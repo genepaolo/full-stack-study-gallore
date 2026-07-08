@@ -6,6 +6,12 @@ updated: 2026-07-07
 
 # Log (newest on top)
 
+## 2026-07-07 — Content expansion P0 + research (GreatFrontend, system-design-primer)
+- Scoured GreatFrontend playbook (intro/js/ui/algorithms) + system-design-primer; gap analysis and
+  full plan filed to vault ([[expansion-roadmap]], [[system-design-plan]]). Decision: keep 4 tracks.
+- Built P0: js-core +5 (throttle, curry, deepClone, flatten, memoize) with taught-logic tests;
+  ui +5 (Todo, Star Rating, Signup Form, Carousel, Stopwatch). Lessons 32 → 42. 82 tests, build OK.
+
 ## 2026-07-07 — Live-editor safety + per-lesson restrictions
 - Documented isolation (Sandpack sandboxed iframe + ErrorBoundary + Reset) in `SECURITY.md`.
 - Added `readOnly` / `lockedFiles` lesson fields + LiveCode support; locked `fe-box-model` structure.

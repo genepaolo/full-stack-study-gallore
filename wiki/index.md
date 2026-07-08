@@ -28,6 +28,10 @@ tags: [index]
 - [[dev-ports]] — dev-port hygiene & the Windows "unauthorized access" fix (`npm run kill`)
 - [[content-sources]] — source of truth for lesson content (Frontend Interview Handbook)
 
+## Planning
+- [[expansion-roadmap]] — GreatFrontend gap analysis + prioritized expansion (P0: UI + JS utils)
+- [[system-design-plan]] — system-design sub-curriculum (system-design-primer + GreatFrontend)
+
 ## Concepts
 - [[Sandpack]] · [[MongoDB Atlas]]
 - _Frontend-interview terms now live in the app's Glossary (data/glossary.js), auto-built from lesson keyTerms._

@@ -96,6 +96,82 @@ describe('middleware chain (be-middleware)', () => {
   })
 })
 
+describe('throttle (fe-throttle)', () => {
+  it('fires immediately then blocks until the window elapses (leading edge)', () => {
+    const { throttle } = extract('fe-throttle', ['throttle'])
+    vi.useFakeTimers()
+    try {
+      const spy = vi.fn()
+      const t = throttle(spy, 100)
+      t('a') // leading — fires now
+      t('b') // within window — suppressed
+      expect(spy).toHaveBeenCalledTimes(1)
+      expect(spy).toHaveBeenCalledWith('a')
+      vi.advanceTimersByTime(100)
+      t('c') // window elapsed — fires again
+      expect(spy).toHaveBeenCalledTimes(2)
+      expect(spy).toHaveBeenLastCalledWith('c')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
+
+describe('curry (fe-curry)', () => {
+  it('collects args across calls until arity is met', () => {
+    const { curry } = extract('fe-curry', ['curry'])
+    const add = (a, b, c) => a + b + c
+    const c = curry(add)
+    expect(c(1)(2)(3)).toBe(6)
+    expect(c(1, 2)(3)).toBe(6)
+    expect(c(1)(2, 3)).toBe(6)
+    expect(c(1, 2, 3)).toBe(6)
+  })
+})
+
+describe('deepClone (fe-deep-clone)', () => {
+  it('produces an independent deep copy', () => {
+    const { deepClone } = extract('fe-deep-clone', ['deepClone'])
+    const orig = { a: 1, nested: { b: 2 }, list: [1, { c: 3 }] }
+    const clone = deepClone(orig)
+    clone.nested.b = 99
+    clone.list[1].c = 99
+    expect(orig.nested.b).toBe(2)
+    expect(orig.list[1].c).toBe(3)
+    expect(clone).not.toBe(orig)
+    expect(clone.nested).not.toBe(orig.nested)
+  })
+
+  it('handles circular references without infinite recursion', () => {
+    const { deepClone } = extract('fe-deep-clone', ['deepClone'])
+    const a = { name: 'a' }
+    a.self = a
+    const clone = deepClone(a)
+    expect(clone.self).toBe(clone) // cycle preserved, points to the clone
+    expect(clone).not.toBe(a)
+  })
+})
+
+describe('flatten (fe-flatten)', () => {
+  it('flattens arbitrary depth', () => {
+    const { flatten } = extract('fe-flatten', ['flatten'])
+    expect(flatten([1, [2, [3, [4]], 5]])).toEqual([1, 2, 3, 4, 5])
+    expect(flatten([])).toEqual([])
+  })
+})
+
+describe('memoize (fe-memoize)', () => {
+  it('caches by arguments and only computes once per distinct input', () => {
+    const { memoize } = extract('fe-memoize', ['memoize'])
+    const fn = vi.fn((n) => n * n)
+    const m = memoize(fn)
+    expect(m(5)).toBe(25)
+    expect(m(5)).toBe(25)
+    expect(m(6)).toBe(36)
+    expect(fn).toHaveBeenCalledTimes(2) // 5 computed once, 6 once
+  })
+})
+
 describe('CRUD handlers (be-crud)', () => {
   it('creates (201), reads (200), 404s missing, deletes (204)', () => {
     const { api } = extract('be-crud', ['api'])

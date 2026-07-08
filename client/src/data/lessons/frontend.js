@@ -263,6 +263,267 @@ const modalCss = `body{font-family:system-ui;padding:16px}
 .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 `
 
+// ---------- fe-js-core (added: throttle, curry, deepClone, flatten, memoize) ----------
+const throttleStarter = `// throttle(fn, wait): allow fn at most once per \\\`wait\\\` ms (leading edge).
+function throttle(fn, wait) {
+  let blocked = false;
+  return function (...args) {
+    if (blocked) return;
+    fn.apply(this, args);            // fire immediately (leading edge)
+    blocked = true;
+    setTimeout(() => { blocked = false; }, wait); // unblock after the window
+  };
+}
+
+const onScroll = throttle((y) => console.log("handle scroll at", y), 200);
+[0, 30, 60, 90, 250, 300].forEach((y, i) => setTimeout(() => onScroll(y), i * 60));
+// Fires ~once per 200ms window no matter how often it's called.
+`
+
+const curryStarter = `// curry(fn): call fn one (or several) args at a time until it has enough.
+function curry(fn) {
+  return function curried(...args) {
+    if (args.length >= fn.length) return fn.apply(this, args); // enough args -> run
+    return (...more) => curried.apply(this, args.concat(more)); // otherwise collect more
+  };
+}
+
+const add = (a, b, c) => a + b + c;
+const cadd = curry(add);
+console.log(cadd(1)(2)(3)); // 6
+console.log(cadd(1, 2)(3)); // 6
+console.log(cadd(1)(2, 3)); // 6
+`
+
+const deepCloneStarter = `// deepClone(value): a recursive copy with no shared references. Handles circular refs.
+function deepClone(value, seen = new WeakMap()) {
+  if (value === null || typeof value !== "object") return value; // primitives copy by value
+  if (seen.has(value)) return seen.get(value);                   // circular reference guard
+  if (value instanceof Date) return new Date(value);
+  const copy = Array.isArray(value) ? [] : {};
+  seen.set(value, copy);
+  for (const key of Object.keys(value)) copy[key] = deepClone(value[key], seen);
+  return copy;
+}
+
+const original = { a: 1, nested: { b: 2 }, list: [1, 2, 3] };
+const clone = deepClone(original);
+clone.nested.b = 99;
+console.log(original.nested.b, clone.nested.b); // 2 99 — fully independent
+`
+
+const flattenStarter = `// flatten(arr): turn a nested array into a single flat array (any depth).
+function flatten(arr) {
+  return arr.reduce(
+    (acc, item) => acc.concat(Array.isArray(item) ? flatten(item) : item),
+    []
+  );
+}
+
+console.log(flatten([1, [2, [3, [4]], 5]])); // [1, 2, 3, 4, 5]
+`
+
+const memoizeStarter = `// memoize(fn): cache results by arguments so repeat calls are instant.
+function memoize(fn) {
+  const cache = new Map();
+  return function (...args) {
+    const key = JSON.stringify(args); // simple key; fine for JSON-serializable args
+    if (cache.has(key)) return cache.get(key);
+    const result = fn.apply(this, args);
+    cache.set(key, result);
+    return result;
+  };
+}
+
+let calls = 0;
+const slowSquare = (n) => { calls++; return n * n; };
+const fast = memoize(slowSquare);
+console.log(fast(5), fast(5), fast(6)); // 25 25 36
+console.log("actual computations:", calls); // 2 — the second fast(5) was cached
+`
+
+// ---------- fe-ui (added: Todo List, Star Rating, Signup Form, Carousel, Stopwatch) ----------
+const todoStarter = `import { useState } from "react";
+import "./styles.css";
+
+export default function TodoList() {
+  const [items, setItems] = useState([{ id: 1, text: "Learn closures", done: false }]);
+  const [text, setText] = useState("");
+
+  const add = (e) => {
+    e.preventDefault();
+    const t = text.trim();
+    if (!t) return;                 // ignore empty input
+    setItems([...items, { id: Date.now(), text: t, done: false }]); // new array, not push
+    setText("");
+  };
+  const toggle = (id) => setItems(items.map((i) => (i.id === id ? { ...i, done: !i.done } : i)));
+  const remove = (id) => setItems(items.filter((i) => i.id !== id));
+
+  return (
+    <div className="todo">
+      <h3>Todos</h3>
+      <form onSubmit={add}>
+        <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Add a task…" />
+        <button>Add</button>
+      </form>
+      <ul>
+        {items.map((i) => (
+          <li key={i.id} className={i.done ? "done" : ""}>
+            <input type="checkbox" checked={i.done} onChange={() => toggle(i.id)} />
+            <span>{i.text}</span>
+            <button className="x" onClick={() => remove(i.id)}>✕</button>
+          </li>
+        ))}
+      </ul>
+      <p className="count">{items.filter((i) => !i.done).length} left</p>
+    </div>
+  );
+}
+`
+const todoCss = `body{font-family:system-ui;padding:16px}
+.todo{max-width:420px;margin:0 auto}
+form{display:flex;gap:8px;margin-bottom:12px}
+input[type=text],form input{flex:1;padding:8px;border:1px solid #d1d5db;border-radius:8px}
+button{border:0;border-radius:8px;padding:8px 12px;background:#6366f1;color:#fff;cursor:pointer}
+ul{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+li{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid #eee;border-radius:8px}
+li span{flex:1}
+li.done span{text-decoration:line-through;color:#9ca3af}
+.x{background:#f3f4f6;color:#6b7280}
+.count{color:#6b7280;font-size:13px;margin-top:10px}
+`
+
+const starRatingStarter = `import { useState } from "react";
+
+export default function StarRating({ max = 5 }) {
+  const [rating, setRating] = useState(0);
+  const [hover, setHover] = useState(0); // preview on hover
+
+  return (
+    <div style={{ fontFamily: "system-ui", textAlign: "center", padding: 24 }}>
+      <h3>Rate it</h3>
+      <div style={{ fontSize: 40, cursor: "pointer" }} onMouseLeave={() => setHover(0)}>
+        {Array.from({ length: max }, (_, i) => i + 1).map((n) => (
+          <span
+            key={n}
+            onMouseEnter={() => setHover(n)}
+            onClick={() => setRating(n)}
+            style={{ color: n <= (hover || rating) ? "#f59e0b" : "#d1d5db" }}
+          >
+            ★
+          </span>
+        ))}
+      </div>
+      <p>{rating ? "You rated " + rating + "/" + max : "Hover and click a star"}</p>
+    </div>
+  );
+}
+`
+
+const signupStarter = `import { useState } from "react";
+
+// Controlled form + validation. The inputs' values live in React state (single source of truth).
+export default function SignupForm() {
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState({});
+  const [ok, setOk] = useState(false);
+
+  const validate = (f) => {
+    const e = {};
+    if (!/^[^@]+@[^@]+\\.[^@]+$/.test(f.email)) e.email = "Enter a valid email";
+    if (f.password.length < 8) e.password = "Password must be 8+ characters";
+    return e;
+  };
+  const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const onSubmit = (e) => {
+    e.preventDefault();
+    const errs = validate(form);
+    setErrors(errs);
+    setOk(Object.keys(errs).length === 0);
+  };
+
+  const box = { fontFamily: "system-ui", maxWidth: 320, margin: "24px auto", display: "grid", gap: 8 };
+  return (
+    <form style={box} onSubmit={onSubmit} noValidate>
+      <h3>Sign up</h3>
+      <input name="email" placeholder="Email" value={form.email} onChange={onChange} />
+      {errors.email && <small style={{ color: "#ef4444" }}>{errors.email}</small>}
+      <input name="password" type="password" placeholder="Password" value={form.password} onChange={onChange} />
+      {errors.password && <small style={{ color: "#ef4444" }}>{errors.password}</small>}
+      <button style={{ padding: 8, border: 0, borderRadius: 8, background: "#6366f1", color: "#fff" }}>
+        Create account
+      </button>
+      {ok && <small style={{ color: "#10b981" }}>✓ Looks good!</small>}
+    </form>
+  );
+}
+`
+
+const carouselStarter = `import { useState } from "react";
+
+const SLIDES = ["#6366f1", "#8b5cf6", "#ec4899", "#f59e0b"];
+
+export default function Carousel() {
+  const [i, setI] = useState(0);
+  const go = (dir) => setI((i + dir + SLIDES.length) % SLIDES.length); // wrap around both ends
+
+  return (
+    <div style={{ fontFamily: "system-ui", textAlign: "center", padding: 16 }}>
+      <div style={{ height: 180, borderRadius: 12, background: SLIDES[i], display: "grid",
+        placeItems: "center", color: "#fff", fontSize: 24 }}>
+        Slide {i + 1}
+      </div>
+      <div style={{ marginTop: 12 }}>
+        <button onClick={() => go(-1)}>‹ Prev</button>
+        <span style={{ margin: "0 12px" }}>
+          {SLIDES.map((_, n) => (
+            <span key={n} onClick={() => setI(n)}
+              style={{ cursor: "pointer", margin: 3, fontSize: 18, color: n === i ? "#111" : "#cbd5e1" }}>
+              ●
+            </span>
+          ))}
+        </span>
+        <button onClick={() => go(1)}>Next ›</button>
+      </div>
+    </div>
+  );
+}
+`
+
+const stopwatchStarter = `import { useState, useRef } from "react";
+
+export default function Stopwatch() {
+  const [ms, setMs] = useState(0);
+  const [running, setRunning] = useState(false);
+  const timer = useRef(null); // interval id kept in a ref (survives re-renders)
+
+  const start = () => {
+    if (running) return;
+    setRunning(true);
+    const startedAt = Date.now() - ms;                       // resume from current time
+    timer.current = setInterval(() => setMs(Date.now() - startedAt), 50);
+  };
+  const stop = () => { setRunning(false); clearInterval(timer.current); };
+  const reset = () => { stop(); setMs(0); };
+
+  const pad = (n) => String(n).padStart(2, "0");
+  const secs = Math.floor(ms / 1000);
+  const cs = Math.floor((ms % 1000) / 10);
+
+  return (
+    <div style={{ fontFamily: "system-ui", textAlign: "center", padding: 24 }}>
+      <h1 style={{ fontVariantNumeric: "tabular-nums" }}>
+        {pad(Math.floor(secs / 60))}:{pad(secs % 60)}.{pad(cs)}
+      </h1>
+      <button onClick={start}>Start</button>
+      <button onClick={stop} style={{ margin: "0 8px" }}>Stop</button>
+      <button onClick={reset}>Reset</button>
+    </div>
+  );
+}
+`
+
 export const frontendLessons = [
   // fe-foundations
   {
@@ -460,5 +721,138 @@ const f = obj.regular; f();  // ?
     ],
     starterCode: { '/App.js': modalStarter, '/styles.css': modalCss },
     explanation: `The real interview is the **a11y checklist**: close on \`Escape\`, trap focus while open, restore focus to the trigger on close, and render through a **portal**. Production code uses \`<dialog>\` or a library — but you must be able to explain each requirement.`,
+  },
+
+  // ---- JS utilities (fe-js-core) ----
+  {
+    id: 'fe-throttle', module: 'fe-js-core', order: 5, kind: 'utility', template: 'vanilla',
+    title: 'throttle', difficulty: 'medium', tags: ['javascript', 'timers'],
+    summary: 'Rate-limit a function to once per interval. The scroll/resize counterpart to debounce.',
+    prompt: `Implement **\`throttle(fn, wait)\`**: allow \`fn\` to run at most **once per \`wait\` ms**, even if called continuously. Watch the console — a burst of calls fires only about once per window.`,
+    keyTerms: [
+      { term: 'throttle', def: 'Guarantees at most one call per N ms during a burst (rate limiting). Good for scroll/resize/mousemove.' },
+      { term: 'debounce vs throttle', def: 'Debounce waits for a pause then fires once; throttle fires steadily at a capped rate.' },
+      { term: 'Leading vs trailing', def: 'Leading fires immediately then blocks; trailing fires at the end of the window. This one is leading.' },
+    ],
+    starterCode: { '/index.js': throttleStarter },
+    explanation: `Interviewers pair this with **debounce** and ask when to use each: a search box → debounce (act on the pause); a scroll handler → throttle (act at a steady rate). Common follow-ups: add a **trailing** call so the final event isn't dropped, and a \`.cancel()\`. Both rely on a **closure** over the timer/blocked flag.`,
+  },
+  {
+    id: 'fe-curry', module: 'fe-js-core', order: 6, kind: 'utility', template: 'vanilla',
+    title: 'curry', difficulty: 'medium', tags: ['javascript', 'functions'],
+    summary: 'Transform f(a,b,c) into f(a)(b)(c) — partial application.',
+    prompt: `Implement **\`curry(fn)\`** so \`fn\` can be called one argument (or several) at a time until it has enough, then it runs. Support \`cadd(1)(2)(3)\`, \`cadd(1,2)(3)\`, and \`cadd(1)(2,3)\`.`,
+    keyTerms: [
+      { term: 'Currying', def: 'Turning an N-arg function into a chain of unary/partial calls that collect args until N is reached.' },
+      { term: 'Partial application', def: 'Fixing some arguments now and supplying the rest later.' },
+      { term: 'fn.length (arity)', def: 'The number of declared parameters — used to know when enough args have arrived.' },
+    ],
+    starterCode: { '/index.js': curryStarter },
+    explanation: `The trick is the recursive \`curried\`: if we have \`>= fn.length\` args, call \`fn\`; otherwise return a function that concatenates more args and recurses. Probes: relies on **closures** and \`fn.length\`; a follow-up is **infinite/variadic currying** where you call the result to get the value (no fixed arity).`,
+  },
+  {
+    id: 'fe-deep-clone', module: 'fe-js-core', order: 7, kind: 'utility', template: 'vanilla',
+    title: 'deepClone', difficulty: 'hard', tags: ['javascript', 'recursion'],
+    summary: 'A true copy with no shared references — including circular ones.',
+    prompt: `Implement **\`deepClone(value)\`**: recursively copy objects and arrays so mutating the clone never affects the original. Handle **circular references** (an object that points to itself).`,
+    keyTerms: [
+      { term: 'Shallow vs deep copy', def: 'Shallow ({...obj}) shares nested references; deep copies every level so nothing is shared.' },
+      { term: 'Circular reference', def: 'An object reachable from itself. A naive recursive clone infinite-loops; a WeakMap of seen objects fixes it.' },
+      { term: 'WeakMap', def: 'A map keyed by objects that does not prevent garbage collection — ideal for the "seen" cache.' },
+    ],
+    starterCode: { '/index.js': deepCloneStarter },
+    explanation: `\`structuredClone()\` now does this natively, but interviewers want the algorithm: recurse over keys, and track already-cloned objects in a **WeakMap** to break cycles and preserve shared identity. Follow-ups: handle \`Date\`, \`Map\`, \`Set\`, and \`RegExp\` (not just plain objects/arrays).`,
+  },
+  {
+    id: 'fe-flatten', module: 'fe-js-core', order: 8, kind: 'utility', template: 'vanilla',
+    title: 'flatten', difficulty: 'easy', tags: ['javascript', 'recursion', 'arrays'],
+    summary: 'Collapse a deeply nested array into one flat list.',
+    prompt: `Implement **\`flatten(arr)\`** that flattens an array of arbitrary depth: \`[1,[2,[3,[4]],5]] → [1,2,3,4,5]\`.`,
+    keyTerms: [
+      { term: 'Recursion', def: 'A function that calls itself on a smaller sub-problem (each nested array) until a base case.' },
+      { term: 'reduce', def: 'Folds an array into a single accumulator — here, concatenating flattened items.' },
+      { term: 'Array.isArray', def: 'The reliable check for "is this an array?" used to decide whether to recurse.' },
+    ],
+    starterCode: { '/index.js': flattenStarter },
+    explanation: `\`Array.prototype.flat(Infinity)\` does this natively; the interview wants the recursion. Follow-ups: an **iterative** version using a stack (avoids call-stack limits on very deep input), and a depth-limited \`flatten(arr, depth)\`.`,
+  },
+  {
+    id: 'fe-memoize', module: 'fe-js-core', order: 9, kind: 'utility', template: 'vanilla',
+    title: 'memoize', difficulty: 'medium', tags: ['javascript', 'performance'],
+    summary: 'Cache a function’s results by its arguments.',
+    prompt: `Implement **\`memoize(fn)\`**: cache results keyed by arguments so repeated calls with the same input skip the work. The demo shows only 2 real computations for 3 calls.`,
+    keyTerms: [
+      { term: 'Memoization', def: 'Caching a pure function’s output per input so repeats are O(1) lookups.' },
+      { term: 'Cache key', def: 'A stable representation of the args (here JSON.stringify) used to look up the cache.' },
+      { term: 'Pure function', def: 'Same input → same output, no side effects — a prerequisite for safe memoization.' },
+    ],
+    starterCode: { '/index.js': memoizeStarter },
+    explanation: `Key choices interviewers probe: the **cache key** strategy (\`JSON.stringify\` is simple but fails on functions/undefined/key order; a nested \`Map\` or \`WeakMap\` handles object args better), and that memoization is only safe for **pure** functions. This is the same idea behind React’s \`useMemo\`/\`memo\`.`,
+  },
+
+  // ---- UI components (fe-ui) ----
+  {
+    id: 'fe-todo-list', module: 'fe-ui', order: 4, kind: 'component', template: 'react',
+    title: 'Todo List', difficulty: 'easy', tags: ['react', 'state', 'lists'],
+    summary: 'Add, toggle, and delete items — the canonical state + list-rendering warm-up.',
+    prompt: `Build a **todo list**: an input adds items; each item can be **toggled** done and **deleted**; show a "N left" count. Keep the input a controlled component and never mutate state in place.`,
+    keyTerms: [
+      { term: 'Controlled input', def: 'An input whose value comes from state and updates via onChange — React is the single source of truth.' },
+      { term: 'Immutable update', def: 'Produce a NEW array/object (spread, map, filter) instead of mutating — so React detects the change.' },
+      { term: 'key prop', def: 'A stable unique id per list item so React can efficiently reconcile the list.' },
+    ],
+    starterCode: { '/App.js': todoStarter, '/styles.css': todoCss },
+    explanation: `The must-nots: don’t \`push\` into state (use \`[...items, new]\`); don’t use the array **index as \`key\`** if items reorder/delete (use a stable id). Derive the "N left" **count from state** rather than storing it separately. Follow-ups: edit-in-place, filter (all/active/done), and persistence.`,
+  },
+  {
+    id: 'fe-star-rating', module: 'fe-ui', order: 5, kind: 'component', template: 'react',
+    title: 'Star Rating', difficulty: 'easy', tags: ['react', 'state', 'events'],
+    summary: 'Hover preview + click to set — two pieces of state working together.',
+    prompt: `Build a **star rating**: hovering previews the rating; clicking commits it; moving the mouse away shows the committed value. Make the number of stars a \`max\` prop.`,
+    keyTerms: [
+      { term: 'Derived display', def: 'Stars fill based on (hover || rating) — hover wins while hovering, else the committed rating shows.' },
+      { term: 'Controlled by props', def: 'max drives how many stars render; the component is reusable for any scale.' },
+      { term: 'onMouseEnter/Leave', def: 'Pointer events that drive the hover-preview state.' },
+    ],
+    starterCode: { '/App.js': starRatingStarter },
+    explanation: `The elegant bit is \`n <= (hover || rating)\` — one expression handling both preview and committed states. Interview follow-ups: **keyboard accessibility** (arrow keys, \`role="radiogroup"\`), **half-stars**, and a read-only display mode.`,
+  },
+  {
+    id: 'fe-signup-form', module: 'fe-ui', order: 6, kind: 'component', template: 'react',
+    title: 'Signup Form (validation)', difficulty: 'medium', tags: ['react', 'forms', 'validation'],
+    summary: 'Controlled inputs, a validation function, and inline error messages.',
+    prompt: `Build a **signup form** with email + password. On submit, validate (valid email, password ≥ 8 chars), show **inline errors**, and a success message when clean. Use one \`onChange\` for all fields.`,
+    keyTerms: [
+      { term: 'Single change handler', def: 'One onChange keyed by input `name` updates the matching field: {...form, [name]: value}.' },
+      { term: 'Validation function', def: 'A pure function (values) → errors object; keeps rules in one testable place.' },
+      { term: 'Controlled vs uncontrolled', def: 'Controlled = value in React state (this). Uncontrolled = read from the DOM via a ref on submit.' },
+    ],
+    starterCode: { '/App.js': signupStarter },
+    explanation: `Interviewers look for: a **single generic \`onChange\`** (not one per field), validation as a **pure function** returning an errors map, and \`noValidate\` so you control the UX. Follow-ups: validate on **blur** vs submit, disable the button while submitting, and async (server) validation.`,
+  },
+  {
+    id: 'fe-carousel', module: 'fe-ui', order: 7, kind: 'component', template: 'react',
+    title: 'Image Carousel', difficulty: 'medium', tags: ['react', 'state'],
+    summary: 'Prev/next with wrap-around and clickable dots.',
+    prompt: `Build a **carousel**: Prev/Next cycle through slides and **wrap around** at both ends; dots jump to a slide and highlight the active one.`,
+    keyTerms: [
+      { term: 'Modulo wrap', def: '(i + dir + n) % n keeps the index in range and wraps past either end (handles the negative case).' },
+      { term: 'Single index state', def: 'One `activeIndex` drives the visible slide and the active dot — no duplicated state.' },
+    ],
+    starterCode: { '/App.js': carouselStarter },
+    explanation: `The trick is \`(i + dir + n) % n\` — adding \`n\` before the modulo handles going **backwards** from 0. Everything derives from one index. Follow-ups: **autoplay** with \`useEffect\` + \`setInterval\` (and cleanup), swipe/touch, lazy-loading images, and keyboard arrows.`,
+  },
+  {
+    id: 'fe-stopwatch', module: 'fe-ui', order: 8, kind: 'component', template: 'react',
+    title: 'Stopwatch', difficulty: 'medium', tags: ['react', 'timers', 'refs'],
+    summary: 'Start/stop/reset with an interval kept in a ref — accurate timing.',
+    prompt: `Build a **stopwatch**: Start/Stop/Reset showing mm:ss.cc. Keep the interval id in a **ref**, and compute elapsed time from a start timestamp (not by counting ticks).`,
+    keyTerms: [
+      { term: 'Ref for the interval id', def: 'setInterval’s id lives in a useRef so it persists across renders and can be cleared.' },
+      { term: 'Timestamp-based timing', def: 'Compute elapsed = Date.now() - startedAt each tick — accurate even if ticks are delayed (never drifts like a counter).' },
+      { term: 'Cleanup', def: 'Clear the interval on stop/reset (and on unmount) to avoid leaks.' },
+    ],
+    starterCode: { '/App.js': stopwatchStarter },
+    explanation: `Why timestamp math: intervals aren’t exact, so **counting ticks drifts**. Reading \`Date.now() - startedAt\` stays accurate. \`startedAt = Date.now() - ms\` lets Start **resume** from the paused time. In a fuller version, clear the interval in a \`useEffect\` cleanup so it’s torn down on unmount too.`,
   },
 ]
