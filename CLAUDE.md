@@ -16,6 +16,8 @@ its own section.
   available for future features (notes, snippets). Single-user, no auth.
 - **Monorepo** — npm workspaces (`client`, `server`). `npm run dev` runs both concurrently.
 
+**Repository:** https://github.com/genepaolo/full-stack-study-gallore · remote setup: [SETUP.md](./SETUP.md).
+
 ## Progress tracking (offline, local-only)
 
 Progress lives entirely in **`localStorage`** — it is the single source of truth (no server

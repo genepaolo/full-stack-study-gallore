@@ -6,6 +6,12 @@ updated: 2026-07-07
 
 # Log (newest on top)
 
+## 2026-07-07 — Security audit + first GitHub push
+- Audited: no secrets/API keys/PII in source or docs; hardened `.gitignore`; added `.gitattributes`.
+- Added `SETUP.md` (requirements + remote setup + troubleshooting); README links it.
+- Initialized `main`, added remote `genepaolo/full-stack-study-gallore`, committed 72 files, pushed.
+- Verified: pushed tree has no secrets/artifacts; local == remote HEAD (`2821840`).
+
 ## 2026-07-07 — Dev-port cleanup automation (Windows "unauthorized access" fix)
 - Diagnosed: stale Vite servers held 5173 → Windows EACCES socket error read as "unauthorized access".
 - Added `scripts/kill-dev.mjs` (cross-platform, port-scoped) + `predev:client`/`predev:server` hooks
