@@ -1,0 +1,34 @@
+# dependencies
+node_modules/
+**/node_modules/
+
+# build output
+client/dist/
+dist/
+
+# env & secrets (never commit real values — only *.example)
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+*.local
+*.pem
+*.key
+secrets.json
+.npmrc
+
+# logs
+*.log
+npm-debug.log*
+
+# editor / os
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# obsidian vault runtime
+wiki/.obsidian/workspace*.json
+wiki/.trash/

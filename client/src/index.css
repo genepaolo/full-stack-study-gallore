@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---- Design tokens (RGB triplets so Tailwind's <alpha-value> works) ---- */
+:root,
+[data-theme='light'] {
+  --surface: 255 255 255;
+  --surface-2: 244 245 248;
+  --border: 226 229 234;
+  --content: 24 27 33;
+  --muted: 108 114 127;
+  --brand: 99 102 241;   /* indigo-500 */
+  --brand-fg: 255 255 255;
+}
+
+[data-theme='dark'] {
+  --surface: 17 19 24;
+  --surface-2: 26 29 36;
+  --border: 42 46 56;
+  --content: 233 235 240;
+  --muted: 148 155 168;
+  --brand: 129 132 248;
+  --brand-fg: 17 19 24;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-surface-2 text-content font-sans antialiased;
+  }
+  h1, h2, h3, h4 {
+    @apply font-semibold tracking-tight;
+  }
+  ::selection {
+    background: rgb(var(--brand) / 0.25);
+  }
+}
+
+@layer components {
+  /* Markdown prose used by prompts/explanations */
+  .prose-app {
+    @apply text-sm leading-relaxed text-content/90;
+  }
+  .prose-app h1 { @apply text-lg mt-4 mb-2; }
+  .prose-app h2 { @apply text-base mt-4 mb-2; }
+  .prose-app p { @apply my-2; }
+  .prose-app ul { @apply my-2 list-disc pl-5 space-y-1; }
+  .prose-app code {
+    @apply font-mono text-[0.85em] px-1 py-0.5 rounded bg-surface-2 text-brand;
+  }
+  .prose-app pre {
+    @apply my-3 p-3 rounded-lg bg-surface-2 overflow-x-auto text-xs;
+  }
+  .prose-app pre code { @apply bg-transparent p-0 text-content; }
+  .prose-app a { @apply text-brand underline underline-offset-2; }
+
+  /* Animated aurora/mesh gradient for the hero. Sits behind content. */
+  .hero-mesh {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .hero-mesh::before {
+    content: '';
+    position: absolute;
+    inset: -40%;
+    z-index: -1;
+    background:
+      radial-gradient(40% 50% at 20% 30%, rgb(var(--brand) / 0.35), transparent 60%),
+      radial-gradient(40% 50% at 80% 20%, rgb(139 92 246 / 0.30), transparent 60%),
+      radial-gradient(45% 55% at 60% 80%, rgb(236 72 153 / 0.22), transparent 60%);
+    background-size: 200% 200%;
+    animation: aurora 18s ease-in-out infinite alternate;
+    filter: blur(8px);
+  }
+  @keyframes aurora {
+    0%   { background-position: 0% 0%, 100% 0%, 50% 100%; }
+    100% { background-position: 60% 40%, 40% 60%, 30% 40%; }
+  }
+
+  /* Soft brand glow on hover for interactive cards. */
+  .card-glow {
+    transition: box-shadow .3s ease, transform .3s ease, border-color .3s ease;
+  }
+  .card-glow:hover {
+    box-shadow: 0 8px 30px -8px rgb(var(--brand) / 0.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-mesh::before { animation: none; }
+  * { scroll-behavior: auto !important; }
+}

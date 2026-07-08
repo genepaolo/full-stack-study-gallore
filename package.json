@@ -1,0 +1,24 @@
+{
+  "name": "full-stack-gallore",
+  "private": true,
+  "version": "0.1.0",
+  "description": "A self-help study app encapsulating the Frontend Interview Handbook: showcase components, JS utilities, quizzes and CSS with live-editable code.",
+  "type": "module",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently -n client,server -c cyan,magenta \"npm:dev:client\" \"npm:dev:server\"",
+    "predev:client": "node scripts/kill-dev.mjs 5173",
+    "dev:client": "npm run dev --workspace client",
+    "predev:server": "node scripts/kill-dev.mjs 5000",
+    "dev:server": "npm run dev --workspace server",
+    "kill": "node scripts/kill-dev.mjs 5173 5174 5175 5176 5177 5000",
+    "build": "npm run build --workspace client",
+    "seed": "npm run seed --workspace server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
