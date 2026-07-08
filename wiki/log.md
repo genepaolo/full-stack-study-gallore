@@ -6,6 +6,12 @@ updated: 2026-07-07
 
 # Log (newest on top)
 
+## 2026-07-07 save | Expansion, tooling, tests, CI & security
+- Type: session
+- Location: wiki/sessions/2026-07-07-expansion-and-tooling.md
+- From: full session arc — progress model, GSAP, dev-ports, GitHub push + email scrub, Vitest suite,
+  CI, live-editor security/restrictions, GreatFrontend + system-design-primer research, P0 content.
+
 ## 2026-07-07 — Content expansion P0 + research (GreatFrontend, system-design-primer)
 - Scoured GreatFrontend playbook (intro/js/ui/algorithms) + system-design-primer; gap analysis and
   full plan filed to vault ([[expansion-roadmap]], [[system-design-plan]]). Decision: keep 4 tracks.
