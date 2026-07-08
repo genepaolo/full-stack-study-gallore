@@ -22,9 +22,11 @@ tags: [index]
 - [[server]] — Express/Mongoose API
 - [[showcase-framework]] — LiveCode + LessonView pattern (+ KeyTerms, ErrorBoundary)
 - [[curriculum]] — Tracks → Modules → Lessons + glossary; how to add a lesson
+- [[testing]] — Vitest suite (`npm test`); correctness guardrails
 
 ## Reference
 - [[dev-ports]] — dev-port hygiene & the Windows "unauthorized access" fix (`npm run kill`)
+- [[content-sources]] — source of truth for lesson content (Frontend Interview Handbook)
 
 ## Concepts
 - [[Sandpack]] · [[MongoDB Atlas]]

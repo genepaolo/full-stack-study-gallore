@@ -90,6 +90,16 @@ a stuck previous dev server never blocks a restart (the Windows "unauthorized ac
 error). Cross-platform; kills only the process on the target port. Key detail: uses `netstat -ano`
 (not `-p tcp`) because Vite listens on IPv6 `::1:5173`. Full writeup: [[dev-ports]].
 
+## 15. Test suite (Vitest) for study-material correctness
+Added Vitest in `client/tests/` (61 tests): content integrity, curriculum/glossary helpers, every
+snippet compiles (esbuild, node-env), the taught vanilla utilities execute correctly, and the
+offline progress logic. `npm test`. Full map: [[testing]]. Note: esbuild dev-server advisory
+(via vite/vitest) is dev-only — not in the prod build; do not `audit fix --force`.
+
+## 16. Frontend Interview Handbook is the content source of truth
+Per owner: teach the handbook's canonical answers; when paywalled, cross-check public sources (MDN,
+specs, official docs). Correctness enforced by the taught-logic tests. → [[content-sources]], `CONTENT.md`.
+
 ## Open decisions
 - Auth: none (single personal user, `localStorage` userId). Revisit if multi-user is ever wanted.
 - Notes UI: models + API exist server-side; client notes editor not yet built.

@@ -1,26 +1,27 @@
 ---
 type: meta
 title: "Hot Cache"
-updated: 2026-07-07T20:45:00
+updated: 2026-07-07T21:15:00
 ---
 
 # Recent Context
 
 ## Last Updated
-2026-07-07. Audited for secrets, added remote-setup docs, and **pushed to GitHub**.
+2026-07-07. Added a **Vitest test suite** for correctness and set the **content source of truth**.
 
 ## Key Recent Facts
-- **Repo:** https://github.com/genepaolo/full-stack-study-gallore (branch `main`, commit `2821840`).
-- **Security audit clean**: no secrets/API keys/PII in source or docs; `.gitignore` excludes
-  `node_modules`, `client/dist`, `.env` (only `*.env.example` placeholders tracked). Hardened
-  `.gitignore` (`*.pem`, `*.key`, `*.local`, `.npmrc`) + added `.gitattributes` (eol=lf).
-- Verified pushed tree contains **no** secrets/artifacts; local == remote HEAD.
-- New: **`SETUP.md`** (requirements + remote setup + troubleshooting); README points to it.
-- Heads-up: commits carry git author `Paolo <paolo.gene@gmail.com>` (public on GitHub — their own id).
+- **61 tests / 6 files** in `client/tests/` (run `npm test`): content integrity, curriculum +
+  glossary helpers, every snippet compiles (esbuild), taught vanilla utilities execute correctly,
+  and offline ProgressContext logic. All green. Map: [[testing]].
+- `lesson-code.test.js` runs in **node env** (`// @vitest-environment node`) — esbuild fails under
+  jsdom's Uint8Array realm. `setup.js` guards `localStorage` for node-env files.
+- **Source of truth = Frontend Interview Handbook** (public sources like MDN when paywalled); teach
+  canonical answers; correctness is test-enforced. See `CONTENT.md` / [[content-sources]].
+- `npm audit`: 5 findings all from esbuild's **dev-server** advisory via vite/vitest — dev-only, not
+  in the static prod build. Not force-fixing (would break vite 6 / vitest 2). → [[decisions]] #15–16.
 
 ## Active Threads
-- **Chrome DevTools MCP still not connected** + design skills uninstalled → no in-browser screenshot
-  pass yet. → [[decisions]] #12.
-- **Owner**: clone/run per [[dev-ports]]/SETUP; `npm run dev:client` → :5173. Repo is public-safe.
-- **Backlog**: more lessons/module; per-lesson notes UI; mobile nav drawer; visual polish pass;
-  optional GitHub Actions CI (build check).
+- **Chrome DevTools MCP not connected** + design skills uninstalled → no in-browser screenshot pass.
+- **Owner**: `npm test` before commits; `npm run dev:client` → :5173; `npm run kill` if a port sticks.
+- **Backlog**: more lessons/module (+ taught-logic assertions); per-lesson notes UI; mobile nav;
+  visual polish; optional GitHub Actions to run `npm ci && npm test && npm run build`.

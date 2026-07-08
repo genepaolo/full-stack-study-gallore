@@ -20,6 +20,9 @@ isolated (Sandpack iframe + `ErrorBoundary`) so a broken edit only affects its o
   that's a held port, not auth. Run `npm run kill`. A `predev` hook auto-frees it; the killer uses
   `netstat -ano` because Vite binds IPv6 `::1:5173`. Don't use Git Bash `pkill` on Windows.
 - Always stop dev servers with **Ctrl+C** so they clean up.
+- **Content = study material.** Source of truth is the Frontend Interview Handbook (public sources
+  like MDN when a topic is paywalled); teach the canonical answer. Correctness is test-enforced —
+  run `npm test` before committing. See [CONTENT.md](./CONTENT.md).
 
 ## Stack
 
@@ -78,7 +81,8 @@ prev/next, and glossary automatically.
 ## Commands
 
 - `npm install` · `npm run dev` (client :5173 + server :5000) · `npm run dev:client` (standalone)
-- `npm run kill` (free stuck dev ports) · `npm run build` · `npm run seed` (Atlas, optional)
+- `npm test` (Vitest; tests in `client/tests/`) · `npm run kill` (free stuck dev ports)
+- `npm run build` · `npm run seed` (Atlas, optional)
 
 ## Memory & skills
 

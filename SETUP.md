@@ -75,7 +75,21 @@ cp .env.example server/.env       # then edit server/.env
 
 ---
 
-## 5. Build for production
+## 5. Tests
+
+```bash
+npm test        # runs the Vitest suite (client/tests/)
+```
+
+Covers curriculum/content integrity, navigation + glossary helpers, that every taught code snippet
+compiles, that the key taught utilities behave correctly, and the offline progress logic. See
+[CONTENT.md](./CONTENT.md) for how content correctness is enforced.
+
+> Dev-only advisory: `npm audit` flags esbuild's dev-server (GHSA-67mh-4wv8-2f99) via vite/vitest.
+> It affects only the local dev server, never the static production build. Don't `audit fix --force`
+> (it breaks the vite 6 / vitest 2 toolchain).
+
+## 6. Build for production
 
 ```bash
 npm run build          # outputs client/dist (static, deployable to any CDN/static host)
@@ -86,7 +100,7 @@ in the host's environment (not a committed file), enable HTTPS, and restrict COR
 
 ---
 
-## 6. Project layout
+## 7. Project layout
 
 ```
 client/   React + Vite + Tailwind + GSAP + Sandpack (the study guide UI)
@@ -99,7 +113,7 @@ See [CLAUDE.md](./CLAUDE.md) for conventions and how to add a lesson.
 
 ---
 
-## 7. Troubleshooting
+## 8. Troubleshooting
 
 - **`npm run dev:client` fails with "unauthorized access" / EACCES / "Port 5173 is in use"** — a
   previous dev server is still holding the port. Run `npm run kill`, then retry. (A `predev` hook

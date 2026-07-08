@@ -15,6 +15,7 @@
     "predev:server": "node scripts/kill-dev.mjs 5000",
     "dev:server": "npm run dev --workspace server",
     "kill": "node scripts/kill-dev.mjs 5173 5174 5175 5176 5177 5000",
+    "test": "npm run test --workspace client",
     "build": "npm run build --workspace client",
     "seed": "npm run seed --workspace server"
   },

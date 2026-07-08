@@ -6,6 +6,13 @@ updated: 2026-07-07
 
 # Log (newest on top)
 
+## 2026-07-07 — Test suite + content source of truth
+- Added Vitest (`client/tests/`, 61 tests): content integrity, curriculum/glossary helpers, snippet
+  compilation (esbuild, node-env), taught-utility execution, offline ProgressContext. `npm test`.
+- Fixed esbuild-under-jsdom by running `lesson-code.test.js` in node env; guarded `localStorage` in setup.
+- Set Frontend Interview Handbook as content source of truth (`CONTENT.md`, [[content-sources]]).
+- Documented dev-only esbuild advisory (don't force-fix). [[testing]]; [[decisions]] #15–16. All green.
+
 ## 2026-07-07 — Scrubbed personal email from git history
 - Rewrote all commits (filter-branch) from `paolo.gene@gmail.com` → `genepaolo@users.noreply.github.com`
   (author + committer). Set repo-local git config to the noreply email for future commits.
