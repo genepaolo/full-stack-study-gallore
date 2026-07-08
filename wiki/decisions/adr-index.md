@@ -100,6 +100,14 @@ offline progress logic. `npm test`. Full map: [[testing]]. Note: esbuild dev-ser
 Per owner: teach the handbook's canonical answers; when paywalled, cross-check public sources (MDN,
 specs, official docs). Correctness enforced by the taught-logic tests. → [[content-sources]], `CONTENT.md`.
 
+## 17. Live-editor safety model + per-lesson restrictions
+Security boundary = Sandpack's sandboxed **cross-origin iframe** (user code can't touch host DOM/
+state/localStorage) + per-block `ErrorBoundary` (host-side containment, proven by a test) + Reset +
+no host-side `eval`/raw-HTML markdown. Added optional lesson fields `readOnly` (view-only) and
+`lockedFiles: ['/path']` (lock scaffolding, edit the rest) — a focus/UX guardrail, not the security
+boundary. Applied to `fe-box-model` (lock `/index.html`, edit `styles.css`). Documented in
+`SECURITY.md`; integrity-tested. Tests now 65.
+
 ## Open decisions
 - Auth: none (single personal user, `localStorage` userId). Revisit if multi-user is ever wanted.
 - Notes UI: models + API exist server-side; client notes editor not yet built.

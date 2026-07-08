@@ -93,6 +93,16 @@ describe('lessons', () => {
     }
   })
 
+  it('editor restrictions are well-formed (readOnly boolean; lockedFiles reference real files)', () => {
+    for (const l of allLessons) {
+      if (l.readOnly !== undefined) expect(typeof l.readOnly, `${l.id} readOnly`).toBe('boolean')
+      for (const path of l.lockedFiles || []) {
+        expect(l.starterCode, `${l.id} lockedFiles needs starterCode`).toBeTruthy()
+        expect(Object.keys(l.starterCode), `${l.id} lockedFile ${path} missing`).toContain(path)
+      }
+    }
+  })
+
   it('lesson order is unique within each module', () => {
     for (const m of MODULES) {
       const orders = allLessons.filter((l) => l.module === m.slug).map((l) => l.order)

@@ -71,6 +71,8 @@ export default function LessonView({ lesson }) {
                 template={lesson.template}
                 showConsole={lesson.template === 'vanilla'}
                 dependencies={lesson.dependencies}
+                readOnly={lesson.readOnly}
+                lockedFiles={lesson.lockedFiles}
               />
             </ErrorBoundary>
           )}
@@ -78,7 +80,12 @@ export default function LessonView({ lesson }) {
           {/* Concept lessons show a small live example only if one is provided */}
           {lesson.kind === 'concept' && lesson.starterCode && (
             <ErrorBoundary>
-              <LiveCode files={lesson.starterCode} template={lesson.template || 'static'} />
+              <LiveCode
+                files={lesson.starterCode}
+                template={lesson.template || 'static'}
+                readOnly={lesson.readOnly}
+                lockedFiles={lesson.lockedFiles}
+              />
             </ErrorBoundary>
           )}
 

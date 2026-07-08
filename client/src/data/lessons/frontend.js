@@ -1,29 +1,31 @@
 // Frontend track lessons. kind: component | utility | quiz | concept | project.
 
 // ---------- fe-foundations ----------
+// Structure is locked (read-only) — the learner edits only styles.css. See `lockedFiles` below.
 const boxModelHtml = `<!doctype html>
 <html>
   <head>
-    <style>
-      body { font-family: system-ui; padding: 24px; background: #f6f6f9; }
-      .box {
-        /* Try changing these and watch the total size. */
-        width: 200px;
-        padding: 20px;
-        border: 4px solid #6366f1;
-        margin: 16px;
-        background: #fff;
-
-        /* box-sizing decides whether width includes padding+border. */
-        box-sizing: content-box; /* try: border-box */
-      }
-    </style>
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="box">Resize me by editing width, padding, border, box-sizing.</div>
+    <div class="box">Resize me by editing styles.css → width, padding, border, box-sizing.</div>
     <p>content-box: total width = width + padding + border. border-box: width IS the total.</p>
   </body>
 </html>
+`
+const boxModelCss = `body { font-family: system-ui; padding: 24px; background: #f6f6f9; }
+
+.box {
+  /* Try changing these and watch the total size. */
+  width: 200px;
+  padding: 20px;
+  border: 4px solid #6366f1;
+  margin: 16px;
+  background: #fff;
+
+  /* box-sizing decides whether width includes padding + border. */
+  box-sizing: content-box; /* try: border-box */
+}
 `
 
 // ---------- fe-css-layout (Center + Flexbox/Grid) ----------
@@ -291,7 +293,8 @@ export const frontendLessons = [
       { term: 'Margin', def: 'Space OUTSIDE the border, separating this box from others. Never part of the box size.' },
       { term: 'box-sizing', def: 'content-box (default): width = content only. border-box: width includes padding + border — usually what you want.' },
     ],
-    starterCode: { '/index.html': boxModelHtml },
+    starterCode: { '/index.html': boxModelHtml, '/styles.css': boxModelCss },
+    lockedFiles: ['/index.html'], // structure is fixed — only the CSS is editable
     explanation: `Most codebases set \`* { box-sizing: border-box; }\` globally so that setting \`width: 200px\` means the box is actually 200px wide — padding and border don't push it larger. Margins also **collapse** vertically between siblings (the larger of the two wins), a classic gotcha.`,
   },
 

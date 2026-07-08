@@ -69,6 +69,8 @@ prev/next, and glossary automatically.
 - `kind`: `component|utility|project` → live editor · `quiz` → reveal card · `concept` → open
   reading (+ optional snippet). `template`: `react|vanilla|static` (backend uses `vanilla` in-browser).
 - `module` must match a slug in `curriculum.js`; `id` is kebab-case & unique.
+- Optional editor restrictions: `readOnly: true` (view-only) or `lockedFiles: ['/index.html']`
+  (lock scaffolding, edit the rest). User code runs in a sandboxed iframe — see [SECURITY.md](./SECURITY.md).
 
 ## Conventions
 

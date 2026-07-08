@@ -6,6 +6,11 @@ updated: 2026-07-07
 
 # Log (newest on top)
 
+## 2026-07-07 — Live-editor safety + per-lesson restrictions
+- Documented isolation (Sandpack sandboxed iframe + ErrorBoundary + Reset) in `SECURITY.md`.
+- Added `readOnly` / `lockedFiles` lesson fields + LiveCode support; locked `fe-box-model` structure.
+- Tests: ErrorBoundary containment + lockedFiles integrity (65 total, all green). → [[decisions]] #17.
+
 ## 2026-07-07 — GitHub Actions CI
 - Added `.github/workflows/ci.yml`: on push/PR to main → `npm ci` → `npm test` → `npm run build`
   (Node 22, npm cache, concurrency-cancel). CI badge in README. Lockfile verified in sync for `npm ci`.
