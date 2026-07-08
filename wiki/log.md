@@ -6,6 +6,12 @@ updated: 2026-07-07
 
 # Log (newest on top)
 
+## 2026-07-07 — Scrubbed personal email from git history
+- Rewrote all commits (filter-branch) from `paolo.gene@gmail.com` → `genepaolo@users.noreply.github.com`
+  (author + committer). Set repo-local git config to the noreply email for future commits.
+- Cleaned local backup refs + reflog; force-pushed. Verified: no gmail in history; local == remote.
+- Note: old commit SHAs (2821840, ca00418) may linger as unreachable objects on GitHub until GC — acceptable per owner.
+
 ## 2026-07-07 — Security audit + first GitHub push
 - Audited: no secrets/API keys/PII in source or docs; hardened `.gitignore`; added `.gitattributes`.
 - Added `SETUP.md` (requirements + remote setup + troubleshooting); README links it.
