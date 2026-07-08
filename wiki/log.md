@@ -6,6 +6,10 @@ updated: 2026-07-07
 
 # Log (newest on top)
 
+## 2026-07-07 — GitHub Actions CI
+- Added `.github/workflows/ci.yml`: on push/PR to main → `npm ci` → `npm test` → `npm run build`
+  (Node 22, npm cache, concurrency-cancel). CI badge in README. Lockfile verified in sync for `npm ci`.
+
 ## 2026-07-07 — Test suite + content source of truth
 - Added Vitest (`client/tests/`, 61 tests): content integrity, curriculum/glossary helpers, snippet
   compilation (esbuild, node-env), taught-utility execution, offline ProgressContext. `npm test`.

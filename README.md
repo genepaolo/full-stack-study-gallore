@@ -1,5 +1,7 @@
 # full-stack-gallore 🖼️
 
+[![CI](https://github.com/genepaolo/full-stack-study-gallore/actions/workflows/ci.yml/badge.svg)](https://github.com/genepaolo/full-stack-study-gallore/actions/workflows/ci.yml)
+
 A self-help study app that encapsulates the [Frontend Interview Handbook](https://www.frontendinterviewhandbook.com/).
 Browse the components, JS utilities, quizzes and CSS patterns you'd be tested on — each paired with
 a **live, editable code block** and a **reset** button so you can see exactly how things interact.
