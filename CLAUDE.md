@@ -1,145 +1,88 @@
 # full-stack-gallore
 
-A personal, progressive **full-stack interview study guide**, inspired by the Frontend Interview
-Handbook (https://www.frontendinterviewhandbook.com/) and extended across the whole stack. Content
-is organized as a **curriculum** — ordered **Tracks → Modules → Lessons** — that ramps from HTML to
-system design. Every lesson pairs a plain-English explanation and its **key terms (lingo)** with a
-**visible, editable code block + live preview + reset**, so you can poke at how things interact.
-Interactive areas are isolated (Sandpack iframe + an ErrorBoundary) so a broken edit only affects
-its own section.
+A personal, progressive **full-stack interview study guide** (inspired by the Frontend Interview
+Handbook, extended across the stack). Content is a **curriculum** — ordered **Tracks → Modules →
+Lessons** ramping from HTML to system design. Each lesson pairs a plain-English explanation + **key
+terms (lingo)** with a **live, editable code block (Sandpack) + reset**. Interactive areas are
+isolated (Sandpack iframe + `ErrorBoundary`) so a broken edit only affects its own section.
+
+**Repo:** https://github.com/genepaolo/full-stack-study-gallore · setup: [SETUP.md](./SETUP.md)
+
+## ⚠️ Important notes (read before committing/pushing)
+
+- **Never commit secrets.** No real `.env`, keys, tokens, or DB strings — only `*.env.example`
+  placeholders are tracked (`.gitignore` enforces it). Anything `VITE_*` is bundled into the public
+  client bundle — never put secrets there.
+- **Git identity is privacy-scoped.** This repo's local git config is
+  `genepaolo <genepaolo@users.noreply.github.com>` on purpose — do NOT commit the personal gmail. If
+  it reappears, scrub with `git filter-branch --env-filter` + force-push (see `wiki/log.md`).
+- **Dev-port stuck?** On Windows a leftover Vite server reads as *"unauthorized access"/EACCES* —
+  that's a held port, not auth. Run `npm run kill`. A `predev` hook auto-frees it; the killer uses
+  `netstat -ano` because Vite binds IPv6 `::1:5173`. Don't use Git Bash `pkill` on Windows.
+- Always stop dev servers with **Ctrl+C** so they clean up.
 
 ## Stack
 
-- **Client** — React 18 + Vite + Tailwind CSS. Live code powered by **Sandpack**
-  (`@codesandbox/sandpack-react`).
-- **Server** — Express + Mongoose (MongoDB Atlas). Optional/legacy for progress (see below); still
-  available for future features (notes, snippets). Single-user, no auth.
-- **Monorepo** — npm workspaces (`client`, `server`). `npm run dev` runs both concurrently.
+- **Client** — React 18 + Vite + Tailwind + GSAP; live code via **Sandpack** (lazy-loaded).
+- **Server** — Express + Mongoose (Atlas). Optional — the client runs fully standalone.
+- **Monorepo** — npm workspaces (`client`, `server`).
 
-**Repository:** https://github.com/genepaolo/full-stack-study-gallore · remote setup: [SETUP.md](./SETUP.md).
+## Progress (offline, local-only)
 
-## Progress tracking (offline, local-only)
+`localStorage` is the single source of truth (`ProgressContext.jsx`, key `gallore:progress:v2`) — no
+server round-trip, so it survives the backend being off. `modules {slug:true}` is the primary unit
+(manual "Mark as learned"; drives the bars); `lessons {id:true}` is an optional finer self-check.
+Mark from Module/Track/**Progress** pages (Progress = control-center + confirm-gated **Reset**);
+syncs across tabs via the `storage` event.
 
-Progress lives entirely in **`localStorage`** — it is the single source of truth (no server
-round-trip), so it's instant, works with the backend off, and can't be clobbered by a fresh/empty
-server on startup. State (`ProgressContext.jsx`, key `gallore:progress:v2`):
+## Content model & layout
 
-- `modules: { [slug]: true }` — the **primary** unit; you manually "Mark as learned" per module.
-  Drives the overall + per-track progress bars. (`modulesLearned` metric.)
-- `lessons: { [id]: true }` — optional finer self-check within a module ("Mark lesson done").
-
-Mark modules from the **Module page**, the **Track page**, or the **Progress page** (control-center
-with per-module checkboxes + a **Reset** button, confirm-gated). Syncs across tabs via the `storage`
-event. The server progress routes still exist but the client no longer calls them.
-
-## Content model: Tracks → Modules → Lessons
-
-- **Tracks** (4): `frontend`, `backend`, `fullstack`, `advanced` — defined in `data/curriculum.js`.
-- **Modules** (15): ordered by a `level` (1→6) for a smooth beginner→pro ramp — also in `curriculum.js`.
-- **Lessons**: plain objects in `data/lessons/<track>.js`, aggregated by `data/lessons/index.js`.
-- **Glossary**: auto-built from every lesson's `keyTerms` in `data/glossary.js`.
-
-## Layout
+Tracks (4: frontend/backend/fullstack/advanced) → Modules (15, ordered by `level` 1→6) → Lessons —
+in `data/curriculum.js` + `data/lessons/<track>.js` (aggregated by `index.js`). Glossary auto-builds
+from lesson `keyTerms` (`data/glossary.js`).
 
 ```
 client/src/
-  components/layout/     AppShell, Sidebar (tracks→modules), TopBar, ThemeToggle
-  components/showcase/   LiveCode (lazy Sandpack + reset), LessonView, LessonCard, QuizCard,
-                         KeyTerms (lingo), Collapsible, Markdown, ErrorBoundary
-  components/ui/         primitives (Button, Badge, DifficultyBadge, KindBadge, Card, ProgressBar)
-  data/curriculum.js     tracks + modules + progression helpers (prev/next, per-module lookups)
-  data/lessons/          frontend.js, backend.js, fullstack.js, advanced.js, index.js
-  data/glossary.js       derived from lessons' keyTerms
-  context/               ProgressContext (offline-first), ThemeContext
-  pages/                 HomePage (roadmap), TrackPage, ModulePage, LessonPage, GlossaryPage, ProgressPage
-  lib/api.js             fetch wrapper -> server
-server/src/
-  models/                Progress, Note
-  routes/                progress, notes  (mounted under /api)
-  db.js  index.js
-wiki/                    Obsidian vault — Claude's cross-session memory (claude-obsidian)
+  components/{layout,showcase,ui}/  AppShell/Sidebar/TopBar · LiveCode/LessonView/LessonCard/
+                                    QuizCard/KeyTerms/ErrorBoundary · primitives, CheckToggle
+  data/                             curriculum.js, lessons/, glossary.js
+  context/                          ProgressContext, ThemeContext
+  pages/                            Home, Track, Module, Lesson, Glossary, Progress
+  lib/                              anim.js (GSAP), api.js
+server/src/                         models/{Progress,Note}, routes/{progress,notes}, db.js, index.js
+scripts/kill-dev.mjs  ·  wiki/ (Obsidian cross-session memory)
 ```
 
 ## How to add a lesson
 
-Append one object to the matching track file in `client/src/data/lessons/` — it flows automatically
-into the sidebar, module page, progression (prev/next), and glossary. Nothing else to wire.
+Append one object to `client/src/data/lessons/<track>.js` — it flows into the sidebar, module page,
+prev/next, and glossary automatically.
 
 ```js
-{
-  id: "fe-accordion",           // unique, kebab-case
-  module: "fe-ui",              // must match a module slug in curriculum.js
-  order: 1,                     // position within the module
-  kind: "component",            // component | utility | quiz | concept | project
-  template: "react",            // react | vanilla | static (Sandpack); omit for pure quiz/concept
-  title: "Accordion",
-  difficulty: "easy",          // easy | medium | hard
-  summary: "one-line card blurb",
-  prompt: `markdown intro / the task`,
-  keyTerms: [{ term: "aria-expanded", def: "…" }],   // the "lingo" callout + glossary source
-  starterCode: { "/App.js": "…" },   // shown first + restored on Reset (interactive kinds)
-  solutionCode: { "/App.js": "…" },  // optional, revealed on demand
-  explanation: `markdown — "what interviewers probe"; for concept kind this is the open body`,
-  tags: ["react", "state"],
-}
+{ id, module, order, kind, template, title, difficulty, summary,
+  prompt, keyTerms: [{ term, def }], starterCode, solutionCode, explanation, tags }
 ```
 
-**Kinds:** `component`/`utility`/`project` show a live editor; `quiz` shows a reveal card; `concept`
-shows the explanation openly (reading) with an optional small live snippet. Backend interactive
-lessons use the `vanilla` template to run illustrative server-flavored JS safely in the browser.
+- `kind`: `component|utility|project` → live editor · `quiz` → reveal card · `concept` → open
+  reading (+ optional snippet). `template`: `react|vanilla|static` (backend uses `vanilla` in-browser).
+- `module` must match a slug in `curriculum.js`; `id` is kebab-case & unique.
 
 ## Conventions
 
-- ES modules everywhere (`"type": "module"`). Functional components + hooks only.
-- Tailwind utility classes; design tokens are CSS variables in `client/src/index.css`
-  (light/dark via `data-theme`). Prefer tokens over hard-coded colors.
-- Keep the `LessonView` pattern the single path every lesson flows through — don't fork it; branch
-  on `kind` instead.
-- Reset works by bumping a React `key` on the Sandpack provider to remount with `starterCode`.
-- Wrap any interactive area in `ErrorBoundary` so a failure stays contained to its section.
-- Sandpack is `lazy`-loaded in `LiveCode.jsx` to keep initial load fast — keep it that way.
-
-## Skills to use
-
-- **claude-obsidian** (installed) — persist decisions/progress at end of a session with
-  `claude-obsidian:save`; recall with `claude-obsidian:wiki-query`. Vault lives in `wiki/`.
-- **Karpathy skills** — think-before-coding, simplicity-first, surgical changes, goal-driven.
-- **ui-ux-pro-max** + **frontend-design** — load before building any visual layer; keep the UI
-  polished and consistent (spacing scale, type scale, tasteful motion, light/dark).
-
-## Wiki knowledge base (cross-session memory)
-
-Path: `./wiki` (claude-obsidian vault). At the **start** of a session, read `wiki/hot.md` for recent
-context; if you need more, `wiki/index.md` then the specific page. At the **end** of a session,
-update `wiki/hot.md`, prepend a `wiki/log.md` entry, and add a `wiki/sessions/` note (or run
-`claude-obsidian:save`). Record architecture choices in `wiki/decisions/`.
+- ESM only; functional components + hooks. Tailwind utilities; design tokens are CSS vars in
+  `index.css` (light/dark via `data-theme`) — prefer tokens over hard-coded colors.
+- Keep `LessonView` the one path every lesson flows through — branch on `kind`, don't fork it.
+- Reset = bump a React `key` on the Sandpack provider. Wrap interactive areas in `ErrorBoundary`.
+- Keep Sandpack `lazy`-loaded (`LiveCode.jsx`). GSAP motion is reduced-motion-safe (`lib/anim.js`).
 
 ## Commands
 
-- `npm install` — install all workspaces.
-- `npm run dev` — client on :5173, server on :5000 (concurrently).
-- `npm run dev:client` — client only (standalone; no DB needed).
-- `npm run kill` — free the dev ports (5173–5177, 5000) if a previous server is stuck.
-- `npm run seed` — seed starter content into Atlas (optional).
+- `npm install` · `npm run dev` (client :5173 + server :5000) · `npm run dev:client` (standalone)
+- `npm run kill` (free stuck dev ports) · `npm run build` · `npm run seed` (Atlas, optional)
 
-Always stop dev servers with **Ctrl+C** so they clean up.
+## Memory & skills
 
-## Dev-port hygiene (Windows "unauthorized access" fix)
-
-A `pre*` hook frees the port before each dev command, so a stuck previous run never blocks you:
-`predev:client` runs `scripts/kill-dev.mjs 5173`; `predev:server` runs it for `5000`. The script is
-**cross-platform** and only kills the process *listening on that specific port* (never a blanket
-"kill all node", so your editor's language servers are safe).
-
-- On Windows, a leftover Vite server surfaces as **"An attempt was made to access a socket in a way
-  forbidden by its access permissions" / EACCES** — that's a busy/held port, not a real auth error.
-  Run `npm run kill`.
-- Implementation gotcha (already handled): Vite listens on **IPv6 loopback `::1:5173`**, so the
-  killer uses plain `netstat -ano` (NOT `-p tcp`, which is IPv4-only and would miss it).
-- Do **not** use Git Bash `pkill -f vite` on Windows — it doesn't reliably kill native `node.exe`.
-
-## Setup notes
-
-- The client runs fully standalone (`npm run dev:client`) — **progress needs no database**.
-- The Express server is optional now. To use it for future features, copy `.env.example` to
-  `server/.env` and set `MONGO_URI` (Atlas); without it the API logs a clear message and still runs.
+- **Wiki** (`./wiki`, claude-obsidian): start a session by reading `wiki/hot.md` → `index.md`; end by
+  updating `hot.md`, prepending `log.md`, adding a `sessions/` note, recording choices in `decisions/`.
+- Skills: **claude-obsidian** (installed) · **Karpathy** (think-first, simple, surgical) ·
+  **ui-ux-pro-max** + **frontend-design** (not installed; load before visual work).
