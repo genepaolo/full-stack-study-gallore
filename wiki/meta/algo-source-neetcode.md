@@ -43,15 +43,18 @@ Advanced Graphs (1) · Greedy (5) · Intervals (5) · Math & Geo (3) · Bit Mani
 | **Stack** | `adv-stack` | Valid parentheses (LC 20) | ✅ **new** |
 | **Binary Search** | `adv-binary-search` | classic binary search | ✅ **new** |
 | **Linked List** | `adv-linked-list` | Reverse list (LC 206) | ✅ **new** |
-| Heap / Priority Queue | — | Kth largest / task scheduler | ⏳ pending |
-| Intervals | — | Merge / insert intervals | ⏳ pending |
-| Greedy | — | Max subarray (Kadane) / jump game | ⏳ pending |
+| **Heap / Priority Queue** | `adv-heap` | Kth largest (min-heap, no built-in) | ✅ **new** |
+| **Intervals** | `adv-intervals` | Merge intervals (sort + sweep) | ✅ **new** |
+| **Greedy** | `adv-greedy` | Max subarray / Kadane | ✅ **new** |
 | Graphs (grid/adjacency) | — | Number of islands / course schedule | ⏳ pending |
 | Tries | — | Implement trie | ⏳ pending |
 | Bit Manipulation | — | Single number / counting bits | ⏳ pending |
 | Trees (depth) | (in `adv-trees-dom`) | invert / max depth / LCA — could deepen | ⏳ optional |
+| — cheat sheet — | `adv-cheatsheet` | pattern table + JS idioms + TS seed | ✅ |
 
-Result so far: `adv-algorithms` is **9 lessons** (orders 1–9), 8 taught-logic-tested.
+Result so far: `adv-algorithms` is **13 lessons** (12 patterns + cheat sheet). 11 taught-logic-tested;
+each shows the brute→optimized journey and lists its full category question set. Every lesson also carries
+a **`codeNotes`** ("Code to reach for") panel of the concrete JS idioms it uses.
 
 ## Next batches (suggested order)
 1. **Heap/Priority Queue** + **Intervals** — high interview frequency, small in the doc.

@@ -9,6 +9,14 @@ tags: [meta, log]
 
 # Log (newest on top)
 
+## 2026-07-09 — +3 patterns: Heap, Intervals, Greedy
+- Built `adv-heap` (Kth largest via a hand-rolled MinHeap — JS has no built-in), `adv-intervals`
+  (merge, sort+sweep), `adv-greedy` (max-subarray / Kadane). All brute→optimized + codeNotes +
+  full category lists; taught-logic-tested (incl. brute==optimized). Cheat sheet moved to order 99
+  (always last) and its pattern table extended with the 3.
+- `adv-algorithms` = **13 lessons** (12 patterns + cheat sheet). Coverage: 11 of 16 doc categories.
+  Remaining: graphs (grid), tries, bit-manipulation, (advanced graphs, math). Tests 107 → **114**.
+
 ## 2026-07-09 — codeNotes ("Code to reach for") + Algorithms cheat sheet
 - New first-class lesson field **`codeNotes: [{label, code, note}]`** + `<CodeNotes>` callout (mirrors
   keyTerms→glossary pattern; read-only snippets, never executed). Wired into `LessonView`; integrity-tested.

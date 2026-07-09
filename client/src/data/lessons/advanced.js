@@ -331,6 +331,107 @@ console.log("naive:    ", toArray(reverseListNaive(toList([1, 2, 3, 4, 5])))); /
 console.log("in-place: ", toArray(reverseList(toList([1, 2, 3, 4, 5]))));      // [5,4,3,2,1]
 `
 
+const heapStarter = `// Kth largest element. JS has NO built-in heap — so here's a minimal one, and when it pays off.
+
+// ---- Brute force: sort descending, take index k-1. O(n log n). ----
+function findKthLargestBrute(nums, k) {
+  return [...nums].sort((a, b) => b - a)[k - 1];
+}
+
+// ---- Optimized: a MIN-heap of size k. Keep only the k largest; its smallest IS the answer. O(n log k). ----
+class MinHeap {
+  constructor() { this.h = []; }
+  size() { return this.h.length; }
+  peek() { return this.h[0]; }
+  push(v) {
+    const h = this.h; h.push(v);
+    let i = h.length - 1;
+    while (i > 0) {                 // sift up
+      const p = (i - 1) >> 1;
+      if (h[p] <= h[i]) break;
+      [h[p], h[i]] = [h[i], h[p]]; i = p;
+    }
+  }
+  pop() {
+    const h = this.h, top = h[0], last = h.pop();
+    if (h.length) {
+      h[0] = last;
+      let i = 0;
+      for (;;) {                    // sift down
+        let s = i, l = 2 * i + 1, r = 2 * i + 2;
+        if (l < h.length && h[l] < h[s]) s = l;
+        if (r < h.length && h[r] < h[s]) s = r;
+        if (s === i) break;
+        [h[s], h[i]] = [h[i], h[s]]; i = s;
+      }
+    }
+    return top;
+  }
+}
+
+function findKthLargest(nums, k) {
+  const heap = new MinHeap();
+  for (const n of nums) {
+    heap.push(n);
+    if (heap.size() > k) heap.pop();   // drop the smallest so only the k largest remain
+  }
+  return heap.peek();
+}
+
+const nums = [3, 2, 1, 5, 6, 4];
+console.log("2nd largest -> brute:", findKthLargestBrute(nums, 2), " heap:", findKthLargest(nums, 2)); // 5
+`
+
+const intervalsStarter = `// Merge overlapping intervals. The move that unlocks the whole category: SORT by start first.
+
+// ---- Brute-force idea: compare every interval against every other and merge — up to O(n^2), fiddly.
+//      (The sorted sweep below is the real answer.) ----
+
+// ---- Optimized: sort by start, then sweep once. Overlaps become adjacent. O(n log n). ----
+function merge(intervals) {
+  const sorted = [...intervals].sort((a, b) => a[0] - b[0]); // copy so we don't mutate the input
+  const out = [];
+  for (const [start, end] of sorted) {
+    const last = out[out.length - 1];
+    if (last && start <= last[1]) {
+      last[1] = Math.max(last[1], end);   // overlap -> extend the previous interval
+    } else {
+      out.push([start, end]);             // no overlap -> start a new one
+    }
+  }
+  return out;
+}
+
+console.log(merge([[1, 3], [2, 6], [8, 10], [15, 18]])); // [[1,6],[8,10],[15,18]]
+console.log(merge([[1, 4], [4, 5]]));                     // [[1,5]] (touching counts as overlap)
+`
+
+const greedyStarter = `// Maximum subarray sum (Kadane's algorithm) — the greedy "extend or restart" move.
+
+// ---- Brute force: try every subarray and sum it. O(n^2). ----
+function maxSubArrayBrute(nums) {
+  let best = -Infinity;
+  for (let i = 0; i < nums.length; i++) {
+    let sum = 0;
+    for (let j = i; j < nums.length; j++) { sum += nums[j]; best = Math.max(best, sum); }
+  }
+  return best;
+}
+
+// ---- Optimized (Kadane): at each element, extend the running sum OR restart from here. O(n). ----
+function maxSubArray(nums) {
+  let best = nums[0], cur = nums[0];
+  for (let i = 1; i < nums.length; i++) {
+    cur = Math.max(nums[i], cur + nums[i]); // the greedy choice: restart vs extend
+    best = Math.max(best, cur);
+  }
+  return best;
+}
+
+const a = [-2, 1, -3, 4, -1, 2, 1, -5, 4];
+console.log("max subarray -> brute:", maxSubArrayBrute(a), " kadane:", maxSubArray(a)); // 6  ([4,-1,2,1])
+`
+
 export const advancedLessons = [
   // adv-algorithms — Snap-curated: JS-centric patterns, DOM-as-a-tree, performance framing.
   {
@@ -518,7 +619,64 @@ export const advancedLessons = [
   },
 
   {
-    id: 'adv-cheatsheet', module: 'adv-algorithms', order: 10, kind: 'concept',
+    id: 'adv-heap', module: 'adv-algorithms', order: 11, kind: 'utility', template: 'vanilla',
+    title: 'Heaps & priority queues', difficulty: 'hard', tags: ['algorithms', 'heap', 'priority-queue', 'data-structures'],
+    summary: 'A structure that always hands you the smallest (or largest) item in O(log n) — the tool for top-K, medians, and scheduling.',
+    prompt: `Implement **\`findKthLargest(nums, k)\`**. **JS has no built-in heap**, so you'll build a minimal **min-heap** and keep only the \`k\` largest elements — its smallest is the answer. Compare it to the brute-force sort.`,
+    keyTerms: [
+      { term: 'Heap / priority queue', def: 'A binary tree (stored in an array) where each parent ≤ (min-heap) or ≥ (max-heap) its children, so peek is O(1) and push/pop are O(log n).' },
+      { term: 'sift up / sift down', def: 'After a push, bubble the new value up to its spot; after a pop, move the last value to the root and sink it down. This keeps the heap ordered.' },
+      { term: 'No built-in heap in JS', def: 'Unlike Java (PriorityQueue) or Python (heapq), JS ships none — you implement one, or fake it with a sorted array for small inputs.' },
+      { term: 'Keep-k trick', def: 'A min-heap of size k gives the kth largest: push all, pop whenever size > k, and the root is the answer. O(n log k).' },
+    ],
+    codeNotes: [
+      { label: 'Array-as-heap index math', code: `parent = (i - 1) >> 1;\nleft   = 2 * i + 1;\nright  = 2 * i + 2;`, note: 'A heap is just an array — no node objects needed.' },
+      { label: 'Keep only the k largest (min-heap)', code: `heap.push(n);\nif (heap.size() > k) heap.pop(); // drop the smallest\n// answer = heap.peek();`, note: 'O(n log k) — beats sorting when k << n or the data streams in.' },
+    ],
+    starterCode: { '/index.js': heapStarter },
+    explanation: `**The journey (run both above):** sorting the whole array to grab one element is **O(n log n)** and needs all the data up front. A **min-heap of size k** processes items one at a time and stays size k, so it's **O(n log k)** — the win when k is small, n is huge, or the data **streams**.
+
+**Your Heap set:** find median from data stream (two heaps — a max-heap + min-heap balanced around the middle) · campus bikes — plus the canonical crew: **kth largest** (this) · **top-K frequent** (map + heap) · **merge K sorted lists** · **task scheduler**. The tell for a heap: "top/smallest/largest **K**" or "**streaming** median".`,
+  },
+  {
+    id: 'adv-intervals', module: 'adv-algorithms', order: 12, kind: 'utility', template: 'vanilla',
+    title: 'Intervals', difficulty: 'medium', tags: ['algorithms', 'intervals', 'sorting'],
+    summary: 'Overlapping ranges become easy the moment you sort by start — then sweep once.',
+    prompt: `Implement **\`merge(intervals)\`** (LeetCode 56): combine all overlapping intervals. Sort by start, then sweep — if the next interval starts at or before the current end, extend; otherwise begin a new one.`,
+    keyTerms: [
+      { term: 'Overlap condition', def: 'Two intervals [a,b] and [c,d] overlap iff c <= b (once sorted by start). Touching ends (b == c) usually counts as overlap.' },
+      { term: 'Sort-by-start', def: 'The category-defining move — after sorting on the start value, all overlaps are adjacent, so one linear pass merges them.' },
+      { term: 'Sweep line', def: 'Process endpoints in order, tracking active intervals — the general tool behind meeting-rooms and calendar problems.' },
+    ],
+    codeNotes: [
+      { label: 'Sort by start (copy first)', code: `const sorted = [...intervals].sort((a, b) => a[0] - b[0]);`, note: 'Spread-copy so you do not mutate the input array.' },
+      { label: 'Extend or push', code: `const last = out[out.length - 1];\nif (last && start <= last[1]) last[1] = Math.max(last[1], end);\nelse out.push([start, end]);`, note: 'start <= last[1] is the overlap test.' },
+    ],
+    starterCode: { '/index.js': intervalsStarter },
+    explanation: `**The journey (run both above):** comparing every interval to every other to find overlaps is **O(n²)** and awkward. **Sort by start first** and overlaps line up next to each other, so a single sweep merges them — **O(n log n)**, dominated by the sort.
+
+**Your Intervals set (5):** insert interval · **merge intervals** (this) · non-overlapping intervals (min removals) · meeting rooms (can you attend all?) · meeting rooms II (how many rooms — a min-heap of end times). Almost all start with **sort by start** (or by end, for the greedy ones).`,
+  },
+  {
+    id: 'adv-greedy', module: 'adv-algorithms', order: 13, kind: 'utility', template: 'vanilla',
+    title: 'Greedy (Kadane & friends)', difficulty: 'medium', tags: ['algorithms', 'greedy'],
+    summary: 'Take the best local choice and never look back — when the problem guarantees it works.',
+    prompt: `Implement **\`maxSubArray(nums)\`** (LeetCode 53) with **Kadane's algorithm**: walk once, and at each element choose to **extend** the running sum or **restart** from here. Compare it to the O(n²) brute force.`,
+    keyTerms: [
+      { term: 'Greedy', def: 'Make the locally optimal choice at each step and never reconsider. Fast and simple — but only correct when the problem has the greedy-choice property.' },
+      { term: "Kadane's algorithm", def: 'For max subarray: keep a running sum; if it goes negative it can only hurt, so restart. Track the best seen. O(n), O(1) space.' },
+      { term: 'When greedy fails', def: 'If a locally best choice can block a better global outcome (e.g. 0/1 knapsack), greedy is wrong — you need DP instead.' },
+    ],
+    codeNotes: [
+      { label: 'Kadane — extend or restart', code: `cur = Math.max(nums[i], cur + nums[i]);\nbest = Math.max(best, cur);`, note: 'If cur + nums[i] < nums[i], the past was dragging you down — restart.' },
+    ],
+    starterCode: { '/index.js': greedyStarter },
+    explanation: `**The journey (run both above):** summing **every** subarray is **O(n²)**. Kadane's insight is greedy: a running sum that has gone **negative can only hurt** what comes next, so drop it and restart — one pass, **O(n)**.
+
+**Your Greedy set (5):** **maximum subarray** (this) · jump game (can you reach the end?) · jump game II (fewest jumps) · gas station · hand of straights. The hard part of greedy isn't the code — it's **arguing the local choice is safe**. If it isn't, reach for DP.`,
+  },
+  {
+    id: 'adv-cheatsheet', module: 'adv-algorithms', order: 99, kind: 'concept',
     title: 'Cheat sheet — patterns & JS idioms', difficulty: 'easy', tags: ['algorithms', 'cheatsheet', 'reference', 'javascript'],
     summary: 'One-page recap: which pattern to reach for, plus the JavaScript one-liners you actually code them with.',
     prompt: `A quick-reference recap of everything in this module — the **pattern table** (how to recognize which tool to grab), and the **JS idioms** you reach for while coding (see the "Code to reach for" panel). A TypeScript quick-ref is seeded at the bottom for when that module lands.`,
@@ -549,6 +707,9 @@ export const advancedLessons = [
 | Linked list | reverse/reorder/cycle/middle in place | dummy head; fast & slow pointers | O(n) |
 | Recursion / backtracking | permutations, subsets, tree walks | base case + smaller subproblem | varies |
 | Trees / graphs | hierarchy, grid, connectivity | BFS = queue, DFS = stack/recursion | O(V+E) |
+| Heap / priority queue | top/smallest K, streaming median | keep-k min-heap | O(n log k) |
+| Intervals | overlapping ranges, meeting rooms | sort by start, then sweep | O(n log n) |
+| Greedy | max subarray, jumps, scheduling | best local choice (when provably safe) | O(n) |
 
 ## How to pick, in 15 seconds
 1. **Is the input sorted?** → binary search or two pointers.

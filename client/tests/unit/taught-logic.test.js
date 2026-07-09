@@ -321,3 +321,42 @@ describe('linked list (adv-linked-list)', () => {
     }
   })
 })
+
+describe('heap / priority queue (adv-heap)', () => {
+  it('findKthLargest returns the kth largest, agreeing with the sort', () => {
+    const { findKthLargest, findKthLargestBrute } = extract('adv-heap', ['findKthLargest', 'findKthLargestBrute'])
+    expect(findKthLargest([3, 2, 1, 5, 6, 4], 2)).toBe(5)
+    expect(findKthLargest([3, 2, 3, 1, 2, 4, 5, 5, 6], 4)).toBe(4)
+    for (const [nums, k] of [[[3, 2, 1, 5, 6, 4], 2], [[7, 7, 7], 1], [[1, 2], 2]]) {
+      expect(findKthLargest(nums, k)).toBe(findKthLargestBrute(nums, k))
+    }
+  })
+})
+
+describe('intervals (adv-intervals)', () => {
+  it('merge combines overlapping intervals (touching counts)', () => {
+    const { merge } = extract('adv-intervals', ['merge'])
+    expect(merge([[1, 3], [2, 6], [8, 10], [15, 18]])).toEqual([[1, 6], [8, 10], [15, 18]])
+    expect(merge([[1, 4], [4, 5]])).toEqual([[1, 5]])
+    expect(merge([[1, 4], [2, 3]])).toEqual([[1, 4]]) // fully contained
+  })
+
+  it('does not mutate the input', () => {
+    const { merge } = extract('adv-intervals', ['merge'])
+    const input = [[1, 3], [2, 6]]
+    merge(input)
+    expect(input).toEqual([[1, 3], [2, 6]])
+  })
+})
+
+describe('greedy — Kadane (adv-greedy)', () => {
+  it('maxSubArray finds the max subarray sum, agreeing with brute force', () => {
+    const { maxSubArray, maxSubArrayBrute } = extract('adv-greedy', ['maxSubArray', 'maxSubArrayBrute'])
+    expect(maxSubArray([-2, 1, -3, 4, -1, 2, 1, -5, 4])).toBe(6)
+    expect(maxSubArray([1])).toBe(1)
+    expect(maxSubArray([5, 4, -1, 7, 8])).toBe(23)
+    for (const a of [[-2, 1, -3, 4, -1, 2, 1, -5, 4], [-1, -2, -3], [5, 4, -1, 7, 8]]) {
+      expect(maxSubArray(a)).toBe(maxSubArrayBrute(a))
+    }
+  })
+})
