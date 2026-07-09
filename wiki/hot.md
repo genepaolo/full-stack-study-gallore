@@ -23,9 +23,10 @@ module + Snap-target curation, and a wiki lint pass. First content batch pushed 
   FE perf/rendering → AI-code-auditing → OOP+FP → TypeScript → React depth.
 
 ## Active Threads
+- **Pushed to `main`**: NeetCode batch (4 lessons, web-verified + simplified) at c520e25; base module at c4212dc.
 - **Next algo batches** (from the doc): heap/priority-queue + intervals, then greedy + graphs (grid),
   then tries + bit-manipulation. See [[algo-source-neetcode]].
-- **Uncommitted**: the NeetCode batch (4 lessons + wiki) is committed-pending this turn — push after review.
+- **Practice**: verify each solution/complexity vs public LeetCode before it ships; keep explanations simple.
 - **Also queued**: FE performance module, AI-code-auditing (the target-weighted P1). [[target-role-profile]].
 - **Gaps for the target**: TypeScript, GraphQL, Canvas/WebGL/Service Workers, Redis/caching.
 - **Chrome DevTools MCP not connected** + design skills uninstalled → no in-browser screenshot pass.
