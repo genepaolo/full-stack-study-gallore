@@ -31,6 +31,7 @@ and mark it complete. Track progress over time.
 - [[server]] — REST API + Mongoose models with a graceful no-DB fallback.
 - [[showcase-framework]] — the `LiveCode` + `LessonView` pattern every lesson flows through.
 - [[curriculum]] — Tracks → Modules → Lessons, as plain objects; auto-built glossary.
+- [[progress-model]] — offline, local-only progress tracking (localStorage single source of truth).
 
 ## Curriculum (learning path)
 
@@ -47,5 +48,5 @@ a searchable **Glossary**.
 
 ## Key decisions
 
-See [[decisions]] — Sandpack (lazy) for live code, Atlas for DB, key-remount reset, offline-first
-progress, curriculum model, and section-level `ErrorBoundary` isolation.
+See [[decisions]] — Sandpack (lazy) for live code, Atlas for DB, key-remount reset, offline
+local-only [[progress-model|progress]], curriculum model, and section-level `ErrorBoundary` isolation.

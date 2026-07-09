@@ -1,10 +1,32 @@
 ---
 type: meta
 title: "Operation Log"
-updated: 2026-07-07
+status: active
+created: 2026-07-07
+updated: 2026-07-09
+tags: [meta, log]
 ---
 
 # Log (newest on top)
+
+## 2026-07-09 — Algorithms & DS module + curriculum curated to a target role
+- Built the **`adv-algorithms`** module (Advanced, level 4), 5 lessons Snap-curated: Big-O & the cost
+  of JS (concept), two-pointers, recursion/backtracking, trees & DOM traversal (BFS/DFS), hash maps & sets.
+- 4 utility lessons are taught-logic-tested (twoSumSorted/isPalindrome, permutations, dfs/bfs, twoSum/frequency).
+  Tests **82 → 94**; build clean. Lessons **42 → 47**.
+- Curated the curriculum toward a **front-end-leaning full-stack target** (Snap JD exemplar): new
+  [[target-role-profile]] with JD→coverage map + re-prioritized P1 (FE perf/rendering → AI-code-auditing
+  → OOP+FP → TypeScript → React depth). Lesson framing threads perf / DOM-as-tree / AI-audit.
+
+## 2026-07-09 — Wiki health check + vault growth (lint)
+- Ran wiki-lint (filesystem floor). Report: `meta/lint-report-2026-07-09.md`.
+- Fixed the systematic dead-link epidemic: renamed `decisions/adr-index.md` → `decisions.md`, so all
+  ~25 `[[decisions]]` links resolve (and the orphan-by-naming is gone).
+- Repointed 3 dead `[[content-registry]]` links → [[curriculum]]; annotated ADR #5 as superseded by #6.
+- Refreshed stale [[client]] (Track/Module/Lesson pages, `curriculum.js`+`lessons/`, offline-local
+  progress). Filled frontmatter gaps on `hot.md` and `log.md`.
+- Grew the vault: new [[progress-model]] page (consolidates localStorage `gallore:progress:v2` /
+  modules-vs-lessons / cross-tab sync / Reset), wired into index, overview, client, decisions.
 
 ## 2026-07-07 save | Expansion, tooling, tests, CI & security
 - Type: session

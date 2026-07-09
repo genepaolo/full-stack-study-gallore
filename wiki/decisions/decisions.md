@@ -31,7 +31,9 @@ reachable. If `MONGO_URI` is unset or the API is down, the app still works and t
 
 ## 5. Content as plain objects
 A challenge is one object appended to a per-category file in `client/src/data/challenges/`.
-Adding content requires no wiring — the registry aggregates automatically. → [[content-registry]]
+Adding content requires no wiring — the registry aggregates automatically.
+_Superseded by #6:_ content is now a lesson object appended to `data/lessons/<track>.js`,
+aggregated by `data/lessons/index.js`. The plain-object / zero-wiring principle carries over. → [[curriculum]]
 
 ## 6. Curriculum model (Tracks → Modules → Lessons)
 Replaced flat categories with an ordered curriculum in `data/curriculum.js`. Modules carry a
@@ -73,7 +75,7 @@ boot. To enable: connect the chrome-devtools MCP server (`claude mcp add …` / 
 screenshot-driven polish pass can follow. The design skills (ui-ux-pro-max, frontend-design) are
 also still uninstalled — visual choices were made by hand.
 
-## 13. Progress is offline, local-only, module-first (supersedes #4)
+## 13. Progress is offline, local-only, module-first (supersedes #4) — see [[progress-model]]
 Progress moved to **localStorage as the single source of truth** (`ProgressContext`, key
 `gallore:progress:v2`) — no server round-trip. Reason: the tool is offline/unpublished and the
 server "opens and closes"; the old on-mount server read could clobber local progress with an

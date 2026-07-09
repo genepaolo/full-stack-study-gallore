@@ -47,6 +47,7 @@ export const MODULES = [
   { slug: 'fs-data', track: 'fullstack', title: 'Data Fetching & State', level: 4, blurb: 'Loading/error states, caching, and optimistic UI.' },
   { slug: 'fs-deploy', track: 'fullstack', title: 'Deployment & DevOps', level: 5, blurb: 'Environments, secrets, and shipping a MERN app.' },
   // Advanced
+  { slug: 'adv-algorithms', track: 'advanced', title: 'Algorithms & Data Structures', level: 4, blurb: 'Big-O, the DOM as a tree, and the coding-round patterns — tuned for front-end performance.' },
   { slug: 'adv-projects', track: 'advanced', title: 'Projects: Snake Game', level: 5, blurb: 'A full interactive game with the game loop and canvas.' },
   { slug: 'adv-sysdesign', track: 'advanced', title: 'System Design', level: 6, blurb: 'Frameworks for designing frontends and scaling backends.' },
   { slug: 'adv-ai', track: 'advanced', title: 'AI in the Dev Workflow', level: 6, blurb: 'Use AI to code, review, and learn faster — and its limits.' },

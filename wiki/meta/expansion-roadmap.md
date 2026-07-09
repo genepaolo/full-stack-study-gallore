@@ -71,6 +71,12 @@ matter (DOM is a tree); behavioral is a real round.
 - ui +5: Todo List, Star Rating, Signup Form, Image Carousel, Stopwatch.
 - Lessons 32 → **42**. Next up: P1 (Algorithms & DS module, AI-interview expansion, Behavioral).
 
+### P1 — Algorithms & DS DONE (2026-07-09)
+- New module `adv-algorithms` (Advanced, level 4): Big-O, two-pointers, recursion, trees/DOM BFS-DFS,
+  hash maps. 5 lessons, Snap-curated framing; 4 utility lessons taught-logic-tested. Lessons **42 → 47**.
+- **Curation re-prioritized** toward a front-end-leaning full-stack target — see [[target-role-profile]].
+  New P1 order: FE performance/rendering → AI-code-auditing → OOP+FP → TypeScript → React depth.
+
 ## System design
 Detailed sub-plan (backend from [system-design-primer], frontend from GreatFrontend) lives in
 [[system-design-plan]]. Sequenced P2 — plan captured, build after P0/P1.

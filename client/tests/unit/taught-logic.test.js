@@ -185,3 +185,65 @@ describe('CRUD handlers (be-crud)', () => {
     expect(api.get(created.body.id).status).toBe(404)
   })
 })
+
+describe('two pointers (adv-two-pointers)', () => {
+  it('twoSumSorted finds the index pair in a sorted array', () => {
+    const { twoSumSorted } = extract('adv-two-pointers', ['twoSumSorted'])
+    expect(twoSumSorted([1, 3, 4, 5, 7, 11], 9)).toEqual([2, 3])
+    expect(twoSumSorted([2, 7, 11, 15], 9)).toEqual([0, 1])
+    expect(twoSumSorted([1, 2, 3], 100)).toBeNull()
+  })
+
+  it('isPalindrome ignores case and punctuation', () => {
+    const { isPalindrome } = extract('adv-two-pointers', ['isPalindrome'])
+    expect(isPalindrome('A man, a plan, a canal: Panama')).toBe(true)
+    expect(isPalindrome('racecar')).toBe(true)
+    expect(isPalindrome('hello')).toBe(false)
+  })
+})
+
+describe('recursion (adv-recursion)', () => {
+  it('permutations returns every ordering', () => {
+    const { permutations } = extract('adv-recursion', ['permutations'])
+    const out = permutations([1, 2, 3])
+    expect(out).toHaveLength(6)
+    expect(out).toContainEqual([1, 2, 3])
+    expect(out).toContainEqual([3, 2, 1])
+    expect(new Set(out.map((p) => p.join(''))).size).toBe(6) // all distinct
+  })
+
+  it('handles the base cases', () => {
+    const { permutations } = extract('adv-recursion', ['permutations'])
+    expect(permutations([])).toEqual([[]])
+    expect(permutations([7])).toEqual([[7]])
+  })
+})
+
+describe('trees & DOM traversal (adv-trees-dom)', () => {
+  it('dfs visits depth-first (pre-order)', () => {
+    const { dfs, tree } = extract('adv-trees-dom', ['dfs', 'tree'])
+    expect(dfs(tree)).toEqual(['html', 'head', 'title', 'body', 'nav', 'main', 'h1', 'p'])
+  })
+
+  it('bfs visits level by level', () => {
+    const { bfs, tree } = extract('adv-trees-dom', ['bfs', 'tree'])
+    expect(bfs(tree)).toEqual(['html', 'head', 'body', 'title', 'nav', 'main', 'h1', 'p'])
+  })
+})
+
+describe('hash maps & sets (adv-hashmaps)', () => {
+  it('twoSum finds the pair in one pass (unsorted)', () => {
+    const { twoSum } = extract('adv-hashmaps', ['twoSum'])
+    expect(twoSum([2, 7, 11, 15], 9)).toEqual([0, 1])
+    expect(twoSum([3, 2, 4], 6)).toEqual([1, 2])
+    expect(twoSum([1, 2, 3], 100)).toBeNull()
+  })
+
+  it('frequency counts occurrences', () => {
+    const { frequency } = extract('adv-hashmaps', ['frequency'])
+    const counts = frequency(['tap', 'swipe', 'tap'])
+    expect(counts.get('tap')).toBe(2)
+    expect(counts.get('swipe')).toBe(1)
+    expect(counts.size).toBe(2)
+  })
+})

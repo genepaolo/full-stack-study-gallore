@@ -13,13 +13,13 @@ React 18 + Vite + Tailwind frontend. Entry `client/src/main.jsx` wraps the app i
 `ThemeProvider` → `ProgressProvider` → `BrowserRouter`.
 
 ## Layout
-- `components/layout/` — `AppShell`, `Sidebar` (category nav + counts), `TopBar` (sync indicator, theme), `ThemeToggle`.
+- `components/layout/` — `AppShell`, `Sidebar` (Track → Module nav + progress counts), `TopBar` ("Saved on device", theme), `ThemeToggle`.
 - `components/showcase/` — see [[showcase-framework]].
 - `components/ui/primitives.jsx` — `Card`, `Button`, `Badge`, `DifficultyBadge`.
-- `context/` — `ThemeContext` (light/dark via `data-theme`), `ProgressContext` (offline-first).
-- `pages/` — Home, Category, Challenge, Progress.
-- `data/` — `categories.js` + `challenges/` (see [[content-registry]]).
-- `lib/api.js` — fetch wrapper; per-browser `x-user-id`; relative `/api` proxied to :5000.
+- `context/` — `ThemeContext` (light/dark via `data-theme`), `ProgressContext` (offline, local-only — see [[progress-model]]).
+- `pages/` — Home, Track, Module, Lesson, Glossary, Progress.
+- `data/` — `curriculum.js` + `lessons/` + `glossary.js` (see [[curriculum]]).
+- `lib/api.js` — fetch wrapper; per-browser `x-user-id`; relative `/api` proxied to :5000 (optional backend).
 
 ## Design tokens
 CSS variables (RGB triplets) in `src/index.css`, consumed by Tailwind semantic colors
@@ -33,5 +33,6 @@ CSS variables (RGB triplets) in `src/index.css`, consumed by Tailwind semantic c
 - All motion is reduced-motion-safe and content stays visible if JS fails. → [[decisions]] #11.
 
 ## Notes
-- Progress is optimistic + cached in `localStorage`; server is source of truth when reachable.
-- Related: [[server]], [[decisions]].
+- Progress is **offline, local-only** — `localStorage` (`gallore:progress:v2`) is the single source of
+  truth; the client never round-trips to the server for progress. Full model: [[progress-model]].
+- Related: [[server]], [[curriculum]], [[progress-model]], [[decisions]].

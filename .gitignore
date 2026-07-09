@@ -32,3 +32,6 @@ Thumbs.db
 # obsidian vault runtime
 wiki/.obsidian/workspace*.json
 wiki/.trash/
+
+# input drop folder (personal source docs — analyzed, never committed)
+dropoff/

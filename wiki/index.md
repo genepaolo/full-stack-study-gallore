@@ -22,6 +22,7 @@ tags: [index]
 - [[server]] — Express/Mongoose API
 - [[showcase-framework]] — LiveCode + LessonView pattern (+ KeyTerms, ErrorBoundary)
 - [[curriculum]] — Tracks → Modules → Lessons + glossary; how to add a lesson
+- [[progress-model]] — offline, local-only progress (localStorage `gallore:progress:v2`)
 - [[testing]] — Vitest suite (`npm test`); correctness guardrails
 
 ## Reference
@@ -29,6 +30,7 @@ tags: [index]
 - [[content-sources]] — source of truth for lesson content (Frontend Interview Handbook)
 
 ## Planning
+- [[target-role-profile]] — curation target (Snap-style Full Stack Eng); JD→coverage map + re-prioritized roadmap
 - [[expansion-roadmap]] — GreatFrontend gap analysis + prioritized expansion (P0: UI + JS utils)
 - [[system-design-plan]] — system-design sub-curriculum (system-design-primer + GreatFrontend)
 
