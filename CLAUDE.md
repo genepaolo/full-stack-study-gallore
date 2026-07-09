@@ -63,7 +63,8 @@ prev/next, and glossary automatically.
 
 ```js
 { id, module, order, kind, template, title, difficulty, summary,
-  prompt, keyTerms: [{ term, def }], starterCode, solutionCode, explanation, tags }
+  prompt, keyTerms: [{ term, def }], codeNotes: [{ label, code, note }],
+  starterCode, solutionCode, explanation, tags }
 ```
 
 - `kind`: `component|utility|project` → live editor · `quiz` → reveal card · `concept` → open

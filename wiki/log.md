@@ -9,6 +9,16 @@ tags: [meta, log]
 
 # Log (newest on top)
 
+## 2026-07-09 — codeNotes ("Code to reach for") + Algorithms cheat sheet
+- New first-class lesson field **`codeNotes: [{label, code, note}]`** + `<CodeNotes>` callout (mirrors
+  keyTerms→glossary pattern; read-only snippets, never executed). Wired into `LessonView`; integrity-tested.
+- Seeded idioms across the 9 pattern lessons: palindrome regex, Map/Set, two-pointer/window/stack/binary
+  templates, BFS queue, 2D grids, spread-copy, list node/dummy-head, map/forEach/reduce + array-op costs.
+- New **`adv-cheatsheet`** concept lesson: pattern-recognition table + JS idiom panel (sort, shallow/deep
+  copy, 2D arrays, classes, regex, Map/Set) + a **TypeScript quick-ref seed**. adv-algorithms now 10 lessons.
+- Enabled **remark-gfm** so markdown tables render (also fixes the Big-O cost table). No raw-HTML → security
+  posture unchanged. Tests 106 → **107**; build clean; `npm ci` lockfile in sync.
+
 ## 2026-07-09 — Security hardening + DESIGN.md
 - **Live-editor hardening:** `LiveCode` now carries its OWN `ErrorBoundary` (defense-in-depth, keyed to
   Reset). Rewrote `SECURITY.md` with a per-threat table + honest infinite-loop nuance (isolated +

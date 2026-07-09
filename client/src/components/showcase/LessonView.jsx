@@ -7,6 +7,7 @@ import QuizCard from './QuizCard.jsx'
 import Collapsible from './Collapsible.jsx'
 import Markdown from './Markdown.jsx'
 import KeyTerms from './KeyTerms.jsx'
+import CodeNotes from './CodeNotes.jsx'
 import ErrorBoundary from './ErrorBoundary.jsx'
 
 // One path every lesson flows through, adapting to its `kind`. Interactive areas are wrapped in an
@@ -56,6 +57,9 @@ export default function LessonView({ lesson }) {
 
       {/* Key terms (lingo) */}
       <KeyTerms terms={lesson.keyTerms} />
+
+      {/* Code to reach for — concrete idioms/lines this lesson leans on */}
+      <CodeNotes notes={lesson.codeNotes} />
 
       {/* Interactive area — isolated */}
       {lesson.kind === 'quiz' ? (

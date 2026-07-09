@@ -144,8 +144,8 @@ full-stack-gallore/
 **Lesson schema:**
 ```js
 { id, module, order, kind, template?, title, difficulty, summary, prompt,
-  keyTerms: [{ term, def }], starterCode?, solutionCode?, explanation, tags,
-  readOnly?, lockedFiles? }
+  keyTerms: [{ term, def }], codeNotes?: [{ label, code, note? }],
+  starterCode?, solutionCode?, explanation, tags, readOnly?, lockedFiles? }
 ```
 - `kind`: `component|utility|project` → live editor · `quiz` → reveal card · `concept` → reading (+ optional snippet).
 - `template`: `react|vanilla|static` (backend interactive lessons use `vanilla` in-browser).
@@ -165,8 +165,10 @@ auth) · Full-Stack (connect, data, deploy) · Advanced (**algorithms**, project
   roadmap/module pages stay fast. Supports `readOnly` and `lockedFiles` (lock scaffolding, edit the rest).
   **Reset** bumps a React `key` to remount the provider and restore starter code. Carries its **own**
   `ErrorBoundary` (defense-in-depth, keyed to Reset).
-- **Supporting:** `KeyTerms` (the "lingo" callout), `QuizCard` (reveal), `Markdown` (react-markdown, no
-  raw HTML), `Collapsible`, `LessonCard`.
+- **Supporting:** `KeyTerms` (the "lingo" callout), `CodeNotes` (the "🧩 Code to reach for" callout —
+  read-only language idioms per lesson, aggregated conceptually by the Algorithms & DS cheat-sheet lesson),
+  `QuizCard` (reveal), `Markdown` (react-markdown + **remark-gfm** for tables, **no raw HTML**),
+  `Collapsible`, `LessonCard`.
 
 ---
 

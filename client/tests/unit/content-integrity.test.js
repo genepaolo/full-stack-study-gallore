@@ -93,6 +93,16 @@ describe('lessons', () => {
     }
   })
 
+  it('codeNotes entries are { label, code } with content', () => {
+    for (const l of allLessons) {
+      for (const cn of l.codeNotes || []) {
+        expect(cn.label, `${l.id} codeNote label`).toBeTruthy()
+        expect(typeof cn.code, `${l.id} codeNote "${cn.label}" code`).toBe('string')
+        expect(cn.code.length, `${l.id} codeNote "${cn.label}" code non-empty`).toBeGreaterThan(0)
+      }
+    }
+  })
+
   it('editor restrictions are well-formed (readOnly boolean; lockedFiles reference real files)', () => {
     for (const l of allLessons) {
       if (l.readOnly !== undefined) expect(typeof l.readOnly, `${l.id} readOnly`).toBe('boolean')

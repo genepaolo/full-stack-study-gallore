@@ -344,6 +344,10 @@ export const advancedLessons = [
       { term: 'Amortized O(1)', def: 'Average cost per operation over many operations, even if one occasionally costs more — e.g. Array.push, which is O(1) amortized.' },
       { term: 'Constant factors', def: 'Big-O hides them, but in a per-frame render loop they still matter — O(n) with a huge constant can miss the 16ms frame budget.' },
     ],
+    codeNotes: [
+      { label: 'Iterate: map / forEach / filter / reduce', code: `arr.map(x => x * 2);           // -> NEW array\narr.forEach(x => log(x));      // side effects, returns nothing\narr.filter(x => x > 0);        // -> subset\narr.reduce((a, x) => a + x, 0); // -> single value`, note: 'All O(n). map/filter allocate a new array; forEach does not.' },
+      { label: 'Cheap vs costly array ops', code: `arr.push(x); arr.pop();        // O(1)\narr.unshift(x); arr.shift();   // O(n) — reindexes every element!\narr.includes(x); arr.indexOf(x); // O(n)`, note: 'A .includes() inside a loop is the hidden O(n^2).' },
+    ],
     explanation: `**Common shapes (fastest → slowest):** O(1) hash lookup · O(log n) binary search · O(n) single pass · O(n log n) a good sort · O(n²) nested loops · O(2ⁿ) naive recursion.
 
 **Costs of everyday JS operations — worth memorizing:**
@@ -369,6 +373,10 @@ export const advancedLessons = [
       { term: 'Sorted-input leverage', def: 'When the array is sorted, comparing the pair sum to the target tells you which pointer to move — no need to try every pair.' },
       { term: 'In-place / O(1) space', def: 'Two pointers usually mutate/scan the existing array without allocating a copy.' },
     ],
+    codeNotes: [
+      { label: 'Normalize a string (strip non-alphanumerics, lowercase)', code: `s = s.toLowerCase().replace(/[^a-z0-9]/g, "");`, note: 'The classic first line of Valid Palindrome. replaceAll(/.../g, "") does the same.' },
+      { label: 'Two-pointer scan from both ends', code: `let lo = 0, hi = arr.length - 1;\nwhile (lo < hi) {\n  // compare arr[lo] / arr[hi], then move one inward\n  lo++; // or hi--;\n}`, note: 'O(n) time, O(1) space. Move the pointer that improves the condition.' },
+    ],
     starterCode: { '/index.js': twoPointersStarter },
     explanation: `The insight: a **brute force** two-sum tries every pair — O(n²). If the array is **sorted**, the sum of the current ends tells you everything: too small → move \`lo\` up; too big → move \`hi\` down. One pass, O(n). Palindrome check is the same idea from both ends. Follow-ups interviewers love: **container with most water**, **3-sum** (sort, then two-pointer inside a loop), and **remove duplicates in place**.`,
   },
@@ -382,6 +390,10 @@ export const advancedLessons = [
       { term: 'Recursive case', def: 'Reduce the problem to a smaller one and call yourself: permute the remaining elements.' },
       { term: 'Backtracking', def: 'Choose an option, recurse, then undo the choice and try the next — how you explore all permutations/combinations.' },
       { term: 'Call stack', def: 'Each recursive call adds a frame; too deep (no base case, or huge n) throws "Maximum call stack size exceeded".' },
+    ],
+    codeNotes: [
+      { label: 'Base case first, always', code: `if (arr.length <= 1) return [arr.slice()]; // stops the recursion`, note: 'No base case → "Maximum call stack size exceeded".' },
+      { label: 'Copy an array without index i', code: `const rest = [...arr.slice(0, i), ...arr.slice(i + 1)];`, note: 'Spread + slice = immutable "everything except i".' },
     ],
     starterCode: { '/index.js': recursionStarter },
     explanation: `Every recursion needs a **base case** (or it never stops) and a step that shrinks the input toward it. Permutations is the canonical **backtracking** shape: fix one element, solve the smaller problem, repeat for each choice. The same structure walks a **tree** or a nested JSON blob. Cost here is O(n·n!) — permutations are inherently explosive, a good prompt for "why is this slow?". Follow-ups: **subsets/powerset**, **combinations**, and converting deep recursion to an **explicit stack** to dodge call-stack limits.`,
@@ -397,6 +409,11 @@ export const advancedLessons = [
       { term: 'Queue vs stack', def: 'BFS uses a queue (shift/push); DFS uses a stack (or recursion). Swapping the data structure flips the traversal.' },
       { term: 'The DOM is a tree', def: 'Elements nest into a tree; querySelectorAll, event bubbling, and React reconciliation all traverse it. Same for a Canvas/WebGL scene graph.' },
     ],
+    codeNotes: [
+      { label: 'BFS with a queue', code: `const queue = [root];\nwhile (queue.length) {\n  const node = queue.shift();               // dequeue front\n  for (const c of node.children) queue.push(c); // enqueue kids\n}`, note: 'Swap shift() for pop() and it becomes DFS.' },
+      { label: 'DFS with recursion', code: `function dfs(node, out = []) {\n  out.push(node.value);\n  for (const c of node.children) dfs(c, out);\n  return out;\n}`, note: 'The call stack IS your stack.' },
+      { label: 'Make a 2D grid (graph / DP problems)', code: `const grid = Array.from({ length: rows }, () => Array(cols).fill(0));\ngrid[r][c] = 1;`, note: 'Never Array(rows).fill(Array(cols)) — every row would share ONE reference.' },
+    ],
     starterCode: { '/index.js': treesDomStarter },
     explanation: `A **tree** is nodes with children and no cycles — the DOM, a file system, a JSON document, a game scene graph. **DFS** dives deep (recursion is easiest; each frame is a node); **BFS** fans out level by level with a **queue**. Choose BFS when the answer is likely shallow (shortest path / nearest ancestor), DFS to fully explore a branch. Real front-end parallels: event **bubbling** walks ancestors, \`querySelectorAll\` traverses descendants, and React's reconciler diffs the tree. Follow-ups: **max depth**, **level-order grouping**, **lowest common ancestor**, and **serialize/deserialize** a tree.`,
   },
@@ -410,6 +427,11 @@ export const advancedLessons = [
       { term: 'Set', def: 'A collection of unique values with O(1) has/add — ideal for dedup and "seen?" checks.' },
       { term: 'Map vs plain object', def: 'Map keeps any key type and insertion order and has .size; objects only take string/symbol keys. Prefer Map for dynamic dictionaries.' },
       { term: 'Complement trick', def: 'For two-sum, store each value and look up target − current in O(1) — one pass instead of checking every pair.' },
+    ],
+    codeNotes: [
+      { label: 'Map & Set essentials', code: `const m = new Map();\nm.set(k, v); m.get(k); m.has(k); m.size;\nconst s = new Set(arr);   // dedup in one line\ns.has(x); s.add(x);`, note: 'Prefer Map/Set over {}/[] for O(1) lookups and any key type.' },
+      { label: 'Spread a Map/Set back to an array', code: `[...m];         // [[k, v], ...]\n[...m.keys()];  [...m.values()];\n[...s];         // unique values`, note: 'Handy for returning results.' },
+      { label: 'Frequency counter', code: `const count = new Map();\nfor (const x of arr) count.set(x, (count.get(x) || 0) + 1);`, note: 'The core of group-by / top-K / anagrams.' },
     ],
     starterCode: { '/index.js': hashMapsStarter },
     explanation: `Hash maps are the single highest-leverage tool in a coding round: any time you catch yourself scanning a list **inside** another loop, a \`Map\`/\`Set\` usually removes the inner scan and drops O(n²) → O(n). Two-sum is the archetype — remember the **complement** (\`target − current\`) as you go. Counting/grouping with a \`Map\` is exactly what "log and analyze engagement metrics" looks like in practice. Follow-ups: **group anagrams**, **first unique character**, **top-K frequent** (map + heap), and **LRU cache** (Map preserves insertion order).`,
@@ -425,6 +447,10 @@ export const advancedLessons = [
       { term: 'Amortized O(n)', def: 'left and right each only move forward across the whole input, so every element is visited at most twice — O(n), not O(n²).' },
       { term: 'Window state', def: 'A Map/Set/counter tracking what is inside the window (here, each char\'s last index) so you can shrink correctly.' },
     ],
+    codeNotes: [
+      { label: 'Current window size', code: `const size = right - left + 1;`, note: 'Off-by-one lives here — the window is inclusive [left..right].' },
+      { label: 'Track window contents with a Map', code: `const seen = new Map();               // char -> last index\nseen.set(c, right);\nif (seen.has(c) && seen.get(c) >= left) left = seen.get(c) + 1;`, note: 'Jump left past a duplicate instead of stepping one at a time.' },
+    ],
     starterCode: { '/index.js': slidingWindowStarter },
     explanation: `**The journey (run both above):** brute force fixes each start and re-scans forward — the same characters get re-checked from every start, so **O(n²)**. The window *reuses* that work: on a repeat you don't restart, you slide \`left\` just past the earlier copy. Each index is visited at most twice → **O(n)**.
 
@@ -439,6 +465,10 @@ export const advancedLessons = [
       { term: 'Stack (LIFO)', def: 'Last-in, first-out. push() adds to the top, pop() removes the top. A plain JS array is a stack.' },
       { term: 'Why a stack here', def: 'Nesting is inherently last-opened-first-closed: "([)]" is invalid precisely because a stack would mismatch. Ordering rules out a naive count.' },
       { term: 'Monotonic stack', def: 'A stack kept sorted (increasing/decreasing) as you push — the trick behind "next greater element" and daily-temperatures.' },
+    ],
+    codeNotes: [
+      { label: 'A JS array IS a stack', code: `const stack = [];\nstack.push(x);            // add to top\nstack.pop();              // remove + return top\nstack[stack.length - 1];  // peek`, note: 'No special class needed.' },
+      { label: 'Object as a fixed lookup map', code: `const pairFor = { ")": "(", "]": "[", "}": "{" };\nif (ch in pairFor) { /* ch is a closer */ }`, note: 'The `in` operator tests keys — O(1) membership on a small fixed set.' },
     ],
     starterCode: { '/index.js': stackStarter },
     explanation: `**The journey (run both above):** the naive version strips matched pairs over and over until the string stops shrinking — correct, but each pass re-scans everything → **O(n²)**. The stack does it in **one pass** because it remembers *order*: \`([)]\` has balanced counts yet the wrong nesting, so plain counting can't catch it. Empty stack at the end = valid. **O(n)**.
@@ -456,6 +486,10 @@ export const advancedLessons = [
       { term: 'Midpoint without overflow', def: 'Use lo + ((hi - lo) >> 1) (or (lo+hi)>>1 for safe sizes) instead of (lo+hi)/2 to avoid integer overflow in other languages.' },
       { term: 'Search space', def: 'Binary search works on any monotonic predicate — rotated arrays, "koko eating bananas", or first-true boundaries, not only literal sorted values.' },
     ],
+    codeNotes: [
+      { label: 'Safe midpoint + loop condition', code: `while (lo <= hi) {\n  const mid = (lo + hi) >> 1;          // floor\n  // use lo + ((hi - lo) >> 1) to avoid overflow in other languages\n}`, note: '>> 1 floor-divides by 2.' },
+      { label: 'Shrink the range — the ±1 matters', code: `if (nums[mid] < target) lo = mid + 1;\nelse hi = mid - 1;`, note: 'Drop the +1/-1 and the range never shrinks → infinite loop.' },
+    ],
     starterCode: { '/index.js': binarySearchStarter },
     explanation: `**The journey (run both above):** linear search ignores the ordering and checks every element — **O(n)**. Binary search *uses* the sorted order to discard half each step — ~20 checks for a million items, **O(log n)**. Two correctness details: loop while \`lo <= hi\`, and move to \`mid ± 1\` (drop the ±1 and you loop forever).
 
@@ -472,10 +506,60 @@ export const advancedLessons = [
       { term: 'Dummy head', def: 'A throwaway node before the real head that removes edge cases when merging/removing at the front. Common across linked-list problems.' },
       { term: 'Fast & slow pointers', def: 'Two pointers at different speeds — finds the middle, detects a cycle (Floyd\'s), or locates the nth-from-end in one pass.' },
     ],
+    codeNotes: [
+      { label: 'A list node — object literal or class', code: `const node = { val: 1, next: null };\n// LeetCode-style class:\nclass ListNode {\n  constructor(val = 0, next = null) { this.val = val; this.next = next; }\n}`, note: 'Interviews usually accept either.' },
+      { label: 'Save next BEFORE you rewire', code: `const next = curr.next; // 1. save the rest\ncurr.next = prev;       // 2. reverse this link\nprev = curr;            // 3. advance prev\ncurr = next;            // 4. advance curr`, note: 'Wrong order = you drop the tail.' },
+      { label: 'Dummy head kills edge cases', code: `const dummy = { val: 0, next: head };\nlet tail = dummy;\n// ... build tail.next ...\nreturn dummy.next;`, note: 'Cleans up merge / remove-nth-node.' },
+    ],
     starterCode: { '/index.js': linkedListStarter },
     explanation: `**The journey (run both above):** the naive reversal copies values into an array and rebuilds — O(n) time but **O(n) extra space**. Rewiring pointers in place is O(n) time and **O(1) space**; the one trap is order — **save \`next\` before** overwriting \`curr.next\`, or you lose the tail.
 
 **Your Linked-List set (8):** **reverse linked list** (this) · merge two sorted lists · reorder list · remove nth node from end · linked list cycle · merge k sorted lists · find the duplicate number · copy list with random pointer. Two tricks unlock most: a **dummy head** (merge, remove-nth) and **fast/slow pointers** (find the middle, detect a *cycle*, reorder).`,
+  },
+
+  {
+    id: 'adv-cheatsheet', module: 'adv-algorithms', order: 10, kind: 'concept',
+    title: 'Cheat sheet — patterns & JS idioms', difficulty: 'easy', tags: ['algorithms', 'cheatsheet', 'reference', 'javascript'],
+    summary: 'One-page recap: which pattern to reach for, plus the JavaScript one-liners you actually code them with.',
+    prompt: `A quick-reference recap of everything in this module — the **pattern table** (how to recognize which tool to grab), and the **JS idioms** you reach for while coding (see the "Code to reach for" panel). A TypeScript quick-ref is seeded at the bottom for when that module lands.`,
+    keyTerms: [
+      { term: 'Pattern recognition', def: 'The real interview skill: mapping a problem to a known pattern (hashing, two-pointer, window, stack, binary search, BFS/DFS) fast.' },
+      { term: 'Mutating vs non-mutating', def: 'sort/reverse/push/splice change the array in place; map/filter/slice/spread return a new one. Know which you called.' },
+      { term: 'Reference vs value', def: 'Objects/arrays are shared by reference — {...o}/[...a] copy one level (shallow); structuredClone copies all levels (deep).' },
+    ],
+    codeNotes: [
+      { label: 'Arrays — transform', code: `arr.map(x => x * 2);            // -> NEW array\narr.filter(x => x > 0);         // -> subset\narr.reduce((a, x) => a + x, 0); // -> one value\narr.forEach(x => log(x));       // side effects only`, note: 'All O(n). map/filter allocate; forEach does not.' },
+      { label: 'Sort (numbers need a comparator!)', code: `[...arr].sort((a, b) => a - b);  // ascending numbers (copy first to not mutate)\narr.sort();                       // string/lexicographic — [1,10,2] bug!`, note: 'Bare sort() compares as strings.' },
+      { label: 'Shallow vs deep copy', code: `const shallow = { ...obj };        // or [...arr] — one level\nconst deep = structuredClone(obj); // every level (modern)\nconst deep2 = JSON.parse(JSON.stringify(obj)); // loses Date/Map/undefined`, note: 'Nested objects are shared in a shallow copy.' },
+      { label: '2D array (grids)', code: `const grid = Array.from({ length: rows }, () => Array(cols).fill(0));`, note: 'Never Array(rows).fill(Array(cols)) — rows would share ONE reference.' },
+      { label: 'Class (custom data structures)', code: `class Node {\n  constructor(val = 0, next = null) { this.val = val; this.next = next; }\n}\nconst n = new Node(1);`, note: 'For list/tree nodes, stacks-with-metadata, etc.' },
+      { label: 'Map / Set', code: `const m = new Map(); m.set(k, v); m.get(k); m.has(k);\nconst s = new Set(arr); s.has(x); s.add(x);   // dedup + O(1) membership`, note: 'Reach for these over {}/[] in almost every problem.' },
+      { label: 'Regex — normalize a string', code: `s.toLowerCase().replace(/[^a-z0-9]/g, ""); // strip to lowercase alphanumerics`, note: 'The palindrome / string-cleanup workhorse.' },
+      { label: 'TypeScript quick-ref (seed — its own module later)', code: `function twoSum(nums: number[], target: number): number[] { ... }\ninterface ListNode { val: number; next: ListNode | null; }\nfunction first<T>(arr: T[]): T | undefined { return arr[0]; } // generic\ntype Dir = "N" | "E" | "S" | "W";   // union / literal types`, note: 'Same algorithms, with types on the inputs/outputs.' },
+    ],
+    explanation: `## Pattern table — reach for…
+
+| Pattern | When you see… | Core idea | Time |
+|---|---|---|---|
+| Hashing (Map/Set) | "seen before?", counts, pairs summing to K | O(1) lookups; complement trick | O(n) |
+| Two pointers | sorted array, palindrome, pair from both ends | walk inward from the ends | O(n) |
+| Sliding window | longest/shortest substring or subarray | grow right, shrink left | O(n) |
+| Stack | matching/nesting, "next greater/warmer" | LIFO; monotonic stack | O(n) |
+| Binary search | sorted input, or "smallest value that works" | halve the search space | O(log n) |
+| Linked list | reverse/reorder/cycle/middle in place | dummy head; fast & slow pointers | O(n) |
+| Recursion / backtracking | permutations, subsets, tree walks | base case + smaller subproblem | varies |
+| Trees / graphs | hierarchy, grid, connectivity | BFS = queue, DFS = stack/recursion | O(V+E) |
+
+## How to pick, in 15 seconds
+1. **Is the input sorted?** → binary search or two pointers.
+2. **Counting, dedup, or "have I seen X?"** → Map/Set.
+3. **Contiguous "longest/shortest with property"** → sliding window.
+4. **Matching, nesting, or most-recent-first** → stack.
+5. **All arrangements / explore then undo** → recursion + backtracking.
+6. **Tree/grid/graph** → BFS (shortest/level) or DFS (explore a branch).
+
+Then check the **Code to reach for** panel above for the exact JavaScript one-liners. Everything here
+generalizes to TypeScript — you just add types to the inputs and outputs (see the last snippet).`,
   },
 
   // adv-projects
