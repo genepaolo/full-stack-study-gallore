@@ -3,30 +3,30 @@ type: meta
 title: "Hot Cache"
 status: active
 created: 2026-07-07
-updated: 2026-07-09T14:00:00
+updated: 2026-07-09T15:00:00
 tags: [meta, cache]
 ---
 
 # Recent Context
 
 ## Last Updated
-2026-07-09. Built the **Algorithms & DS** module and curated the curriculum toward a front-end-leaning
-full-stack **target role** (Snap JD exemplar). Lessons **42 → 47**; tests **82 → 94**; build clean.
-Earlier today: wiki lint + the [[progress-model]] page.
+2026-07-09. Ingested the owner's **NeetCode notes** (`Paolo 114.docx`) and added 4 pattern lessons to
+`adv-algorithms` (now **9 lessons**; tests **102**; build clean). Earlier today: the base Algorithms & DS
+module + Snap-target curation, and a wiki lint pass. First content batch pushed to `main` (c4212dc).
 
 ## Headlines
-- **Algorithms & DS DONE**: new `adv-algorithms` module (Advanced, level 4), 5 lessons — Big-O (concept),
-  two-pointers, recursion, trees & DOM BFS/DFS, hash maps. 4 utility lessons taught-logic-tested.
-- **Curriculum curated to a target role** → [[target-role-profile]] (Snap-style FS Eng). JD→coverage map;
-  re-prioritized P1: **FE perf/rendering → AI-code-auditing → OOP+FP → TypeScript → React depth**.
-  Lesson framing threads performance / DOM-as-tree / AI-audit throughout.
-- **Earlier (lint)**: renamed `adr-index.md`→`decisions.md` (fixed ~25 dead `[[decisions]]` links);
-  added [[progress-model]]; refreshed stale [[client]]. Report: `meta/lint-report-2026-07-09.md`.
+- **`adv-algorithms` = 9 lessons**: Big-O, hash maps, two-pointers, recursion, trees/DOM BFS-DFS +
+  **sliding window, stack, binary search, linked list** (new, from the owner's NeetCode notes).
+- **Source map** → [[algo-source-neetcode]]: 16 pattern categories → lessons, coverage table, pending
+  batches. `Paolo 114.docx` stays in gitignored `dropoff/`. Each lesson uses the owner's own method notes.
+- **Curation target** → [[target-role-profile]] (Snap-style FS Eng): re-prioritized P1 =
+  FE perf/rendering → AI-code-auditing → OOP+FP → TypeScript → React depth.
 
 ## Active Threads
-- **Next content (P1, target-weighted)**: **Front-end performance & browser rendering** module first,
-  then **AI-assisted engineering (auditing generated code)**. See [[target-role-profile]].
-- **Uncommitted**: this session's app + wiki changes are not committed yet.
+- **Next algo batches** (from the doc): heap/priority-queue + intervals, then greedy + graphs (grid),
+  then tries + bit-manipulation. See [[algo-source-neetcode]].
+- **Uncommitted**: the NeetCode batch (4 lessons + wiki) is committed-pending this turn — push after review.
+- **Also queued**: FE performance module, AI-code-auditing (the target-weighted P1). [[target-role-profile]].
 - **Gaps for the target**: TypeScript, GraphQL, Canvas/WebGL/Service Workers, Redis/caching.
 - **Chrome DevTools MCP not connected** + design skills uninstalled → no in-browser screenshot pass.
 - **Owner**: `npm test` before commits; `npm run dev:client` → :5173; `npm run kill` if a port sticks.

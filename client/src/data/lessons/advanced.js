@@ -192,6 +192,102 @@ console.log("twoSum([2,7,11,15], 9) =", twoSum([2, 7, 11, 15], 9));             
 console.log("frequency(['tap','swipe','tap']) =", [...frequency(["tap", "swipe", "tap"])]); // [['tap',2],['swipe',1]]
 `
 
+const slidingWindowStarter = `// Sliding Window: a variable-size window [left..right] over a string/array.
+// Grow it by moving 'right'; when it breaks a rule, shrink from 'left'. Each item is visited ~twice → O(n).
+
+// Longest substring without repeating characters (LeetCode 3).
+function lengthOfLongestSubstring(s) {
+  const lastSeen = new Map();   // char -> most recent index
+  let left = 0, best = 0;
+  for (let right = 0; right < s.length; right++) {
+    const c = s[right];
+    // If we've seen c inside the current window, jump left past its previous position.
+    if (lastSeen.has(c) && lastSeen.get(c) >= left) {
+      left = lastSeen.get(c) + 1;
+    }
+    lastSeen.set(c, right);
+    best = Math.max(best, right - left + 1);   // window size = right - left + 1
+  }
+  return best;
+}
+
+console.log('"abcabcbb" ->', lengthOfLongestSubstring("abcabcbb")); // 3  ("abc")
+console.log('"bbbbb"    ->', lengthOfLongestSubstring("bbbbb"));    // 1  ("b")
+console.log('"pwwkew"   ->', lengthOfLongestSubstring("pwwkew"));   // 3  ("wke")
+`
+
+const stackStarter = `// Stack (LIFO): push to add, pop to remove the most-recent item. A JS array is a stack.
+// The go-to for matching/nesting problems: parentheses, undo, and "reverse-ish" ordering.
+
+// Valid parentheses (LeetCode 20): every bracket closes in the right order.
+function isValid(s) {
+  const stack = [];
+  const pairFor = { ")": "(", "]": "[", "}": "{" };   // closer -> its opener
+  for (const ch of s) {
+    if (ch in pairFor) {
+      // A closer must match the most-recent opener on top of the stack.
+      if (stack.pop() !== pairFor[ch]) return false;
+    } else {
+      stack.push(ch);   // an opener — remember it
+    }
+  }
+  return stack.length === 0;   // nothing left unclosed
+}
+
+console.log('"()[]{}" ->', isValid("()[]{}")); // true
+console.log('"([])"   ->', isValid("([])"));   // true
+console.log('"[(])"   ->', isValid("[(])"));   // false — wrong order
+`
+
+const binarySearchStarter = `// Binary Search: halve a SORTED range each step → O(log n). 20 steps handles a million items.
+
+function binarySearch(nums, target) {
+  let lo = 0, hi = nums.length - 1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;          // floor of the midpoint
+    if (nums[mid] === target) return mid;
+    if (nums[mid] < target) lo = mid + 1; // target is in the right half
+    else hi = mid - 1;                     // target is in the left half
+  }
+  return -1;                               // not found
+}
+
+const arr = [-5, -2, 0, 3, 7, 11, 18, 42];
+console.log("find 11 ->", binarySearch(arr, 11)); // 5
+console.log("find -5 ->", binarySearch(arr, -5)); // 0
+console.log("find  6 ->", binarySearch(arr, 6));  // -1 (absent)
+`
+
+const linkedListStarter = `// Singly linked list: nodes of { val, next }. No indexes — you follow 'next' pointers.
+// Reversing one is THE classic: re-point every node's 'next' to the node before it.
+
+// Helpers to move between arrays and lists (so we can see the result).
+function toList(arr) {
+  let head = null;
+  for (let i = arr.length - 1; i >= 0; i--) head = { val: arr[i], next: head };
+  return head;
+}
+function toArray(head) {
+  const out = [];
+  for (let node = head; node; node = node.next) out.push(node.val);
+  return out;
+}
+
+// Reverse in place with three pointers: prev, curr, and a saved 'next'.
+function reverseList(head) {
+  let prev = null, curr = head;
+  while (curr) {
+    const next = curr.next;   // 1. save the rest of the list
+    curr.next = prev;         // 2. flip this node's pointer backward
+    prev = curr;              // 3. advance prev
+    curr = next;              // 4. advance curr
+  }
+  return prev;                // new head = last node we processed
+}
+
+console.log("reverse [1,2,3,4,5] ->", toArray(reverseList(toList([1, 2, 3, 4, 5])))); // [5,4,3,2,1]
+`
+
 export const advancedLessons = [
   // adv-algorithms — Snap-curated: JS-centric patterns, DOM-as-a-tree, performance framing.
   {
@@ -274,6 +370,69 @@ export const advancedLessons = [
     ],
     starterCode: { '/index.js': hashMapsStarter },
     explanation: `Hash maps are the single highest-leverage tool in a coding round: any time you catch yourself scanning a list **inside** another loop, a \`Map\`/\`Set\` usually removes the inner scan and drops O(n²) → O(n). Two-sum is the archetype — remember the **complement** (\`target − current\`) as you go. Counting/grouping with a \`Map\` is exactly what "log and analyze engagement metrics" looks like in practice. Follow-ups: **group anagrams**, **first unique character**, **top-K frequent** (map + heap), and **LRU cache** (Map preserves insertion order).`,
+  },
+  {
+    id: 'adv-sliding-window', module: 'adv-algorithms', order: 6, kind: 'utility', template: 'vanilla',
+    title: 'Sliding window', difficulty: 'medium', tags: ['algorithms', 'strings', 'two-pointers'],
+    summary: 'A window that grows and shrinks over a string/array — O(n) answers to "longest/shortest" sub-range questions.',
+    prompt: `Implement **\`lengthOfLongestSubstring(s)\`** (LeetCode 3): the length of the longest substring with **no repeating characters**. Slide a window — extend \`right\`, and when a duplicate appears, move \`left\` past it. No nested loop.`,
+    keyTerms: [
+      { term: 'Sliding window', def: 'Two indices [left..right] bounding a contiguous range. Grow by moving right; shrink by moving left when a constraint breaks.' },
+      { term: 'Variable-size window', def: 'The window resizes to stay valid (vs. a fixed-k window). Used for "longest/shortest substring with property X".' },
+      { term: 'Amortized O(n)', def: 'left and right each only move forward across the whole input, so every element is visited at most twice — O(n), not O(n²).' },
+      { term: 'Window state', def: 'A Map/Set/counter tracking what is inside the window (here, each char\'s last index) so you can shrink correctly.' },
+    ],
+    starterCode: { '/index.js': slidingWindowStarter },
+    explanation: `Brute force checks every possible substring — O(n²). The window idea: keep a range with no repeats and slide it. Move \`right\` to grow the window; when the new character is already inside, move \`left\` just past where you last saw it. Since \`left\` and \`right\` each only move forward, every character is touched about twice → **O(n)**.
+
+The same window shape solves the rest of your sliding-window set — *longest repeating character replacement*, *minimum window substring*, *permutation in string* — you just change what you track inside the window.`,
+  },
+  {
+    id: 'adv-stack', module: 'adv-algorithms', order: 7, kind: 'utility', template: 'vanilla',
+    title: 'Stack (matching & nesting)', difficulty: 'easy', tags: ['algorithms', 'stack', 'data-structures'],
+    summary: 'LIFO push/pop — the right tool whenever order and nesting matter (parentheses, undo, expressions).',
+    prompt: `Implement **\`isValid(s)\`** (LeetCode 20): return true if every bracket \`()[]{}\` is closed in the correct order. Push openers; when you hit a closer, it must match the **most-recent** opener on top of the stack.`,
+    keyTerms: [
+      { term: 'Stack (LIFO)', def: 'Last-in, first-out. push() adds to the top, pop() removes the top. A plain JS array is a stack.' },
+      { term: 'Why a stack here', def: 'Nesting is inherently last-opened-first-closed: "([)]" is invalid precisely because a stack would mismatch. Ordering rules out a naive count.' },
+      { term: 'Monotonic stack', def: 'A stack kept sorted (increasing/decreasing) as you push — the trick behind "next greater element" and daily-temperatures.' },
+    ],
+    starterCode: { '/index.js': stackStarter },
+    explanation: `Just counting brackets fails: \`([)]\` has equal counts but the wrong nesting. A **stack** remembers *order* — push each opener, and every closer must match the one on top. If the stack is empty at the end, everything matched. O(n) time, O(n) space.
+
+That "most-recent-first" instinct is the whole stack category: *min-stack*, *evaluate reverse-polish notation*, *backspace string compare*, and the *monotonic stack* problems (*daily temperatures*, *next greater element*).`,
+  },
+  {
+    id: 'adv-binary-search', module: 'adv-algorithms', order: 8, kind: 'utility', template: 'vanilla',
+    title: 'Binary search', difficulty: 'easy', tags: ['algorithms', 'binary-search'],
+    summary: 'Halve a sorted range each step — O(log n). The pattern behind "search space" problems, not just arrays.',
+    prompt: `Implement **\`binarySearch(nums, target)\`**: return the index of \`target\` in a **sorted** array, or \`-1\`. Compare the middle, then throw away the half that can't contain the answer.`,
+    keyTerms: [
+      { term: 'Binary search', def: 'Repeatedly halve a sorted search range by comparing the midpoint to the target. O(log n) time, O(1) space.' },
+      { term: 'Loop invariant', def: 'The answer, if present, always lies within [lo..hi]. Each step provably shrinks that range, guaranteeing termination.' },
+      { term: 'Midpoint without overflow', def: 'Use lo + ((hi - lo) >> 1) (or (lo+hi)>>1 for safe sizes) instead of (lo+hi)/2 to avoid integer overflow in other languages.' },
+      { term: 'Search space', def: 'Binary search works on any monotonic predicate — rotated arrays, "koko eating bananas", or first-true boundaries, not only literal sorted values.' },
+    ],
+    starterCode: { '/index.js': binarySearchStarter },
+    explanation: `Each step throws away half of what's left, so a million items take only ~20 checks — that's **O(log n)**. Two details keep it correct: loop while \`lo <= hi\`, and always move to \`mid + 1\` or \`mid - 1\` so the range actually shrinks (forgetting the ±1 is the classic infinite loop).
+
+The bigger idea, for your rotated-array problems (*search in rotated sorted array*, *find minimum*): binary search works on any yes/no question that flips exactly once — not only on sorted numbers.`,
+  },
+  {
+    id: 'adv-linked-list', module: 'adv-algorithms', order: 9, kind: 'utility', template: 'vanilla',
+    title: 'Linked lists (pointer surgery)', difficulty: 'medium', tags: ['algorithms', 'linked-list', 'data-structures'],
+    summary: 'Nodes joined by next pointers. Reversing one — re-pointing each link backward — is the canonical warm-up.',
+    prompt: `Implement **\`reverseList(head)\`** (LeetCode 206): reverse a singly linked list of \`{ val, next }\` nodes **in place** and return the new head. Walk the list with three pointers: \`prev\`, \`curr\`, and a saved \`next\`.`,
+    keyTerms: [
+      { term: 'Singly linked list', def: 'A chain of nodes; each holds a value and a next pointer to the following node (null at the end). No random/index access.' },
+      { term: 'Pointer re-linking', def: 'Reversal flips each node\'s next to point at the previous node — save next first, or you lose the rest of the list.' },
+      { term: 'Dummy head', def: 'A throwaway node before the real head that removes edge cases when merging/removing at the front. Common across linked-list problems.' },
+      { term: 'Fast & slow pointers', def: 'Two pointers at different speeds — finds the middle, detects a cycle (Floyd\'s), or locates the nth-from-end in one pass.' },
+    ],
+    starterCode: { '/index.js': linkedListStarter },
+    explanation: `There are no indexes — you can only follow \`next\`. Reversing means flipping every \`next\` to point backward, and the one trap is order: **save \`next\` first**, or you lose the rest of the list. O(n) time, O(1) space.
+
+Two tricks cover most linked-list problems: a **dummy head** node (makes *merge two sorted lists* and *remove nth node* clean) and **fast/slow pointers** (find the middle, or detect a *cycle*). Follow-up: try reversing it recursively.`,
   },
 
   // adv-projects

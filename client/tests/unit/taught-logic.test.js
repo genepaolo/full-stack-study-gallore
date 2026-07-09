@@ -247,3 +247,46 @@ describe('hash maps & sets (adv-hashmaps)', () => {
     expect(counts.size).toBe(2)
   })
 })
+
+describe('sliding window (adv-sliding-window)', () => {
+  it('finds the longest substring without repeating characters', () => {
+    const { lengthOfLongestSubstring } = extract('adv-sliding-window', ['lengthOfLongestSubstring'])
+    expect(lengthOfLongestSubstring('abcabcbb')).toBe(3)
+    expect(lengthOfLongestSubstring('bbbbb')).toBe(1)
+    expect(lengthOfLongestSubstring('pwwkew')).toBe(3)
+    expect(lengthOfLongestSubstring('')).toBe(0)
+    expect(lengthOfLongestSubstring('abba')).toBe(2) // left must not jump backward
+  })
+})
+
+describe('stack (adv-stack)', () => {
+  it('validates bracket nesting order', () => {
+    const { isValid } = extract('adv-stack', ['isValid'])
+    expect(isValid('()[]{}')).toBe(true)
+    expect(isValid('([])')).toBe(true)
+    expect(isValid('[(])')).toBe(false)
+    expect(isValid('(')).toBe(false)
+    expect(isValid('')).toBe(true)
+  })
+})
+
+describe('binary search (adv-binary-search)', () => {
+  it('finds targets and reports -1 when absent', () => {
+    const { binarySearch } = extract('adv-binary-search', ['binarySearch'])
+    const arr = [-5, -2, 0, 3, 7, 11, 18, 42]
+    expect(binarySearch(arr, 11)).toBe(5)
+    expect(binarySearch(arr, -5)).toBe(0)
+    expect(binarySearch(arr, 42)).toBe(7)
+    expect(binarySearch(arr, 6)).toBe(-1)
+    expect(binarySearch([], 1)).toBe(-1)
+  })
+})
+
+describe('linked list (adv-linked-list)', () => {
+  it('reverses a singly linked list in place', () => {
+    const { reverseList, toList, toArray } = extract('adv-linked-list', ['reverseList', 'toList', 'toArray'])
+    expect(toArray(reverseList(toList([1, 2, 3, 4, 5])))).toEqual([5, 4, 3, 2, 1])
+    expect(toArray(reverseList(toList([7])))).toEqual([7])
+    expect(reverseList(toList([]))).toBeNull()
+  })
+})

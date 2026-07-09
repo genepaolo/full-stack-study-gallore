@@ -9,6 +9,14 @@ tags: [meta, log]
 
 # Log (newest on top)
 
+## 2026-07-09 — Ingested NeetCode notes → +4 pattern lessons
+- Analyzed `Paolo 114.docx` (owner's NeetCode 150 / Blind 75 notes, ~12.5k words, 16 pattern categories).
+  Source map + coverage table + pending batches → [[algo-source-neetcode]]. Doc kept in gitignored `dropoff/`.
+- Added 4 pattern lessons to `adv-algorithms` (drawn from owner's own method notes): **sliding window**
+  (LC 3), **stack** (LC 20 valid parens), **binary search**, **linked list** (LC 206 reverse).
+  All taught-logic-tested. Module now **9 lessons**; tests **94 → 102**; build clean.
+- Pending patterns: heap, intervals, greedy, graphs (grid), tries, bit manipulation.
+
 ## 2026-07-09 — Algorithms & DS module + curriculum curated to a target role
 - Built the **`adv-algorithms`** module (Advanced, level 4), 5 lessons Snap-curated: Big-O & the cost
   of JS (concept), two-pointers, recursion/backtracking, trees & DOM traversal (BFS/DFS), hash maps & sets.
