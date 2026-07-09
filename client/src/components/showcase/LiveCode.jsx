@@ -1,6 +1,7 @@
 import { useState, useMemo, lazy, Suspense } from 'react'
 import { useTheme } from '../../context/ThemeContext.jsx'
 import { Button } from '../ui/primitives.jsx'
+import ErrorBoundary from './ErrorBoundary.jsx'
 
 // Code-split Sandpack (~1MB) so it only downloads when a lesson with an editor is opened,
 // keeping the home/module pages fast.
@@ -62,6 +63,9 @@ export default function LiveCode({
           </Button>
         )}
       </div>
+      {/* Defense-in-depth: LiveCode carries its OWN ErrorBoundary so a Sandpack/chunk-load failure is
+          contained even if a caller forgets to wrap it. Keyed by nonce so Reset also clears a caught error. */}
+      <ErrorBoundary key={nonce}>
       <Suspense
         fallback={<div className="grid h-[420px] place-items-center text-sm text-muted">Loading editor…</div>}
       >
@@ -83,6 +87,7 @@ export default function LiveCode({
           }}
         />
       </Suspense>
+      </ErrorBoundary>
     </div>
   )
 }

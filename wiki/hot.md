@@ -15,8 +15,12 @@ tags: [meta, cache]
 module + Snap-target curation, and a wiki lint pass. First content batch pushed to `main` (c4212dc).
 
 ## Headlines
+- **`DESIGN.md`** (repo root) — extensive design doc: architecture, stack+versions, security/preventative
+  measures, testing, CI, ADR register, knowledge-base + AI-build process, resources. Linked from [[index]].
+- **Security hardening**: `LiveCode` self-wraps in `ErrorBoundary`; `SECURITY.md` rewritten (per-threat
+  table + honest infinite-loop model; `autorun:false` offered). Live-editor code is host-isolated.
 - **`adv-algorithms` = 9 lessons**: Big-O, hash maps, two-pointers, recursion, trees/DOM BFS-DFS +
-  **sliding window, stack, binary search, linked list** (new, from the owner's NeetCode notes).
+  **sliding window, stack, binary search, linked list** (brute→optimized, from the owner's NeetCode notes).
 - **Source map** → [[algo-source-neetcode]]: 16 pattern categories → lessons, coverage table, pending
   batches. `Paolo 114.docx` stays in gitignored `dropoff/`. Each lesson uses the owner's own method notes.
 - **Curation target** → [[target-role-profile]] (Snap-style FS Eng): re-prioritized P1 =

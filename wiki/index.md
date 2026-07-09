@@ -11,6 +11,7 @@ tags: [index]
 
 ## Meta
 - [[overview]] — what the project is and why
+- **`../DESIGN.md`** — extensive design document (architecture, stack, security, ADRs, resources, AI build process)
 - [[hot]] — recent-context cache (read this first)
 - [[log]] — operation history
 

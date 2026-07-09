@@ -9,6 +9,14 @@ tags: [meta, log]
 
 # Log (newest on top)
 
+## 2026-07-09 — Security hardening + DESIGN.md
+- **Live-editor hardening:** `LiveCode` now carries its OWN `ErrorBoundary` (defense-in-depth, keyed to
+  Reset). Rewrote `SECURITY.md` with a per-threat table + honest infinite-loop nuance (isolated +
+  Reset-recoverable, not thread-interruptible; `autorun:false` offered as a stronger guard). 106 tests, build clean.
+- **`DESIGN.md`** — extensive design document: architecture, full stack w/ versions, content model,
+  showcase framework, progress model, security & preventative measures, testing, CI, ADR register,
+  knowledge-base/memory system, AI-assisted build process (Claude skills), external resources/repos, roadmap.
+
 ## 2026-07-09 — Depth pass: brute→optimized journey on the 4 pattern lessons
 - Chose **depth-first** for the NeetCode content. Enhanced sliding-window/stack/binary-search/linked-list:
   each live editor now shows **brute force → optimized** (naive + optimal side by side); explanations

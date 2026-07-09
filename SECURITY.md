@@ -17,16 +17,42 @@ malicious JS against the host page?
    your code inside a sandboxed `<iframe>` served from a *different origin*. Cross-origin isolation
    means the code **cannot read or modify** the host page's DOM, its React state, `localStorage`
    (your progress), or cookies. It runs in its own world.
-2. **Blast radius = that one block.** A broken edit or infinite loop only affects **its own
-   preview**. Every editor is also wrapped in a React **`ErrorBoundary`**, so even a host-side
-   render error is contained to that section with a per-section "Retry" (see
-   `components/showcase/ErrorBoundary.jsx`). A test (`tests/integration/ErrorBoundary.test.jsx`)
-   proves a throwing block does not crash the surrounding page.
-3. **Reset restores instantly.** The **Reset** button re-mounts the editor with the original starter
-   code, discarding any edits. A full page reload also clears everything (edits are never persisted).
+2. **Blast radius = that one block.** A broken edit only affects **its own preview**. Every editor is
+   wrapped in a React **`ErrorBoundary`** — both by `LessonView` *and* internally by `LiveCode` itself
+   (defense-in-depth) — so even a host-side render or chunk-load error is contained to that section
+   with a per-section "Retry" (`components/showcase/ErrorBoundary.jsx`). A test
+   (`tests/integration/ErrorBoundary.test.jsx`) proves a throwing block does not crash the page.
+3. **Reset restores instantly.** The **Reset** button re-mounts the editor (and its ErrorBoundary)
+   with the original starter code, discarding edits and **destroying the preview iframe**. A full page
+   reload also clears everything (edits are never persisted).
 4. **No `eval` of user content on the host.** The app never `eval`s or `dangerouslySetInnerHTML`s
    editor input on the host page — only Sandpack (sandboxed) executes it. Lesson prose is rendered
    with `react-markdown` **without** raw-HTML support, so markdown can't inject scripts either.
+
+## The four specific concerns
+
+| Concern | Status | How |
+|---|---|---|
+| **Malicious code** (touch host, steal progress) | **Prevented** | Cross-origin sandbox iframe — no access to host DOM/state/`localStorage`/cookies. |
+| **Runtime errors / crashes** | **Contained** | Sandpack shows the error inside its own iframe; the host is protected by two layers of `ErrorBoundary`. |
+| **Infinite loops** (`while(true){}`) | **Isolated + recoverable** (see below) | Runs on the iframe's own thread — the **host app stays responsive**. Not *prevented*: the preview itself freezes until you Reset. |
+| **External network requests** | **Low risk** | The iframe *can* `fetch()` external URLs, but it's isolated from all host data, so there's nothing sensitive to exfiltrate. Offline, single-user tool. |
+
+## Infinite loops — the honest nuance
+
+A synchronous infinite loop **cannot be interrupted from another thread in JavaScript**, so no host-side
+timer can "kill" it mid-run. What protects you instead:
+
+- **Isolation.** The loop runs on the *iframe's* thread, not the app's. The rest of the page — sidebar,
+  navigation, other lessons — stays fully responsive. It can't hang the app.
+- **Recovery.** **Reset** unmounts the editor and **removes the iframe**, which terminates the runaway
+  code instantly. A page reload does the same.
+
+Fully *preventing* the preview from freezing would require bundler-level loop-protection (injecting
+iteration guards into every loop) or disabling auto-run — both trade off the "edit → instant preview"
+experience. Given the host is already immune, we favor isolation + one-click recovery. (If desired,
+`autorun: false` on the Sandpack options would require an explicit "Run" click before any edit executes —
+a stronger infinite-loop guard at the cost of live-updating.)
 
 ## Restricting what can be edited (per lesson)
 
