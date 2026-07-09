@@ -32,6 +32,7 @@ tags: [index]
 ## Planning
 - [[target-role-profile]] — curation target (Snap-style Full Stack Eng); JD→coverage map + re-prioritized roadmap
 - [[algo-source-neetcode]] — NeetCode/Blind-75 notes (Paolo 114.docx) → algo/ds lesson map + pending batches
+- [[prep-resources]] — curated resources & GitHub repos per prep gap (DSA, perf, TS, sysdesign, AI-audit, behavioral)
 - [[expansion-roadmap]] — GreatFrontend gap analysis + prioritized expansion (P0: UI + JS utils)
 - [[system-design-plan]] — system-design sub-curriculum (system-design-primer + GreatFrontend)
 

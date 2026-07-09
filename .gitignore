@@ -35,3 +35,6 @@ wiki/.trash/
 
 # input drop folder (personal source docs — analyzed, never committed)
 dropoff/
+
+# private candidate info (resume-derived experience, behavioral prep) — local vault only, never pushed
+wiki/private/
