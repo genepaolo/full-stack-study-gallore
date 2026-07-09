@@ -14,8 +14,11 @@ Blind 75 walkthroughs, ~12.5k words, organized by pattern with I/O examples, Lee
 multiple methods + complexity, and Java/JS snippets). The file lives in `dropoff/` (gitignored — analyzed,
 never committed). This page maps that taxonomy onto app lessons in [[curriculum]] (`adv-algorithms`).
 
-**Approach — focus of learning:** teach the **pattern** via one canonical, editable, test-enforced
-problem per lesson; list the category's other problems as "more practice". Not a 109-problem dump.
+**Approach — focus of learning (depth-first, chosen 2026-07-09):** teach the **pattern** via one
+canonical, editable, test-enforced problem per lesson, showing the **brute-force → optimized journey**
+(both implementations in the live editor, a test asserts they agree); and each lesson lists **every** one
+of its category's questions from the doc, so all ~114 are *captured as a map* even though ~16 are worked.
+Not a 114-problem dump.
 
 **Verify, don't trust:** the doc is a strong *draft*, not ground truth. Every solution/complexity claim
 is cross-checked against public LeetCode/canonical sources before it becomes a lesson, and explanations

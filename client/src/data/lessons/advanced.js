@@ -192,70 +192,103 @@ console.log("twoSum([2,7,11,15], 9) =", twoSum([2, 7, 11, 15], 9));             
 console.log("frequency(['tap','swipe','tap']) =", [...frequency(["tap", "swipe", "tap"])]); // [['tap',2],['swipe',1]]
 `
 
-const slidingWindowStarter = `// Sliding Window: a variable-size window [left..right] over a string/array.
-// Grow it by moving 'right'; when it breaks a rule, shrink from 'left'. Each item is visited ~twice → O(n).
+const slidingWindowStarter = `// Longest substring without repeating characters (LeetCode 3).
+// Watch the SAME problem go from O(n^2) to O(n) by reusing work instead of restarting.
 
-// Longest substring without repeating characters (LeetCode 3).
+// ---- Brute force: try every start, extend until a repeat. O(n^2) time, O(n) space. ----
+function lengthOfLongestSubstringBrute(s) {
+  let best = 0;
+  for (let i = 0; i < s.length; i++) {
+    const seen = new Set();
+    for (let j = i; j < s.length; j++) {
+      if (seen.has(s[j])) break;        // repeat -> this start is finished
+      seen.add(s[j]);
+      best = Math.max(best, j - i + 1);
+    }
+  }
+  return best;                          // re-scans the same chars from every start = wasteful
+}
+
+// ---- Optimized: one sliding window. O(n) time. ----
+// Insight: when we hit a repeat we DON'T restart — we just move 'left' past the earlier copy.
 function lengthOfLongestSubstring(s) {
-  const lastSeen = new Map();   // char -> most recent index
+  const lastSeen = new Map();           // char -> most recent index
   let left = 0, best = 0;
   for (let right = 0; right < s.length; right++) {
     const c = s[right];
-    // If we've seen c inside the current window, jump left past its previous position.
     if (lastSeen.has(c) && lastSeen.get(c) >= left) {
-      left = lastSeen.get(c) + 1;
+      left = lastSeen.get(c) + 1;       // jump left past the previous copy (no restart)
     }
     lastSeen.set(c, right);
-    best = Math.max(best, right - left + 1);   // window size = right - left + 1
+    best = Math.max(best, right - left + 1);
   }
   return best;
 }
 
-console.log('"abcabcbb" ->', lengthOfLongestSubstring("abcabcbb")); // 3  ("abc")
-console.log('"bbbbb"    ->', lengthOfLongestSubstring("bbbbb"));    // 1  ("b")
-console.log('"pwwkew"   ->', lengthOfLongestSubstring("pwwkew"));   // 3  ("wke")
+// Same answers, less work:
+for (const s of ["abcabcbb", "bbbbb", "pwwkew"]) {
+  console.log(s, "-> brute:", lengthOfLongestSubstringBrute(s), " window:", lengthOfLongestSubstring(s));
+}
 `
 
-const stackStarter = `// Stack (LIFO): push to add, pop to remove the most-recent item. A JS array is a stack.
-// The go-to for matching/nesting problems: parentheses, undo, and "reverse-ish" ordering.
+const stackStarter = `// Valid parentheses (LeetCode 20). Same problem, two ways — see why the stack is the point.
 
-// Valid parentheses (LeetCode 20): every bracket closes in the right order.
+// ---- Brute force: repeatedly strip matched pairs until nothing changes. O(n^2). ----
+function isValidNaive(s) {
+  let prev;
+  do {
+    prev = s;
+    s = s.split("()").join("").split("[]").join("").split("{}").join("");
+  } while (s !== prev);                 // each pass re-scans the whole string
+  return s.length === 0;
+}
+
+// ---- Optimized: one pass with a stack. O(n) time, O(n) space. ----
+// A stack captures ORDER: "([)]" has balanced counts but the wrong nesting — counting can't catch that.
 function isValid(s) {
   const stack = [];
   const pairFor = { ")": "(", "]": "[", "}": "{" };   // closer -> its opener
   for (const ch of s) {
     if (ch in pairFor) {
-      // A closer must match the most-recent opener on top of the stack.
-      if (stack.pop() !== pairFor[ch]) return false;
+      if (stack.pop() !== pairFor[ch]) return false;  // closer must match the most-recent opener
     } else {
-      stack.push(ch);   // an opener — remember it
+      stack.push(ch);                                 // an opener — remember it
     }
   }
-  return stack.length === 0;   // nothing left unclosed
+  return stack.length === 0;                          // nothing left unclosed
 }
 
-console.log('"()[]{}" ->', isValid("()[]{}")); // true
-console.log('"([])"   ->', isValid("([])"));   // true
-console.log('"[(])"   ->', isValid("[(])"));   // false — wrong order
+for (const s of ["()[]{}", "([])", "[(])"]) {
+  console.log(JSON.stringify(s), "-> naive:", isValidNaive(s), " stack:", isValid(s));
+}
 `
 
-const binarySearchStarter = `// Binary Search: halve a SORTED range each step → O(log n). 20 steps handles a million items.
+const binarySearchStarter = `// Search a SORTED array. The sorted-ness is the whole trick — use it or waste it.
 
-function binarySearch(nums, target) {
-  let lo = 0, hi = nums.length - 1;
-  while (lo <= hi) {
-    const mid = (lo + hi) >> 1;          // floor of the midpoint
-    if (nums[mid] === target) return mid;
-    if (nums[mid] < target) lo = mid + 1; // target is in the right half
-    else hi = mid - 1;                     // target is in the left half
+// ---- Brute force: linear scan, ignores that the array is sorted. O(n). ----
+function linearSearch(nums, target) {
+  for (let i = 0; i < nums.length; i++) {
+    if (nums[i] === target) return i;
   }
-  return -1;                               // not found
+  return -1;
 }
 
-const arr = [-5, -2, 0, 3, 7, 11, 18, 42];
-console.log("find 11 ->", binarySearch(arr, 11)); // 5
-console.log("find -5 ->", binarySearch(arr, -5)); // 0
-console.log("find  6 ->", binarySearch(arr, 6));  // -1 (absent)
+// ---- Optimized: binary search — halve the range each step. O(log n), O(1) space. ----
+function binarySearch(nums, target) {
+  let lo = 0, hi = nums.length - 1;
+  while (lo <= hi) {                       // range still non-empty
+    const mid = (lo + hi) >> 1;            // floor of the midpoint
+    if (nums[mid] === target) return mid;
+    if (nums[mid] < target) lo = mid + 1;  // answer must be in the right half
+    else hi = mid - 1;                     // answer must be in the left half  (±1 or you loop forever)
+  }
+  return -1;
+}
+
+const arr = [-5, -2, 0, 3, 7, 11, 18, 42];   // ~1M items would be ~20 steps for binary search, ~1M for linear
+for (const t of [11, -5, 6]) {
+  console.log("find", t, "-> linear:", linearSearch(arr, t), " binary:", binarySearch(arr, t));
+}
 `
 
 const linkedListStarter = `// Singly linked list: nodes of { val, next }. No indexes — you follow 'next' pointers.
@@ -273,11 +306,20 @@ function toArray(head) {
   return out;
 }
 
-// Reverse in place with three pointers: prev, curr, and a saved 'next'.
+// ---- Brute force: copy values out, rebuild reversed. Works, but O(n) EXTRA space. ----
+function reverseListNaive(head) {
+  const vals = [];
+  for (let n = head; n; n = n.next) vals.push(n.val);   // extra array the size of the list
+  let newHead = null;
+  for (const v of vals) newHead = { val: v, next: newHead };  // prepend each -> reversed
+  return newHead;
+}
+
+// ---- Optimized: rewire pointers in place. O(n) time, O(1) space (no extra array). ----
 function reverseList(head) {
   let prev = null, curr = head;
   while (curr) {
-    const next = curr.next;   // 1. save the rest of the list
+    const next = curr.next;   // 1. save the rest of the list (or we lose it)
     curr.next = prev;         // 2. flip this node's pointer backward
     prev = curr;              // 3. advance prev
     curr = next;              // 4. advance curr
@@ -285,7 +327,8 @@ function reverseList(head) {
   return prev;                // new head = last node we processed
 }
 
-console.log("reverse [1,2,3,4,5] ->", toArray(reverseList(toList([1, 2, 3, 4, 5])))); // [5,4,3,2,1]
+console.log("naive:    ", toArray(reverseListNaive(toList([1, 2, 3, 4, 5])))); // [5,4,3,2,1]
+console.log("in-place: ", toArray(reverseList(toList([1, 2, 3, 4, 5]))));      // [5,4,3,2,1]
 `
 
 export const advancedLessons = [
@@ -383,9 +426,9 @@ export const advancedLessons = [
       { term: 'Window state', def: 'A Map/Set/counter tracking what is inside the window (here, each char\'s last index) so you can shrink correctly.' },
     ],
     starterCode: { '/index.js': slidingWindowStarter },
-    explanation: `Brute force checks every possible substring — O(n²). The window idea: keep a range with no repeats and slide it. Move \`right\` to grow the window; when the new character is already inside, move \`left\` just past where you last saw it. Since \`left\` and \`right\` each only move forward, every character is touched about twice → **O(n)**.
+    explanation: `**The journey (run both above):** brute force fixes each start and re-scans forward — the same characters get re-checked from every start, so **O(n²)**. The window *reuses* that work: on a repeat you don't restart, you slide \`left\` just past the earlier copy. Each index is visited at most twice → **O(n)**.
 
-The same window shape solves the rest of your sliding-window set — *longest repeating character replacement*, *minimum window substring*, *permutation in string* — you just change what you track inside the window.`,
+**Your Sliding-Window set (6):** best time to buy & sell stock · **longest substring without repeating** (this) · longest repeating character replacement · minimum window substring · permutation in string · sliding window maximum. They differ only in *what you track inside the window* — a running min, a char-count, a need/have tally, or a deque.`,
   },
   {
     id: 'adv-stack', module: 'adv-algorithms', order: 7, kind: 'utility', template: 'vanilla',
@@ -398,9 +441,9 @@ The same window shape solves the rest of your sliding-window set — *longest re
       { term: 'Monotonic stack', def: 'A stack kept sorted (increasing/decreasing) as you push — the trick behind "next greater element" and daily-temperatures.' },
     ],
     starterCode: { '/index.js': stackStarter },
-    explanation: `Just counting brackets fails: \`([)]\` has equal counts but the wrong nesting. A **stack** remembers *order* — push each opener, and every closer must match the one on top. If the stack is empty at the end, everything matched. O(n) time, O(n) space.
+    explanation: `**The journey (run both above):** the naive version strips matched pairs over and over until the string stops shrinking — correct, but each pass re-scans everything → **O(n²)**. The stack does it in **one pass** because it remembers *order*: \`([)]\` has balanced counts yet the wrong nesting, so plain counting can't catch it. Empty stack at the end = valid. **O(n)**.
 
-That "most-recent-first" instinct is the whole stack category: *min-stack*, *evaluate reverse-polish notation*, *backspace string compare*, and the *monotonic stack* problems (*daily temperatures*, *next greater element*).`,
+**Your Stack set (12):** **valid parentheses** (this) · min-stack · evaluate reverse-polish notation · generate parentheses · daily temperatures · car fleet · largest rectangle in histogram · reverse substrings between parentheses · backspace string compare · remove adjacent duplicates I & II · basic calculator. *Daily temperatures*, *car fleet*, and *largest rectangle* are the **monotonic stack** family — a stack kept in sorted order.`,
   },
   {
     id: 'adv-binary-search', module: 'adv-algorithms', order: 8, kind: 'utility', template: 'vanilla',
@@ -414,9 +457,9 @@ That "most-recent-first" instinct is the whole stack category: *min-stack*, *eva
       { term: 'Search space', def: 'Binary search works on any monotonic predicate — rotated arrays, "koko eating bananas", or first-true boundaries, not only literal sorted values.' },
     ],
     starterCode: { '/index.js': binarySearchStarter },
-    explanation: `Each step throws away half of what's left, so a million items take only ~20 checks — that's **O(log n)**. Two details keep it correct: loop while \`lo <= hi\`, and always move to \`mid + 1\` or \`mid - 1\` so the range actually shrinks (forgetting the ±1 is the classic infinite loop).
+    explanation: `**The journey (run both above):** linear search ignores the ordering and checks every element — **O(n)**. Binary search *uses* the sorted order to discard half each step — ~20 checks for a million items, **O(log n)**. Two correctness details: loop while \`lo <= hi\`, and move to \`mid ± 1\` (drop the ±1 and you loop forever).
 
-The bigger idea, for your rotated-array problems (*search in rotated sorted array*, *find minimum*): binary search works on any yes/no question that flips exactly once — not only on sorted numbers.`,
+**Your Binary-Search set (4):** search in rotated sorted array · find minimum in rotated sorted array · koko eating bananas · median of two sorted arrays — plus the **classic search** you built here. The bigger idea in those four: binary-search on a *condition* (is this the rotation point? is this eating-speed fast enough?), not on literal sorted values.`,
   },
   {
     id: 'adv-linked-list', module: 'adv-algorithms', order: 9, kind: 'utility', template: 'vanilla',
@@ -430,9 +473,9 @@ The bigger idea, for your rotated-array problems (*search in rotated sorted arra
       { term: 'Fast & slow pointers', def: 'Two pointers at different speeds — finds the middle, detects a cycle (Floyd\'s), or locates the nth-from-end in one pass.' },
     ],
     starterCode: { '/index.js': linkedListStarter },
-    explanation: `There are no indexes — you can only follow \`next\`. Reversing means flipping every \`next\` to point backward, and the one trap is order: **save \`next\` first**, or you lose the rest of the list. O(n) time, O(1) space.
+    explanation: `**The journey (run both above):** the naive reversal copies values into an array and rebuilds — O(n) time but **O(n) extra space**. Rewiring pointers in place is O(n) time and **O(1) space**; the one trap is order — **save \`next\` before** overwriting \`curr.next\`, or you lose the tail.
 
-Two tricks cover most linked-list problems: a **dummy head** node (makes *merge two sorted lists* and *remove nth node* clean) and **fast/slow pointers** (find the middle, or detect a *cycle*). Follow-up: try reversing it recursively.`,
+**Your Linked-List set (8):** **reverse linked list** (this) · merge two sorted lists · reorder list · remove nth node from end · linked list cycle · merge k sorted lists · find the duplicate number · copy list with random pointer. Two tricks unlock most: a **dummy head** (merge, remove-nth) and **fast/slow pointers** (find the middle, detect a *cycle*, reorder).`,
   },
 
   // adv-projects

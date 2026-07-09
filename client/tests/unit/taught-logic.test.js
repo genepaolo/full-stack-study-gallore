@@ -257,6 +257,14 @@ describe('sliding window (adv-sliding-window)', () => {
     expect(lengthOfLongestSubstring('')).toBe(0)
     expect(lengthOfLongestSubstring('abba')).toBe(2) // left must not jump backward
   })
+
+  it('brute force agrees with the optimized window (the journey is real)', () => {
+    const { lengthOfLongestSubstring, lengthOfLongestSubstringBrute } =
+      extract('adv-sliding-window', ['lengthOfLongestSubstring', 'lengthOfLongestSubstringBrute'])
+    for (const s of ['abcabcbb', 'bbbbb', 'pwwkew', 'abba', '', 'dvdf']) {
+      expect(lengthOfLongestSubstringBrute(s)).toBe(lengthOfLongestSubstring(s))
+    }
+  })
 })
 
 describe('stack (adv-stack)', () => {
@@ -267,6 +275,13 @@ describe('stack (adv-stack)', () => {
     expect(isValid('[(])')).toBe(false)
     expect(isValid('(')).toBe(false)
     expect(isValid('')).toBe(true)
+  })
+
+  it('naive strip-pairs agrees with the stack solution', () => {
+    const { isValid, isValidNaive } = extract('adv-stack', ['isValid', 'isValidNaive'])
+    for (const s of ['()[]{}', '([])', '[(])', '(', '', '{[]}', '(]']) {
+      expect(isValidNaive(s)).toBe(isValid(s))
+    }
   })
 })
 
@@ -280,6 +295,14 @@ describe('binary search (adv-binary-search)', () => {
     expect(binarySearch(arr, 6)).toBe(-1)
     expect(binarySearch([], 1)).toBe(-1)
   })
+
+  it('binary search agrees with linear search on every element', () => {
+    const { binarySearch, linearSearch } = extract('adv-binary-search', ['binarySearch', 'linearSearch'])
+    const arr = [-5, -2, 0, 3, 7, 11, 18, 42]
+    for (const t of [...arr, 6, 100, -100]) {
+      expect(binarySearch(arr, t)).toBe(linearSearch(arr, t))
+    }
+  })
 })
 
 describe('linked list (adv-linked-list)', () => {
@@ -288,5 +311,13 @@ describe('linked list (adv-linked-list)', () => {
     expect(toArray(reverseList(toList([1, 2, 3, 4, 5])))).toEqual([5, 4, 3, 2, 1])
     expect(toArray(reverseList(toList([7])))).toEqual([7])
     expect(reverseList(toList([]))).toBeNull()
+  })
+
+  it('in-place reversal agrees with the O(n)-space naive version', () => {
+    const { reverseList, reverseListNaive, toList, toArray } =
+      extract('adv-linked-list', ['reverseList', 'reverseListNaive', 'toList', 'toArray'])
+    for (const a of [[1, 2, 3, 4, 5], [7], [], [9, 8]]) {
+      expect(toArray(reverseList(toList(a)))).toEqual(toArray(reverseListNaive(toList(a))))
+    }
   })
 })

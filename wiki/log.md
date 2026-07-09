@@ -9,6 +9,13 @@ tags: [meta, log]
 
 # Log (newest on top)
 
+## 2026-07-09 — Depth pass: brute→optimized journey on the 4 pattern lessons
+- Chose **depth-first** for the NeetCode content. Enhanced sliding-window/stack/binary-search/linked-list:
+  each live editor now shows **brute force → optimized** (naive + optimal side by side); explanations
+  narrate the "why it's slow → the fix"; each lists its **full** category question set from the doc.
+- A test asserts brute == optimized for every lesson (the journey is real). Tests **102 → 106**; build clean.
+- Coverage framing: ~16 pattern lessons capture all ~114 doc questions as a map; ~4/16 built so far.
+
 ## 2026-07-09 — Ingested NeetCode notes → +4 pattern lessons
 - Analyzed `Paolo 114.docx` (owner's NeetCode 150 / Blind 75 notes, ~12.5k words, 16 pattern categories).
   Source map + coverage table + pending batches → [[algo-source-neetcode]]. Doc kept in gitignored `dropoff/`.
