@@ -31,7 +31,7 @@ From the JD, in rough priority for *our* content:
 | JD requirement | Status | Where |
 |---|---|---|
 | JS/HTML/CSS proficiency | ✅ covered | [[curriculum]] frontend track |
-| **TypeScript** | ❌ gap | none — JD says "and/or TS"; table stakes |
+| **TypeScript** | ✅ **covered (new)** | `fe-typescript` — types/inference/erasure, interfaces vs type + unions, narrowing/discriminated unions, generics, utility types (verified vs official TS Handbook) |
 | React (a UI framework) | ✅ covered | fe-react, fe-ui |
 | Node/Express, REST, Mongo, auth | ✅ covered | backend track |
 | Algorithms & DS (coding round) | ✅ **covered** | `adv-algorithms` — 16 lessons, full NeetCode taxonomy (patterns + cheat sheet) |
@@ -56,8 +56,10 @@ Supersedes the generic P1 order in [[expansion-roadmap]] when optimizing for *th
      checklist, security risks (OWASP LLM Top 10 2025, slopsquatting/package hallucination, Veracode stats),
      and a hands-on audit drill (spot the hidden O(n²) + correctness bug). All figures primary-source
      verified → [[prep-resources]]. *(JD names it; owner interest.)*
-  3. **TypeScript basics** ← **NEXT** — types, interfaces, generics, narrowing (grow from the cheat-sheet seed).
-  4. **OOP & functional programming principles** — pure functions, immutability, composition;
+  3. ✅ **DONE — TypeScript Essentials** (`fe-typescript`, 5 lessons): types/inference/erasure, interfaces
+     vs type + unions, narrowing & discriminated unions (exhaustiveness via `never`), generics (`keyof`
+     constraints), utility types. Two lessons are live + taught-logic-tested; verified vs the official Handbook.
+  4. **OOP & functional programming principles** ← **NEXT** — pure functions, immutability, composition;
      classes, encapsulation, a light-touch SOLID.
   5. **React depth** — `useMemo`/`useCallback`/`memo`, controlled forms, custom hooks (ties to perf).
 - **P2:** GraphQL · advanced front-end (Canvas/WebGL/Service Workers/WASM) · Redis/caching ·

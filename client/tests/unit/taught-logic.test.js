@@ -465,3 +465,47 @@ describe('AI audit drill (adv-ai-audit-drill)', () => {
     expect(new Set(findDuplicates(data))).toEqual(new Set(findDuplicatesAI(data)))
   })
 })
+
+describe('TypeScript narrowing (fe-ts-narrowing)', () => {
+  it('area dispatches on the discriminant kind', () => {
+    const { area } = extract('fe-ts-narrowing', ['area'])
+    expect(area({ kind: 'circle', radius: 2 })).toBeCloseTo(Math.PI * 4, 5)
+    expect(area({ kind: 'square', side: 3 })).toBe(9)
+    expect(area({ kind: 'rectangle', width: 2, height: 5 })).toBe(10)
+  })
+
+  it('throws on an unhandled kind (the exhaustiveness guard at runtime)', () => {
+    const { area } = extract('fe-ts-narrowing', ['area'])
+    expect(() => area({ kind: 'triangle', base: 1, height: 2 })).toThrow(/Unhandled shape/)
+  })
+
+  it('isString is a working runtime type guard', () => {
+    const { isString } = extract('fe-ts-narrowing', ['isString'])
+    expect(isString('hi')).toBe(true)
+    expect(isString(5)).toBe(false)
+    expect(isString(null)).toBe(false)
+  })
+})
+
+describe('TypeScript generics (fe-ts-generics)', () => {
+  it('first returns the head or undefined', () => {
+    const { first } = extract('fe-ts-generics', ['first'])
+    expect(first([1, 2, 3])).toBe(1)
+    expect(first([])).toBeUndefined()
+    expect(first(['a'])).toBe('a')
+  })
+
+  it('identity returns its argument unchanged', () => {
+    const { identity } = extract('fe-ts-generics', ['identity'])
+    expect(identity('hi')).toBe('hi')
+    const obj = { a: 1 }
+    expect(identity(obj)).toBe(obj) // same reference
+  })
+
+  it('pluck maps items to the named key', () => {
+    const { pluck } = extract('fe-ts-generics', ['pluck'])
+    const users = [{ id: 1, name: 'Ada' }, { id: 2, name: 'Lin' }]
+    expect(pluck(users, 'name')).toEqual(['Ada', 'Lin'])
+    expect(pluck(users, 'id')).toEqual([1, 2])
+  })
+})

@@ -30,10 +30,16 @@ only behavioral prep is personalized (kept privately, out of this repo).
 - MDN — Critical Rendering Path (reflow vs repaint).
 - thedaviddias/Front-End-Performance-Checklist.
 
-## 🎯 TypeScript
-- ⭐ type-challenges/type-challenges — learn the type system by solving.
-- Official TS Handbook · basarat's *TypeScript Deep Dive* (free).
-- dzharii/awesome-typescript — aggregator.
+## 🎯 TypeScript — VERIFIED sources (built into `fe-typescript`)
+Content cross-checked against the **official TypeScript Handbook** on 2026-07-09 (no-hallucination rule):
+- ⭐ **Official TS Handbook** — [Everyday Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html)
+  (interface vs type: a `type` can't be re-opened, an `interface` is always extendable; `any` disables all
+  checking; unions with `|`; prefer inference) · [Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html)
+  (typeof/truthiness/equality/`in`/`instanceof` guards; discriminated unions; `never` for exhaustiveness —
+  "no type is assignable to `never`") · [Utility Types](https://www.typescriptlang.org/docs/handbook/utility-types.html)
+  (Partial/Required/Readonly/Pick/Omit/Record/ReturnType).
+- ⭐ type-challenges/type-challenges — learn the type system by solving (highly starred).
+- basarat's *TypeScript Deep Dive* (free) · dzharii/awesome-typescript — aggregator.
 
 ## Front-end system design
 - ⭐ greatfrontend/awesome-front-end-system-design — RADIO framework.

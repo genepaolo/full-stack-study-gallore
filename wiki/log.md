@@ -9,6 +9,19 @@ tags: [meta, log]
 
 # Log (newest on top)
 
+## 2026-07-09 — New `fe-typescript` module (5 lessons), verified vs the official TS Handbook
+- Built the P1 TypeScript module (JD: "JavaScript and/or TypeScript"): `fe-ts-basics` (types/inference/
+  **erasure**, any vs unknown, structural typing), `fe-ts-interfaces` (interface vs type, unions `|` /
+  intersections `&`, literals, `as const`), `fe-ts-narrowing` (**live** — discriminated-union `area`;
+  typeof/in/instanceof guards; `never` exhaustiveness), `fe-ts-generics` (**live** — `first`/`identity`/
+  constrained `pluck<T,K extends keyof T>`), `fe-ts-utility-types` (Partial/Pick/Omit/Record/… + React props).
+- TS is **content-only** — the app stays JS. The two live lessons run the plain-JS runtime (types erase);
+  codeNotes carry the `<T>` signatures. Taught-logic-tested. Every claim checked against the official
+  Handbook (Everyday Types / Narrowing / Utility Types) → [[prep-resources]].
+- Fixed a self-inflicted parse error first: a stray unescaped backtick in the narrowing explanation closed
+  the template literal early (caught by `node --check`; the no-hallucination discipline applies to our code too).
+- Tests 130 → **138**; build clean. Updated [[target-role-profile]]: TypeScript ✅; **OOP/FP** is next.
+
 ## 2026-07-09 — AI-code-auditing: +3 `adv-ai` lessons, every figure primary-source verified
 - Built the P1 "audit AI output" content (JD names it twice): `adv-ai-auditing` (5-pass checklist:
   correctness/security/performance/dependencies/maintainability; "assume confidently incomplete"),

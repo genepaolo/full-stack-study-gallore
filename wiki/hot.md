@@ -10,9 +10,9 @@ tags: [meta, cache]
 # Recent Context
 
 ## Last Updated
-2026-07-09. Three P1 gaps closed today: **DSA taxonomy** (`adv-algorithms` = 16), **Front-End Performance**
-(`fe-performance` = 5), and **AI-assisted engineering + auditing** (`adv-ai` = 5). Tests **130**, build clean.
-Every AI-audit statistic was **primary-source verified** (owner's no-hallucination rule). Next P1: **TypeScript**.
+2026-07-09. Four P1 gaps closed today: **DSA taxonomy** (`adv-algorithms`=16), **Front-End Performance**
+(`fe-performance`=5), **AI-assisted engineering + auditing** (`adv-ai`=5), and **TypeScript** (`fe-typescript`=5).
+Tests **138**, build clean. All facts **primary-source verified** (owner's no-hallucination rule). Next P1: **OOP/FP**.
 
 ## Headlines
 - **`adv-algorithms` = 16 lessons**, all JS (not Java), each brute→optimized + `codeNotes` + full
@@ -30,14 +30,18 @@ Every AI-audit statistic was **primary-source verified** (owner's no-hallucinati
 - **`adv-ai` = 5 lessons**: workflow · prompting · **auditing** (5-pass checklist) · **security** (OWASP
   LLM Top 10 2025, slopsquatting/package hallucination, Veracode stats) · **audit drill** (live: spot the
   hidden O(n²) + correctness bug, tested). All stats primary-source verified → [[prep-resources]].
-- **Curation target** → [[target-role-profile]] (Snap-style FS Eng): P1 = FE perf ✅ · AI-audit ✅ →
-  **TypeScript (next)** → OOP/FP → React depth → behavioral.
+- **`fe-typescript` = 5 lessons** (frontend, level 3, content-only — app stays JS): basics (types/inference/
+  **erasure**, any vs unknown) · interfaces vs type + unions/literals/`as const` · **narrowing** (live:
+  discriminated-union `area`, `never` exhaustiveness) · **generics** (live: `pluck<T,K extends keyof T>`) ·
+  utility types. Two lessons live+tested; verified vs the official TS Handbook.
+- **Curation target** → [[target-role-profile]] (Snap-style FS Eng): P1 = FE perf ✅ · AI-audit ✅ ·
+  TypeScript ✅ → **OOP/FP (next)** → React depth → behavioral.
 - **Security**: live-editor host-isolated (Sandpack sandboxed iframe + double ErrorBoundary + Reset).
   `autorun:false` still offered as a stronger infinite-loop guard (owner's call, not applied).
 
 ## Active Threads
-- **NEXT: TypeScript module** — types, interfaces, generics, narrowing; grow from the cheat-sheet TS seed
-  in `adv-cheatsheet`. Then OOP/FP, React depth (useMemo/useCallback), FE system design, deepen MongoDB.
+- **NEXT: OOP & functional programming** — pure functions, immutability, composition; classes,
+  encapsulation, light SOLID. Then React depth (useMemo/useCallback/memo), FE system design, deepen MongoDB.
 - **Verify-don't-hallucinate is now a standing rule**: every factual claim/stat must be backed by a solid
   primary source or a highly-starred repo before it ships (see [[prep-resources]] for the AI-audit set).
 - **Practice**: verify each solution/complexity vs public LeetCode before it ships; keep explanations simple.

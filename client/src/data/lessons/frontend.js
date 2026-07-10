@@ -556,6 +556,60 @@ console.log("DOM nodes rendered:", bEnd - bStart, "of", TOTAL);    // 16 of 1000
 console.log("spacer height:", totalHeight(TOTAL, ROW), "px (scrollbar stays correct)");
 `
 
+// ---------- fe-typescript ----------
+const tsNarrowingStarter = `// Narrowing & discriminated unions in action. TypeScript uses the 'kind' tag to figure out which
+// shape it has; at RUNTIME the types are gone, so this is plain JS. The codeNotes show the TS version.
+
+// A "discriminated union": every shape carries a literal 'kind' tag TS can switch on.
+function area(shape) {
+  switch (shape.kind) {
+    case "circle":    return Math.PI * shape.radius ** 2;
+    case "square":    return shape.side ** 2;
+    case "rectangle": return shape.width * shape.height;
+    default:
+      // Exhaustiveness: in TS you assign 'shape' to a 'never' here, so adding a new kind
+      // without handling it becomes a COMPILE error. At runtime we just guard.
+      throw new Error("Unhandled shape: " + shape.kind);
+  }
+}
+
+// A runtime type guard — 'typeof x === "string"' narrows to string in TS, and works in JS too.
+function isString(x) {
+  return typeof x === "string";
+}
+
+console.log("circle:   ", area({ kind: "circle", radius: 2 }).toFixed(2)); // 12.57
+console.log("square:   ", area({ kind: "square", side: 3 }));              // 9
+console.log("rectangle:", area({ kind: "rectangle", width: 2, height: 5 })); // 10
+console.log("isString('hi'):", isString("hi"), " isString(5):", isString(5)); // true false
+`
+
+const tsGenericsStarter = `// Generics let ONE function work over many types without losing type info. Types erase at runtime,
+// so below is the plain-JS runtime; the codeNotes show the <T> signatures TypeScript layers on top.
+
+// first<T>(arr: T[]): T | undefined
+function first(arr) {
+  return arr[0];
+}
+
+// identity<T>(x: T): T
+function identity(x) {
+  return x;
+}
+
+// pluck<T, K extends keyof T>(items: T[], key: K): T[K][]
+// A CONSTRAINED generic: K must be a key of T, so items.map(it => it[key]) is type-safe.
+function pluck(items, key) {
+  return items.map((it) => it[key]);
+}
+
+console.log("first([1,2,3]):", first([1, 2, 3]));   // 1
+console.log("first([]):     ", first([]));           // undefined (that is why the return is T | undefined)
+console.log("identity('hi'):", identity("hi"));      // hi
+const users = [{ id: 1, name: "Ada" }, { id: 2, name: "Lin" }];
+console.log("pluck names:   ", pluck(users, "name")); // ["Ada", "Lin"]
+`
+
 export const frontendLessons = [
   // fe-foundations
   {
@@ -1051,5 +1105,161 @@ and INP (less JS to load and run), **avoiding layout thrash** and **transform/op
 INP and CLS, and **virtualization** keeps the DOM small so interactions stay responsive. Measure with the
 **web-vitals** library on real users, debug in Lighthouse/DevTools, and always cite the metric you’re
 moving.`,
+  },
+
+  // ---------- fe-typescript ----------
+  {
+    id: 'fe-ts-basics', module: 'fe-typescript', order: 1, kind: 'concept',
+    title: 'Why TypeScript (types, inference, erasure)', difficulty: 'easy', tags: ['typescript', 'types'],
+    summary: 'TypeScript is JavaScript plus a compile-time type checker — it catches bugs before they run, then disappears.',
+    prompt: `**TypeScript is a superset of JavaScript**: all valid JS is valid TS, plus a **static type system** that checks your code *before* it runs. The role lists "JavaScript **and/or TypeScript**" — TS is table stakes now. The key mental model: types are checked at **compile time** and then **erased**, so at runtime it is just plain JavaScript (which is why this app's live editors run the JS underneath).`,
+    keyTerms: [
+      { term: 'Static vs dynamic typing', def: 'TS checks types at compile time (before running); JS only finds type errors at runtime, if at all. Static typing surfaces the bug in your editor.' },
+      { term: 'Type inference', def: 'TS infers types automatically from initializers — `let name = "Ada"` is inferred as `string`. The handbook advises: use fewer annotations than you think.' },
+      { term: 'Type annotation', def: 'Explicitly stating a type: `let name: string`. Needed mainly on function parameters and where inference can’t help.' },
+      { term: 'Type erasure', def: 'Types have no runtime footprint — the compiler removes them, emitting plain JS. You cannot check a TS type with `if` at runtime; you narrow with real JS checks instead.' },
+      { term: 'any vs unknown', def: '`any` disables all type checking (an escape hatch). `unknown` is the safe counterpart — you must narrow it before use. Prefer `unknown` over `any`.' },
+      { term: 'Structural typing', def: 'TS matches types by shape, not by name ("if it has the right properties, it fits"). Two differently-named types with the same shape are compatible.' },
+    ],
+    codeNotes: [
+      { label: 'Annotate params; let inference do the rest', code: `function greet(name: string): string {  // annotate inputs/outputs\n  return "Hi " + name;\n}\nlet count = 5;            // inferred as number — no annotation needed\nconst names = ["a", "b"]; // inferred as string[]`, note: "Lead with inference; annotate function parameters and public APIs." },
+      { label: 'unknown is the safe any', code: `let a: any = JSON.parse(s);      // a.foo.bar — no error, no safety\nlet u: unknown = JSON.parse(s);  // must narrow before use:\nif (typeof u === "string") u.toUpperCase();`, note: "any switches off the checker; unknown forces you to prove the type first." },
+    ],
+    explanation: `**What you get:** the type checker catches whole classes of bugs — typos, \`undefined\` is not a
+function, passing a \`number\` where a \`string\` is expected, forgetting a case — **in your editor**, before
+the code ever runs. It also powers autocomplete, safe refactors, and self-documenting function signatures.
+
+**The compile-time / runtime split (the thing to internalize):** TypeScript runs a checker over your
+code, then a compiler **strips the types** and emits ordinary JavaScript. So types are a *development-time*
+tool with **zero runtime cost and zero runtime presence**. You can't write \`if (x is Foo)\` — the type is
+gone. To make decisions at runtime you use real JS checks (\`typeof\`, \`in\`, \`instanceof\`) that TS
+understands (the **narrowing** lesson). This is exactly why this study app stays JavaScript under the hood
+while teaching TS as content: the runtime behavior is identical.
+
+**Two habits from the official handbook:** (1) **prefer inference** — annotate function parameters and
+public APIs, but let TS infer local variables; (2) **avoid \`any\`** — it silently switches the checker off;
+reach for \`unknown\` and narrow. *Source: [TypeScript Handbook — Everyday Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html).*`,
+  },
+  {
+    id: 'fe-ts-interfaces', module: 'fe-typescript', order: 2, kind: 'concept',
+    title: 'Interfaces, type aliases & unions', difficulty: 'medium', tags: ['typescript', 'interfaces', 'unions'],
+    summary: 'Shape your data with interface/type, combine with unions (|) and intersections (&), and lock values with literals.',
+    prompt: `Model your data’s **shape** with an \`interface\` or a \`type\` alias, then compose types with **unions** (\`A | B\` — "one of") and **intersections** (\`A & B\` — "both"). **Literal types** (\`"sm" | "md" | "lg"\`) turn a loose \`string\` into an exact set of allowed values — one of TS’s highest-leverage features.`,
+    keyTerms: [
+      { term: 'interface', def: 'Declares the shape of an object. Always extendable — it can be re-opened to add fields (declaration merging) and `extends` other interfaces. Preferred for object/class shapes and public APIs.' },
+      { term: 'type alias', def: 'Names any type — objects, unions, primitives, tuples, functions. Cannot be re-opened after definition. Use it for unions and anything that isn’t a plain object shape.' },
+      { term: 'Union type (|)', def: '`string | number` means the value is one of these types. You must narrow before using type-specific methods.' },
+      { term: 'Intersection type (&)', def: '`A & B` combines both — the value must satisfy every member. Handy for mixing in extra fields: `Animal & { honey: boolean }`.' },
+      { term: 'Literal types', def: 'Exact values as types: `type Size = "sm" | "md" | "lg"`. Restricts a string/number to a known set — the compiler rejects `"xl"`.' },
+      { term: 'Optional & readonly', def: '`name?: string` marks a property optional; `readonly id: number` forbids reassignment after creation.' },
+    ],
+    codeNotes: [
+      { label: 'interface for object shapes', code: `interface User {\n  readonly id: number;   // cannot be reassigned\n  name: string;\n  email?: string;        // optional\n}\ninterface Admin extends User { role: "admin"; }`, note: "Interfaces extend and can be re-opened; reach for them for object/class shapes." },
+      { label: 'type for unions, literals, composition', code: `type Size = "sm" | "md" | "lg";     // literal union\ntype ID = string | number;          // union\ntype Staff = User & { level: number }; // intersection`, note: "A type alias cannot be re-opened; use it for unions and compositions." },
+      { label: 'as const freezes to literal types', code: `const sizes = ["sm", "md", "lg"] as const;\n// type is readonly ["sm","md","lg"], not string[]\ntype Size = typeof sizes[number];   // "sm" | "md" | "lg"`, note: "as const derives a literal union from a real array — single source of truth." },
+    ],
+    explanation: `**interface vs type — the real rule (from the handbook):** they’re nearly interchangeable for
+object shapes; the one hard difference is that **a \`type\` cannot be re-opened to add properties, while an
+\`interface\` is always extendable**. Practical guidance: use \`interface\` for object and class shapes and
+public APIs (it \`extends\` cleanly and supports declaration merging), and use \`type\` for **unions**,
+**literals**, tuples, and function types — things an interface can’t express.
+
+**Unions and literals are where TS earns its keep.** A \`union\` (\`|\`) models "this is one of these
+types/values"; an **intersection** (\`&\`) models "this has all of these." Turning a loose \`string\` into a
+**literal union** (\`"GET" | "POST" | "PUT" | "DELETE"\`) means the compiler rejects typos like \`"POTS"\`
+before you ever run the code. Combined with **discriminated unions** (next lesson), literals let TS prove
+you handled every case. *Source: [TypeScript Handbook — Everyday Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html).*`,
+  },
+  {
+    id: 'fe-ts-narrowing', module: 'fe-typescript', order: 3, kind: 'utility', template: 'vanilla',
+    title: 'Narrowing & discriminated unions', difficulty: 'medium', tags: ['typescript', 'narrowing', 'unions'],
+    summary: 'Real JS checks (typeof, in, instanceof, a discriminant tag) let TS refine a union to one exact type.',
+    prompt: `Implement **\`area(shape)\`** over a **discriminated union** of shapes tagged by \`kind\`. A \`switch\` on \`shape.kind\` lets TypeScript **narrow** to the exact shape in each branch. Because types erase, the code you run is plain JS — but the same checks drive the compiler’s narrowing.`,
+    keyTerms: [
+      { term: 'Narrowing', def: 'TS follows your control flow and refines a value to a more specific type inside a branch — e.g. `number | string` becomes `string` after a `typeof` check.' },
+      { term: 'Type guard', def: 'A runtime check TS recognizes for narrowing: `typeof x === "string"`, `"swim" in animal`, `x instanceof Date`, or a custom `x is Fish` predicate.' },
+      { term: 'Discriminated union', def: 'A union of object types sharing a common literal property (the discriminant, e.g. `kind: "circle"`). Switching on it narrows to the matching member.' },
+      { term: 'Exhaustiveness with never', def: 'In the `default` branch, assigning the value to a `never` makes TS error if any union member is unhandled — so adding a new shape forces you to handle it. `never`: no type is assignable to it (except never).' },
+    ],
+    codeNotes: [
+      { label: 'The discriminant + switch (TS narrows each case)', code: `type Shape =\n  | { kind: "circle"; radius: number }\n  | { kind: "square"; side: number };\nfunction area(s: Shape): number {\n  switch (s.kind) {\n    case "circle": return Math.PI * s.radius ** 2; // s is Circle here\n    case "square": return s.side ** 2;             // s is Square here\n  }\n}`, note: "The shared literal 'kind' is the discriminant TS switches on." },
+      { label: 'Exhaustiveness check with never', code: `default: {\n  const _exhaustive: never = s; // compile error if a kind is unhandled\n  return _exhaustive;\n}`, note: "Add a new shape kind and TS forces you to handle it — no silent gaps." },
+      { label: 'Custom type guard (x is Fish)', code: `function isFish(pet: Fish | Bird): pet is Fish {\n  return (pet as Fish).swim !== undefined;\n}`, note: "A 'x is T' return type teaches TS to narrow at the call site." },
+    ],
+    starterCode: { '/index.js': tsNarrowingStarter },
+    explanation: `**The idea:** a value typed as a **union** can’t be used as any one member until you prove which
+it is. TypeScript watches ordinary JS checks — \`typeof\`, truthiness, \`===\`, the \`in\` operator,
+\`instanceof\` — and **narrows** the type inside that branch. A **discriminated union** makes this airtight:
+give every member a shared literal tag (\`kind: "circle"\`) and a \`switch\` narrows to the exact shape in
+each \`case\`.
+
+**The killer feature is exhaustiveness.** Put \`const _exhaustive: never = shape\` in the \`default\`: because
+**no type is assignable to \`never\`**, TS raises a compile error the moment you add a new \`kind\` without a
+matching \`case\`. That turns "did I handle every state?" from a code-review hope into a compiler guarantee
+— exactly the reliability the role cares about. Run the editor to see the runtime (plain JS); the codeNotes
+show the types that make it safe. *Source: [TypeScript Handbook — Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html).*`,
+  },
+  {
+    id: 'fe-ts-generics', module: 'fe-typescript', order: 4, kind: 'utility', template: 'vanilla',
+    title: 'Generics', difficulty: 'medium', tags: ['typescript', 'generics'],
+    summary: 'One function, many types, without losing type info — `<T>` is a type parameter you fill in per call.',
+    prompt: `Implement generic helpers — **\`first(arr)\`**, **\`identity(x)\`**, and **\`pluck(items, key)\`**. In TypeScript these are \`first<T>\`, \`identity<T>\`, and a **constrained** \`pluck<T, K extends keyof T>\`, so callers keep exact types instead of falling back to \`any\`. Types erase, so the running code is plain JS.`,
+    keyTerms: [
+      { term: 'Generic / type parameter', def: 'A placeholder type (`<T>`) filled in when the function is called, so `first<number>([1,2])` returns `number`. One implementation, full type safety across types.' },
+      { term: 'Why not any', def: '`any` loses information — `first(arr): any` forgets the element type. `first<T>(arr: T[]): T` remembers it, so the result keeps autocomplete and checking.' },
+      { term: 'Generic constraint (extends)', def: '`<T extends { length: number }>` restricts T to types that have the required shape, so you can safely use those members inside.' },
+      { term: 'keyof', def: '`keyof T` is the union of T’s property names. `pluck<T, K extends keyof T>` guarantees `key` is a real property of the items — a typo won’t compile.' },
+    ],
+    codeNotes: [
+      { label: 'Generic function signatures', code: `function first<T>(arr: T[]): T | undefined { return arr[0]; }\nfunction identity<T>(x: T): T { return x; }\n// first([1,2,3]) -> number | undefined  (T inferred as number)`, note: "T is inferred from the argument — callers rarely write it explicitly." },
+      { label: 'Constrained generic with keyof', code: `function pluck<T, K extends keyof T>(items: T[], key: K): T[K][] {\n  return items.map((it) => it[key]);\n}\npluck(users, "name"); // OK   pluck(users, "nope"); // compile error`, note: "K extends keyof T rejects keys that do not exist on T." },
+    ],
+    starterCode: { '/index.js': tsGenericsStarter },
+    explanation: `**The problem generics solve:** without them you either write the same function once per type
+(repetitive) or type it as \`any\` (unsafe — you lose all checking and autocomplete). A **generic** captures
+the type as a parameter \`T\` and threads it through: \`first<T>(arr: T[]): T | undefined\` means "give me an
+array of some \`T\`, I return that same \`T\`." Call \`first([1,2,3])\` and TS **infers** \`T = number\`, so the
+result is \`number | undefined\` — fully typed, zero annotations at the call site.
+
+**Constraints make generics precise.** \`<T extends { length: number }>\` says "T must at least have a
+\`length\`," letting you use \`.length\` safely inside. \`pluck<T, K extends keyof T>\` uses **\`keyof\`** so the
+\`key\` argument must be a real property name of the items — \`pluck(users, "nmae")\` fails to compile. This
+is the same generic machinery React uses to type components (\`useState<number>\`, \`Array<User>\`), so it’s
+worth real fluency. Run the editor for the JS runtime; the codeNotes carry the \`<T>\` signatures.`,
+  },
+  {
+    id: 'fe-ts-utility-types', module: 'fe-typescript', order: 5, kind: 'concept',
+    title: 'Utility types (Partial, Pick, Record…)', difficulty: 'medium', tags: ['typescript', 'utility-types', 'react'],
+    summary: 'Built-in type transformers — reshape an existing type instead of hand-writing a new one.',
+    prompt: `TypeScript ships **utility types** that transform existing types: make every field optional (\`Partial\`), select a subset (\`Pick\`), remove fields (\`Omit\`), build a dictionary (\`Record\`), and more. They keep your types **DRY** — derive from one source of truth instead of re-declaring shapes that drift apart.`,
+    keyTerms: [
+      { term: 'Partial<T> / Required<T>', def: '`Partial<T>` makes every property optional (great for update/patch objects); `Required<T>` makes every property mandatory.' },
+      { term: 'Pick<T, K> / Omit<T, K>', def: '`Pick` keeps only the named keys; `Omit` removes them. E.g. `Omit<User, "password">` for a safe public shape.' },
+      { term: 'Record<K, V>', def: 'A dictionary/object type with keys K and values V: `Record<string, number>` or `Record<"sm" | "lg", string>`.' },
+      { term: 'Readonly<T>', def: 'Makes all properties `readonly` — a compile-time immutable view of the shape.' },
+      { term: 'ReturnType<F> / Parameters<F>', def: 'Extract a function’s return type or its parameter tuple from the function type itself — no manual duplication.' },
+    ],
+    codeNotes: [
+      { label: 'Reshape one source-of-truth type', code: `interface User { id: number; name: string; email: string; password: string; }\ntype UserUpdate = Partial<User>;          // all optional (PATCH body)\ntype PublicUser = Omit<User, "password">;  // drop the secret\ntype Credentials = Pick<User, "email" | "password">;`, note: "Derive from User; if User changes, these follow automatically." },
+      { label: 'Record for dictionaries', code: `type Roles = Record<"admin" | "editor" | "viewer", string[]>;\n// { admin: string[]; editor: string[]; viewer: string[] }\nconst counts: Record<string, number> = {};`, note: "Cleaner than index signatures for known key sets." },
+      { label: 'Typing React props (where you meet these)', code: `interface ButtonProps {\n  label: string;\n  variant?: "primary" | "ghost";   // optional literal union\n  onClick: () => void;\n}\nfunction Button({ label, variant = "primary", onClick }: ButtonProps) { /* ... */ }`, note: "Props are just an object type; literal unions constrain variants." },
+    ],
+    explanation: `**Why they matter:** the biggest maintenance win in TS is a **single source of truth** for a
+shape, then *deriving* everything else from it. Hand-writing a \`UserUpdate\` next to \`User\` guarantees they
+drift; \`Partial<User>\` stays in sync forever. The core set to know cold: **\`Partial\`**, **\`Required\`**,
+**\`Readonly\`**, **\`Pick\`**, **\`Omit\`**, **\`Record\`**, and **\`ReturnType\`**.
+
+| Utility | Turns \`User\` into… | Use for |
+|---|---|---|
+| \`Partial<User>\` | all fields optional | PATCH/update payloads |
+| \`Required<User>\` | all fields mandatory | tightening a loose type |
+| \`Pick<User, "id" \\| "name">\` | only those keys | narrow view models |
+| \`Omit<User, "password">\` | everything except those | safe public objects |
+| \`Record<Role, string[]>\` | dictionary of Role → string[] | keyed maps |
+| \`Readonly<User>\` | immutable view | frozen config/state |
+
+**Where you’ll use them daily:** typing **React props** (a props object is just a type — often with
+optional fields and literal-union variants), API request/response shapes, and reducer state. Master these
+and you write far fewer bespoke types. *Source: [TypeScript Handbook — Utility Types](https://www.typescriptlang.org/docs/handbook/utility-types.html).*`,
   },
 ]

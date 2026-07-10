@@ -925,7 +925,7 @@ export const advancedLessons = [
       { label: 'Class (custom data structures)', code: `class Node {\n  constructor(val = 0, next = null) { this.val = val; this.next = next; }\n}\nconst n = new Node(1);`, note: 'For list/tree nodes, stacks-with-metadata, etc.' },
       { label: 'Map / Set', code: `const m = new Map(); m.set(k, v); m.get(k); m.has(k);\nconst s = new Set(arr); s.has(x); s.add(x);   // dedup + O(1) membership`, note: 'Reach for these over {}/[] in almost every problem.' },
       { label: 'Regex — normalize a string', code: `s.toLowerCase().replace(/[^a-z0-9]/g, ""); // strip to lowercase alphanumerics`, note: 'The palindrome / string-cleanup workhorse.' },
-      { label: 'TypeScript quick-ref (seed — its own module later)', code: `function twoSum(nums: number[], target: number): number[] { ... }\ninterface ListNode { val: number; next: ListNode | null; }\nfunction first<T>(arr: T[]): T | undefined { return arr[0]; } // generic\ntype Dir = "N" | "E" | "S" | "W";   // union / literal types`, note: 'Same algorithms, with types on the inputs/outputs.' },
+      { label: 'TypeScript quick-ref (full module: TypeScript Essentials)', code: `function twoSum(nums: number[], target: number): number[] { ... }\ninterface ListNode { val: number; next: ListNode | null; }\nfunction first<T>(arr: T[]): T | undefined { return arr[0]; } // generic\ntype Dir = "N" | "E" | "S" | "W";   // union / literal types`, note: 'Same algorithms, with types on the inputs/outputs. See the TypeScript Essentials module.' },
     ],
     explanation: `## Pattern table — reach for…
 
