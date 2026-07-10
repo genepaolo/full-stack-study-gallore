@@ -9,6 +9,18 @@ tags: [meta, log]
 
 # Log (newest on top)
 
+## 2026-07-10 — New `fe-paradigms` module (5 lessons): OOP & Functional Programming
+- Built P1 #4 (JD: "OOP + functional programming principles"). Frontend track, level 3, placed after
+  `fe-js-core`, before `fe-react`. Lessons: `fe-para-intro` (multi-paradigm; imperative vs declarative),
+  `fe-fp-pure` (pure functions + immutability — live+tested cart ops), `fe-fp-compose` (HOF + pipe/compose
+  — live+tested), `fe-oop-classes` (classes/#private encapsulation/prototypes; composition over
+  inheritance), `fe-solid` (SOLID as front-end instincts). 2 live vanilla editors + taught-logic tests.
+- Framed to the target role: React purity/immutability angle, AI-audit angle (mutation of inputs; needless
+  class trees), performance note on map/filter passes. Facts verified vs MDN (First-class Function, Classes,
+  Private properties), React docs (Keeping Components Pure, Updating Arrays in State), Wikipedia/Martin (SOLID).
+- Tests **138 → 148** (+8 taught-logic, +2 auto-compile), build clean, `node --check` passed. No in-browser
+  pass (DevTools MCP still not connected). Next P1: **React depth** (useMemo/useCallback/memo, custom hooks).
+
 ## 2026-07-09 save | Content buildout: DSA, FE performance, AI-audit, TypeScript
 - Type: session
 - Location: wiki/sessions/2026-07-09-content-buildout.md

@@ -610,6 +610,77 @@ const users = [{ id: 1, name: "Ada" }, { id: 2, name: "Lin" }];
 console.log("pluck names:   ", pluck(users, "name")); // ["Ada", "Lin"]
 `
 
+// ---------- fe-paradigms ----------
+const fpPureStarter = `// PURE FUNCTION = (1) same input -> same output (deterministic), (2) no side effects
+// (no mutating inputs, no I/O). Pure functions are trivial to test and reason about — and
+// React depends on them: state must be treated as immutable, so you return NEW data, never edit.
+
+// IMPURE: mutates the caller's array underneath them. The classic AI-generated bug.
+function addImpure(cart, item) {
+  cart.push(item);          // <-- side effect: the input is changed
+  return cart;
+}
+
+// PURE: return a NEW array; the original is untouched.
+function addItem(cart, item) {
+  return [...cart, item];                 // spread = shallow copy + append
+}
+
+// PURE update: map to a new array, replacing ONLY the matched item with a new object.
+function setQty(cart, id, qty) {
+  return cart.map((it) => (it.id === id ? { ...it, qty } : it));
+}
+
+// PURE remove.
+function removeItem(cart, id) {
+  return cart.filter((it) => it.id !== id);
+}
+
+// PURE derivation: reduce is a fold — deterministic, no mutation.
+function total(cart) {
+  return cart.reduce((sum, it) => sum + it.price * it.qty, 0);
+}
+
+const cart = [{ id: 1, price: 10, qty: 1 }, { id: 2, price: 5, qty: 3 }];
+const bigger = addItem(cart, { id: 3, price: 2, qty: 10 });
+console.log("original length:", cart.length, " new length:", bigger.length); // 2  3  (original untouched)
+console.log("total(bigger):", total(bigger));                                // 45
+console.log("setQty is immutable:", total(setQty(cart, 1, 5)), "vs original", total(cart)); // 65 vs 25
+`
+
+const fpComposeStarter = `// HIGHER-ORDER FUNCTIONS take and/or return functions. map / filter / reduce are the daily trio.
+// COMPOSITION builds one big transform by chaining small, pure steps — each independently testable.
+
+// pipe: LEFT-to-right. pipe(f, g)(x) === g(f(x)) — reads top-to-bottom like a recipe.
+function pipe(...fns) {
+  return (x) => fns.reduce((acc, fn) => fn(acc), x);
+}
+
+// compose: RIGHT-to-left (classic math order). compose(f, g)(x) === f(g(x)).
+function compose(...fns) {
+  return (x) => fns.reduceRight((acc, fn) => fn(acc), x);
+}
+
+// small, pure, reusable steps:
+const trim = (s) => s.trim();
+const lower = (s) => s.toLowerCase();
+const spacesToDashes = (s) => s.replace(/\\s+/g, "-");
+
+// one readable pipeline instead of nested calls:
+const slugify = pipe(trim, lower, spacesToDashes);
+
+// map/filter/reduce is itself a data pipeline:
+const nums = [1, 2, 3, 4, 5, 6];
+const sumOfEvenSquares = nums
+  .filter((n) => n % 2 === 0)   // [2, 4, 6]
+  .map((n) => n * n)            // [4, 16, 36]
+  .reduce((a, b) => a + b, 0);  // 56
+
+console.log("slugify:", slugify("  Hello World  "));            // "hello-world"
+console.log("compose is right-to-left:", compose(trim, lower)("  HI  ")); // "hi"
+console.log("sumOfEvenSquares:", sumOfEvenSquares);            // 56
+`
+
 export const frontendLessons = [
   // fe-foundations
   {
@@ -1261,5 +1332,200 @@ drift; \`Partial<User>\` stays in sync forever. The core set to know cold: **\`P
 **Where you’ll use them daily:** typing **React props** (a props object is just a type — often with
 optional fields and literal-union variants), API request/response shapes, and reducer state. Master these
 and you write far fewer bespoke types. *Source: [TypeScript Handbook — Utility Types](https://www.typescriptlang.org/docs/handbook/utility-types.html).*`,
+  },
+
+  // ---------- fe-paradigms (OOP & Functional Programming) ----------
+  {
+    id: 'fe-para-intro', module: 'fe-paradigms', order: 1, kind: 'concept',
+    title: 'Two paradigms, one language', difficulty: 'easy', tags: ['oop', 'functional', 'paradigms'],
+    summary: 'JavaScript is multi-paradigm: it does object-oriented AND functional. Know what each optimizes for and when to reach for it.',
+    prompt: `The role asks for "**OOP + functional programming principles**." JavaScript is **multi-paradigm** — it supports both, and idiomatic code mixes them. The one-line contrast: **OOP bundles state and the behavior that acts on it together** (objects/classes); **FP keeps data and behavior separate** and transforms **immutable** data with **pure functions**. React itself is the poster child — components used to be classes (OOP) and are now functions with hooks that lean hard on FP (immutable state, pure render).`,
+    keyTerms: [
+      { term: 'Imperative vs declarative', def: 'Imperative code says HOW step by step (a `for` loop that pushes). Declarative code says WHAT you want (`.map`/`.filter`). FP and React both push you toward declarative.' },
+      { term: 'Object-oriented programming (OOP)', def: 'Organize code as objects that bundle state (data) with behavior (methods). Core ideas: encapsulation, inheritance, polymorphism.' },
+      { term: 'Functional programming (FP)', def: 'Build programs from pure functions over immutable data, composed together. Core ideas: pure functions, immutability, first-class & higher-order functions, composition.' },
+      { term: 'Multi-paradigm', def: 'A language that supports several paradigms. JS has first-class functions (FP) AND classes/prototypes (OOP) — real code blends them.' },
+      { term: 'State', def: 'Data that changes over time. OOP tends to hold and mutate state inside objects; FP tends to thread state through as immutable values you replace, not edit.' },
+    ],
+    codeNotes: [
+      { label: 'Same task, two styles', code: `// Imperative (how):\nlet totals = [];\nfor (let i = 0; i < carts.length; i++) totals.push(sum(carts[i]));\n\n// Declarative / functional (what):\nconst totals2 = carts.map(sum);`, note: "Declarative reads as intent; fewer places for an off-by-one to hide." },
+      { label: 'OOP: state + behavior together', code: `class Counter {\n  #count = 0;               // state, encapsulated\n  increment() { this.#count++; } // behavior on that state\n  get value() { return this.#count; }\n}`, note: "The data and the methods that change it live in one unit." },
+      { label: 'FP: data in, new data out', code: `const increment = (count) => count + 1; // pure: no stored state\nconst next = increment(0);              // caller holds the state`, note: "No hidden state; the value is passed in and a new value returned." },
+    ],
+    explanation: `**Neither paradigm is "the right one" — they optimize for different things, and senior code
+uses both deliberately.**
+
+**OOP** shines when you have a *thing* with identity and lifecycle — a DOM element wrapper, a game entity,
+a database connection — where bundling state with the methods that manage it (**encapsulation**) keeps the
+invariants in one place. **FP** shines for **data transformation** — take input, run it through pure steps,
+get output — which is most of what a UI does (props → view) and most of what interview problems ask for.
+
+**Why front-end interviews lean functional:** React's model is *"UI is a pure function of state."* Render
+must be pure (same props/state → same output, no side effects during render); state updates must be
+**immutable** (return new objects/arrays so React can detect the change by reference). Getting fluent with
+pure functions, immutability, and composition — the next lessons — directly pays off in React, and makes
+your code far easier to unit-test.
+
+**The pragmatic rule:** reach for a **class** when you're modeling a stateful entity with a clear identity;
+reach for **pure functions + composition** when you're transforming data. Don't force everything into one.
+*Sources: [MDN — First-class Function](https://developer.mozilla.org/en-US/docs/Glossary/First-class_Function),
+[React — Keeping Components Pure](https://react.dev/learn/keeping-components-pure).*`,
+  },
+  {
+    id: 'fe-fp-pure', module: 'fe-paradigms', order: 2, kind: 'utility', template: 'vanilla',
+    title: 'Pure functions & immutability', difficulty: 'medium', tags: ['functional', 'immutability', 'react'],
+    summary: 'A pure function is deterministic and side-effect-free. Update data by returning copies (spread/map/filter), never by mutating.',
+    prompt: `Implement **pure** cart operations — \`addItem\`, \`setQty\`, \`removeItem\`, and \`total\` — that **never mutate** their inputs. Each returns a **new** array/value; the original is left untouched. This is exactly how you update React state, and why these functions are trivial to test.`,
+    keyTerms: [
+      { term: 'Pure function', def: 'Two rules: (1) same input → same output (deterministic), and (2) no side effects — it doesn’t mutate inputs, touch globals, or do I/O. Everything it needs comes in as arguments.' },
+      { term: 'Side effect', def: 'Anything a function does beyond returning a value: mutating an argument, writing a global, logging, network/DOM. Pure functions have none.' },
+      { term: 'Immutability', def: 'Treat data as read-only: to "change" it, produce a new copy with the change applied (`[...arr]`, `{...obj}`), leaving the original intact.' },
+      { term: 'Referential transparency', def: 'A pure call can be replaced by its result without changing the program. It’s what makes pure code cacheable (memoizable) and easy to reason about.' },
+      { term: 'Mutation vs copy', def: '`arr.push`/`arr.sort`/`obj.x = 1` mutate in place (impure). `[...arr, x]`, `arr.map(...)`, `arr.filter(...)`, `{...obj, x: 1}` return copies (pure).' },
+    ],
+    codeNotes: [
+      { label: 'Immutable array updates (the cheat sheet)', code: `const add    = [...arr, item];                 // append\nconst remove = arr.filter((x) => x.id !== id);  // delete\nconst update = arr.map((x) => x.id === id ? { ...x, done: true } : x); // edit one\n// sort/reverse MUTATE — copy first:\nconst sorted = [...arr].sort();`, note: "push/splice/sort/reverse mutate; spread/map/filter/slice return copies." },
+      { label: 'Immutable object update', code: `const next = { ...user, name: "Ada" };  // new object, name replaced\n// nested: copy each level you change\nconst next2 = { ...state, cart: { ...state.cart, qty: 5 } };`, note: "Spread is a SHALLOW copy — spread each nested level you touch." },
+      { label: 'Why React needs this', code: `// WRONG: mutating state — React sees the same reference, skips re-render\nstate.items.push(item);\nsetState(state);\n// RIGHT: new array reference\nsetState({ ...state, items: [...state.items, item] });`, note: "React detects change by reference (Object.is). Mutation = missed render." },
+    ],
+    starterCode: { '/index.js': fpPureStarter },
+    explanation: `**The definition to say out loud:** a function is **pure** if (1) it always returns the same
+output for the same input, and (2) it has **no side effects** — crucially, it does not mutate its arguments.
+\`addItem(cart, item)\` returning \`[...cart, item]\` is pure; \`cart.push(item)\` is not, because the caller's
+array silently changes.
+
+**Why this is a front-end power tool, not academic trivia:**
+- **React correctness.** React decides whether to re-render by comparing references with \`Object.is\`. If you
+  \`push\` into the existing state array and set it back, the reference is unchanged and **your UI won't
+  update**. Returning a new array/object is mandatory. \`useMemo\`/\`useCallback\` rely on the same purity to
+  cache safely.
+- **Testability.** A pure function needs no mocks, no setup, no teardown — feed input, assert output. That's
+  why the reference implementations here are unit-tested directly.
+- **The AI-audit angle.** In-place mutation of a caller's data is one of the most common bugs AI-generated
+  helpers introduce (a \`.sort()\` or \`.push()\` on the input). When you review generated code, check: *does
+  this function change something it was only supposed to read?*
+
+**One gotcha:** spread and \`Object.freeze\` are **shallow** — they protect the top level only. To update
+nested data immutably, copy each level you touch (see the codeNotes). *Sources:
+[MDN — First-class Function](https://developer.mozilla.org/en-US/docs/Glossary/First-class_Function),
+[React — Updating Arrays in State](https://react.dev/learn/updating-arrays-in-state).*`,
+  },
+  {
+    id: 'fe-fp-compose', module: 'fe-paradigms', order: 3, kind: 'utility', template: 'vanilla',
+    title: 'Higher-order functions & composition', difficulty: 'medium', tags: ['functional', 'composition', 'hof'],
+    summary: 'Functions are values. map/filter/reduce and compose/pipe let you build big transforms from small pure steps.',
+    prompt: `Implement **\`pipe\`** (left-to-right) and **\`compose\`** (right-to-left), then use them to build a \`slugify\` from tiny pure steps. Because functions are **first-class values** in JS, you can pass them around, return them, and chain them — the essence of functional composition.`,
+    keyTerms: [
+      { term: 'First-class functions', def: 'Functions are values: you can store them in variables, pass them as arguments, and return them. This is what makes everything below possible.' },
+      { term: 'Higher-order function (HOF)', def: 'A function that takes a function and/or returns one. `map`, `filter`, `reduce`, `debounce`, and `pipe` are all HOFs.' },
+      { term: 'map / filter / reduce', def: '`map` transforms each element 1:1; `filter` keeps elements passing a test; `reduce` folds a list into a single value with an accumulator. All return new data.' },
+      { term: 'Composition', def: 'Combining small functions into a bigger one. `pipe(f, g)(x)` runs `f` then `g` (left→right); `compose(f, g)(x)` runs `g` then `f` (right→left).' },
+      { term: 'Currying / partial application', def: 'Turning `f(a, b)` into `f(a)(b)`, so you can pre-fill arguments and get back a specialized function — handy for building reusable pipeline steps.' },
+    ],
+    codeNotes: [
+      { label: 'pipe & compose via reduce', code: `const pipe    = (...fns) => (x) => fns.reduce((acc, fn) => fn(acc), x);\nconst compose = (...fns) => (x) => fns.reduceRight((acc, fn) => fn(acc), x);\n// pipe(a, b, c)(x)  === c(b(a(x)))   // top-to-bottom\n// compose(a, b, c)(x) === a(b(c(x))) // math order`, note: "Same engine (reduce); pipe folds left, compose folds right." },
+      { label: 'The map/filter/reduce trio', code: `[1,2,3,4].filter((n) => n % 2 === 0) // [2,4]\n         .map((n) => n * n)          // [4,16]\n         .reduce((a, b) => a + b, 0); // 20`, note: "Declarative pipeline — no loop, no mutable accumulator you manage by hand." },
+      { label: 'HOF that RETURNS a function', code: `const multiplyBy = (factor) => (n) => n * factor; // partial application\nconst double = multiplyBy(2);\n[1,2,3].map(double); // [2,4,6]`, note: "Returning a function pre-fills args — reusable, composable steps." },
+    ],
+    starterCode: { '/index.js': fpComposeStarter },
+    explanation: `**Functions are first-class values in JS** — you can pass them in, return them out, and store
+them. A **higher-order function** is one that does either: \`map\`, \`filter\`, \`reduce\`, \`debounce\`, and the
+\`pipe\`/\`compose\` you just built are all HOFs.
+
+**map / filter / reduce is the functional core of everyday front-end work.** Instead of an imperative loop
+with a mutable accumulator you babysit, you declare the transformation: filter down, map across, reduce to a
+value — each step pure, each returning new data. It reads as intent and has fewer places for bugs to hide.
+
+**Composition** is how you scale that up. Rather than one big function, write small single-purpose ones and
+glue them: \`pipe(trim, lower, spacesToDashes)\`. \`pipe\` runs **left-to-right** (top-to-bottom, how most
+people read); \`compose\` runs **right-to-left** (the mathematical \`f(g(x))\` order). Both are one-liners over
+\`reduce\`/\`reduceRight\` — knowing that you can *derive* them on the spot is a great interview signal.
+
+**Where you already use this:** React's \`children.map(...)\`, Redux/reducer folds, middleware chains
+(\`compose\` is literally how Redux composes middleware), and RxJS-style pipelines. **Performance note:** each
+\`map\`/\`filter\` creates a new array and one more pass over the data — clean and usually fine, but on a hot
+path over large lists, a single \`reduce\` (or one loop) avoids the intermediate arrays. Readability first;
+fuse passes only when profiling says so. *Source:
+[MDN — First-class Function](https://developer.mozilla.org/en-US/docs/Glossary/First-class_Function).*`,
+  },
+  {
+    id: 'fe-oop-classes', module: 'fe-paradigms', order: 4, kind: 'concept',
+    title: 'Classes, encapsulation & prototypes', difficulty: 'medium', tags: ['oop', 'classes', 'prototypes'],
+    summary: 'Classes bundle state with behavior. Private #fields enforce encapsulation; under the hood it’s all prototypes. Favor composition over deep inheritance.',
+    prompt: `**Classes** are JavaScript's OOP syntax: a blueprint that bundles **state** (fields) with **behavior** (methods) and enforces **encapsulation** via \`#private\` fields. Under the hood classes are **prototype**-based (methods live on the shared prototype, not copied per instance). The senior instinct: reach for classes to model stateful entities, but **favor composition over inheritance** rather than building deep class trees.`,
+    keyTerms: [
+      { term: 'Class', def: 'A template for creating objects that share structure and behavior. `new Thing()` runs the `constructor` and returns an instance whose methods live on `Thing.prototype`.' },
+      { term: 'Encapsulation', def: 'Hiding internal state and exposing a controlled API. `#private` fields (ES2022) are truly inaccessible outside the class — a hard boundary the language enforces.' },
+      { term: 'Prototype chain', def: 'JS objects delegate to a prototype; property lookups walk the chain until found. `class` is syntax sugar over this — methods sit on the prototype, shared by all instances.' },
+      { term: 'Inheritance (extends)', def: '`class B extends A` makes B a specialized A, reusing/overriding its behavior. `super(...)` calls the parent constructor/method. Powerful but easy to overuse.' },
+      { term: 'Polymorphism', def: 'Different types responding to the same method name (`shape.area()`), so calling code doesn’t care which concrete class it holds.' },
+      { term: 'Composition over inheritance', def: 'Build behavior by combining small pieces (objects/functions an object HAS) rather than inheriting from a base class (what an object IS). More flexible; avoids brittle deep hierarchies.' },
+    ],
+    codeNotes: [
+      { label: 'A class with encapsulated state', code: `class BankAccount {\n  #balance = 0;                         // truly private (ES2022)\n  constructor(opening = 0) { this.#balance = opening; }\n  deposit(n) { if (n > 0) this.#balance += n; return this; } // guard the invariant\n  get balance() { return this.#balance; }                    // read-only view\n}\nconst a = new BankAccount(100);\na.deposit(50);\nconsole.log(a.balance); // 150\n// a.#balance -> SyntaxError: private field not accessible`, note: "#balance can only be changed through deposit(), which enforces the rule." },
+      { label: 'Methods live on the prototype (shared)', code: `class Point { constructor(x){ this.x = x; } show(){ return this.x; } }\nconst p = new Point(3), q = new Point(9);\nPoint.prototype.show === Object.getPrototypeOf(p).show; // true\np.show === q.show; // true — ONE function shared, not copied per instance`, note: "Instances hold data; the shared prototype holds methods. Memory-efficient." },
+      { label: 'Composition often beats inheritance', code: `// Instead of Duck extends Bird extends Animal (rigid):\nconst canFly  = (o) => ({ fly:  () => o.name + " flies" });\nconst canSwim = (o) => ({ swim: () => o.name + " swims" });\nconst duck = (name) => { const self = { name }; return { ...self, ...canFly(self), ...canSwim(self) }; };\nduck("Rio").fly();  // mix in exactly the behaviors you need`, note: "HAS-A (compose behaviors) is more flexible than IS-A (deep class trees)." },
+    ],
+    explanation: `**Classes bundle state and behavior behind an API.** The constructor initializes fields;
+methods act on them; **\`#private\` fields** (standardized in ES2022) give you real **encapsulation** — code
+outside the class literally cannot read or write \`#balance\`, so the only way to change it is through methods
+that enforce your invariants (no negative deposits, etc.). That guarantee is the whole point of OOP: keep the
+rules that protect your data next to the data.
+
+**It's prototypes underneath.** \`class\` is syntax sugar over JavaScript's prototype system. Methods are
+defined once on \`ClassName.prototype\` and **shared** by every instance (not copied), while per-instance data
+lives on the object. Property access walks the **prototype chain** until it finds the method. Knowing this
+explains \`this\` binding, \`instanceof\`, and why arrow-function methods behave differently.
+
+**Inheritance — use sparingly.** \`extends\` + \`super\` model an "is-a" relationship and enable
+**polymorphism** (many shapes, one \`area()\` call). But deep inheritance trees are the classic OOP trap:
+they're rigid, and a change to a base class ripples everywhere. The widely-taught guideline —
+**"favor composition over inheritance"** (Gang of Four) — says prefer building objects out of smaller
+behaviors they *have* over hierarchies of what they *are*. In React this is explicit: the docs recommend
+composition (children/props) over component inheritance. **The AI-audit angle:** generated OOP code loves to
+spin up needless class hierarchies and leak state through public fields — check whether a class earns its
+keep or a couple of pure functions would be clearer. *Sources:
+[MDN — Classes](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes),
+[MDN — Private properties](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_properties).*`,
+  },
+  {
+    id: 'fe-solid', module: 'fe-paradigms', order: 5, kind: 'concept',
+    title: 'SOLID principles, lightly', difficulty: 'medium', tags: ['oop', 'solid', 'design'],
+    summary: 'Five design principles for code that’s easy to change. You don’t need the jargon — you need the instincts: small units, extend don’t edit, depend on abstractions.',
+    prompt: `**SOLID** is five object-oriented design principles (Robert C. Martin) aimed at one goal: **code that's easy to change without breaking**. You rarely need to recite the acronym in a front-end interview — but the *instincts* (one job per unit, extend rather than edit, depend on abstractions) show up constantly in component and hook design. Learn them as habits, not vocabulary.`,
+    keyTerms: [
+      { term: 'S — Single Responsibility', def: 'A module/class/component should have one reason to change — one job. A component that fetches, formats, AND renders is three jobs; split them.' },
+      { term: 'O — Open/Closed', def: 'Open for extension, closed for modification: add new behavior without editing working code. In React: pass new props/children or a render function instead of adding `if` branches.' },
+      { term: 'L — Liskov Substitution', def: 'A subtype must be usable anywhere its base type is expected, without surprises. A `<Button>` variant shouldn’t silently drop `onClick`.' },
+      { term: 'I — Interface Segregation', def: 'Don’t force clients to depend on things they don’t use. Prefer small, focused props/interfaces over one giant "God" prop object.' },
+      { term: 'D — Dependency Inversion', def: 'Depend on abstractions, not concretions. High-level code shouldn’t hard-wire a concrete implementation — inject it (props, context, a passed-in function).' },
+    ],
+    codeNotes: [
+      { label: 'S — split responsibilities', code: `// Before: one component does fetching + formatting + rendering.\n// After: a hook owns data, a pure fn formats, the component just renders.\nfunction useUsers() { /* fetch + state */ }\nconst fullName = (u) => u.first + " " + u.last;  // pure, testable\nfunction UserList() { const users = useUsers(); return users.map(/* render */); }`, note: "Each piece has one reason to change — and each is testable alone." },
+      { label: 'O — extend without editing (inject behavior)', code: `// Closed to edits, open to new variants — no growing if/else:\nfunction Button({ variant = "primary", ...props }) {\n  return <button className={styles[variant]} {...props} />;\n}\n// New variant? add a style key; don't touch Button's logic.`, note: "New cases arrive as data/props, not as edits to tested code." },
+      { label: 'D — depend on an abstraction (inject it)', code: `// Hard-wired (rigid): the component knows the concrete API client.\n// Inverted: pass the dependency in, so it's swappable + mockable.\nfunction UserList({ fetchUsers }) { /* uses fetchUsers() */ }\n// prod: <UserList fetchUsers={api.getUsers} />  test: <UserList fetchUsers={fake} />`, note: "Injecting the dependency makes the unit testable and swappable." },
+    ],
+    explanation: `**The point of SOLID isn't the acronym — it's making change cheap and safe.** Here's each
+principle as a front-end instinct:
+
+- **S — Single Responsibility.** One unit, one job. The most useful one day-to-day: a component that fetches
+  *and* formats *and* renders has three reasons to change. Pull data into a **custom hook**, formatting into
+  a **pure function**, and let the component just render. Each becomes independently testable.
+- **O — Open/Closed.** Add behavior without editing working code. Every time you'd add another \`if
+  (type === ...)\`, consider passing behavior in instead (a prop, a \`render\` function, a strategy object) so
+  new cases don't risk breaking old ones.
+- **L — Liskov Substitution.** A specialized version must honor the contract of the general one. A
+  \`<PrimaryButton>\` that silently ignores \`disabled\` or \`onClick\` violates it — callers get surprises.
+- **I — Interface Segregation.** Keep props/interfaces small and focused. A component shouldn't demand a huge
+  config object when it uses three fields; many small props beat one God object.
+- **D — Dependency Inversion.** Depend on **abstractions**, not concrete implementations. Don't hard-wire a
+  specific API client inside a component — **inject** it (via props, context, or a passed-in function). That's
+  what makes the unit swappable and mockable in tests.
+
+**How to use this in an interview:** don't lecture the acronym — *demonstrate* the instincts. "I'd split the
+data-fetching into a hook (single responsibility) and inject the API so it's testable (dependency
+inversion)" lands far better than reciting five definitions. These principles are guidelines, not laws —
+apply them to reduce coupling, not to add ceremony. *Source:
+[Wikipedia — SOLID](https://en.wikipedia.org/wiki/SOLID) (Robert C. Martin's principles).*`,
   },
 ]

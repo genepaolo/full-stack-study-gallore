@@ -35,6 +35,7 @@ export const MODULES = [
   { slug: 'fe-foundations', track: 'frontend', title: 'HTML & CSS Foundations', level: 1, blurb: 'The building blocks: semantic markup and the box model.' },
   { slug: 'fe-css-layout', track: 'frontend', title: 'CSS Layout & Responsive', level: 2, blurb: 'Flexbox, grid, centering, and responsive patterns.' },
   { slug: 'fe-js-core', track: 'frontend', title: 'JavaScript Core', level: 2, blurb: 'Closures, `this`, async, and the utility functions interviewers love.' },
+  { slug: 'fe-paradigms', track: 'frontend', title: 'OOP & Functional Programming', level: 3, blurb: 'Two paradigms, one language: pure functions & composition, classes & encapsulation, and a light-touch SOLID.' },
   { slug: 'fe-react', track: 'frontend', title: 'React Essentials', level: 3, blurb: 'State, effects, and thinking in components.' },
   { slug: 'fe-ui', track: 'frontend', title: 'UI Component Challenges', level: 3, blurb: 'Build the classics: accordion, tabs, modal.' },
   { slug: 'fe-typescript', track: 'frontend', title: 'TypeScript Essentials', level: 3, blurb: 'Types, interfaces, unions, narrowing, and generics — JavaScript that catches bugs before runtime.' },

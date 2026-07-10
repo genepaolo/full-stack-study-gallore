@@ -509,3 +509,68 @@ describe('TypeScript generics (fe-ts-generics)', () => {
     expect(pluck(users, 'id')).toEqual([1, 2])
   })
 })
+
+describe('Pure functions & immutability (fe-fp-pure)', () => {
+  const cart = () => [{ id: 1, price: 10, qty: 1 }, { id: 2, price: 5, qty: 3 }]
+
+  it('addItem appends without mutating the original', () => {
+    const { addItem } = extract('fe-fp-pure', ['addItem'])
+    const c = cart()
+    const next = addItem(c, { id: 3, price: 2, qty: 10 })
+    expect(next).toHaveLength(3)
+    expect(c).toHaveLength(2) // original untouched
+    expect(next).not.toBe(c) // new reference
+  })
+
+  it('setQty updates one item immutably', () => {
+    const { setQty } = extract('fe-fp-pure', ['setQty'])
+    const c = cart()
+    const next = setQty(c, 1, 5)
+    expect(next.find((it) => it.id === 1).qty).toBe(5)
+    expect(c.find((it) => it.id === 1).qty).toBe(1) // original untouched
+    expect(next).not.toBe(c)
+    expect(next.find((it) => it.id === 2)).toBe(c.find((it) => it.id === 2)) // unchanged item reused
+  })
+
+  it('removeItem filters immutably', () => {
+    const { removeItem } = extract('fe-fp-pure', ['removeItem'])
+    const c = cart()
+    const next = removeItem(c, 1)
+    expect(next.map((it) => it.id)).toEqual([2])
+    expect(c).toHaveLength(2) // original untouched
+  })
+
+  it('total is a pure sum of price * qty', () => {
+    const { total } = extract('fe-fp-pure', ['total'])
+    expect(total(cart())).toBe(25) // 10*1 + 5*3
+    expect(total([])).toBe(0)
+  })
+})
+
+describe('Higher-order functions & composition (fe-fp-compose)', () => {
+  it('pipe runs functions left-to-right', () => {
+    const { pipe } = extract('fe-fp-compose', ['pipe'])
+    const add1 = (n) => n + 1
+    const double = (n) => n * 2
+    expect(pipe(add1, double)(3)).toBe(8) // (3+1)*2
+    expect(pipe(double, add1)(3)).toBe(7) // (3*2)+1
+  })
+
+  it('compose runs functions right-to-left', () => {
+    const { compose } = extract('fe-fp-compose', ['compose'])
+    const add1 = (n) => n + 1
+    const double = (n) => n * 2
+    expect(compose(add1, double)(3)).toBe(7) // add1(double(3))
+    expect(compose(double, add1)(3)).toBe(8) // double(add1(3))
+  })
+
+  it('slugify composes the taught steps', () => {
+    const { slugify } = extract('fe-fp-compose', ['slugify'])
+    expect(slugify('  Hello World  ')).toBe('hello-world')
+  })
+
+  it('sumOfEvenSquares folds the pipeline to the taught value', () => {
+    const { sumOfEvenSquares } = extract('fe-fp-compose', ['sumOfEvenSquares'])
+    expect(sumOfEvenSquares).toBe(56) // 2²+4²+6²
+  })
+})

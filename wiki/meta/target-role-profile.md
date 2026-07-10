@@ -37,7 +37,7 @@ From the JD, in rough priority for *our* content:
 | Algorithms & DS (coding round) | ✅ **covered** | `adv-algorithms` — 16 lessons, full NeetCode taxonomy (patterns + cheat sheet) |
 | **JS performance + browser rendering** | ✅ **covered (new)** | `fe-performance` — pixel pipeline, reflow/thrashing, virtualization, code-splitting, Core Web Vitals |
 | **AI-assisted dev + auditing output** | ✅ **covered (new)** | `adv-ai` — workflow, prompting, + auditing / security (OWASP LLM Top 10, slopsquatting) / hands-on audit drill |
-| OOP + functional programming | ⚠️ partial | scattered; no dedicated lessons |
+| OOP + functional programming | ✅ **covered (new)** | `fe-paradigms` — multi-paradigm intro, pure functions + immutability, HOF + composition, classes/encapsulation/prototypes, SOLID (verified vs MDN + React docs) |
 | Unit testing | ⚠️ partial | app has a Vitest suite ([[testing]]); no lesson |
 | UI components | ✅ covered | fe-ui (8 components) |
 | Canvas/WebGL/WASM/Service Workers | ⚠️ partial | Snake uses Canvas; rest missing |
@@ -59,9 +59,11 @@ Supersedes the generic P1 order in [[expansion-roadmap]] when optimizing for *th
   3. ✅ **DONE — TypeScript Essentials** (`fe-typescript`, 5 lessons): types/inference/erasure, interfaces
      vs type + unions, narrowing & discriminated unions (exhaustiveness via `never`), generics (`keyof`
      constraints), utility types. Two lessons are live + taught-logic-tested; verified vs the official Handbook.
-  4. **OOP & functional programming principles** ← **NEXT** — pure functions, immutability, composition;
-     classes, encapsulation, a light-touch SOLID.
-  5. **React depth** — `useMemo`/`useCallback`/`memo`, controlled forms, custom hooks (ties to perf).
+  4. ✅ **DONE — OOP & functional programming** (`fe-paradigms`, 5 lessons): multi-paradigm intro, pure
+     functions + immutability (live+tested), HOF + pipe/compose (live+tested), classes/`#private`
+     encapsulation/prototypes (composition over inheritance), SOLID as front-end instincts. Verified vs
+     MDN + React docs.
+  5. **React depth** ← **NEXT** — `useMemo`/`useCallback`/`memo`, controlled forms, custom hooks (ties to perf).
 - **P2:** GraphQL · advanced front-end (Canvas/WebGL/Service Workers/WASM) · Redis/caching ·
   distributed systems / [[system-design-plan]] · a unit-testing lesson · domain-driven design.
 - **Behavioral** stays valuable (a real round) but is secondary to the technical gaps above.
