@@ -47,3 +47,4 @@ tags: [index]
 - [[2026-07-07-expansion-and-tooling]] — progress model, GSAP, tests, CI, security, P0 content
 - [[2026-07-09-content-buildout]] — DSA taxonomy finished; FE performance, AI-audit & TypeScript modules
 - [[2026-07-10-oop-fp]] — OOP & Functional Programming module (`fe-paradigms`, 5 lessons)
+- [[2026-07-10-react-depth]] — React Depth & Performance module (`fe-react-depth`, 5 lessons); all P1 closed

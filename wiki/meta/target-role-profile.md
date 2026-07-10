@@ -32,7 +32,7 @@ From the JD, in rough priority for *our* content:
 |---|---|---|
 | JS/HTML/CSS proficiency | ✅ covered | [[curriculum]] frontend track |
 | **TypeScript** | ✅ **covered (new)** | `fe-typescript` — types/inference/erasure, interfaces vs type + unions, narrowing/discriminated unions, generics, utility types (verified vs official TS Handbook) |
-| React (a UI framework) | ✅ covered | fe-react, fe-ui |
+| React (a UI framework) | ✅ covered | fe-react, fe-ui, **fe-react-depth** (reconciliation/keys, memo/useMemo/useCallback, custom hooks, controlled forms) |
 | Node/Express, REST, Mongo, auth | ✅ covered | backend track |
 | Algorithms & DS (coding round) | ✅ **covered** | `adv-algorithms` — 16 lessons, full NeetCode taxonomy (patterns + cheat sheet) |
 | **JS performance + browser rendering** | ✅ **covered (new)** | `fe-performance` — pixel pipeline, reflow/thrashing, virtualization, code-splitting, Core Web Vitals |
@@ -63,9 +63,11 @@ Supersedes the generic P1 order in [[expansion-roadmap]] when optimizing for *th
      functions + immutability (live+tested), HOF + pipe/compose (live+tested), classes/`#private`
      encapsulation/prototypes (composition over inheritance), SOLID as front-end instincts. Verified vs
      MDN + React docs.
-  5. **React depth** ← **NEXT** — `useMemo`/`useCallback`/`memo`, controlled forms, custom hooks (ties to perf).
-- **P2:** GraphQL · advanced front-end (Canvas/WebGL/Service Workers/WASM) · Redis/caching ·
-  distributed systems / [[system-design-plan]] · a unit-testing lesson · domain-driven design.
+  5. ✅ **DONE — React depth** (`fe-react-depth`, 5 lessons): reconciliation & keys (index-key bug), the
+     equality checks behind memo/deps (`shallowEqual`/`depsChanged`, live+tested), memo/useMemo/useCallback
+     in action (live), custom hooks (live), controlled vs uncontrolled forms (live). Verified vs react.dev.
+- **P2 (build next):** FE system design ([[system-design-plan]]) · deepen MongoDB (`be-data`) · GraphQL ·
+  advanced front-end (Canvas/WebGL/Service Workers/WASM) · Redis/caching · a unit-testing lesson · DDD.
 - **Behavioral** stays valuable (a real round) but is secondary to the technical gaps above.
 
 ## Framing guidance (apply to every new lesson)

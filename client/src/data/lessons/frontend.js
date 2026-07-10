@@ -681,6 +681,172 @@ console.log("compose is right-to-left:", compose(trim, lower)("  HI  ")); // "hi
 console.log("sumOfEvenSquares:", sumOfEvenSquares);            // 56
 `
 
+// ---------- fe-react-depth ----------
+const reactEqualityStarter = `// What React actually compares. React.memo skips a re-render when the new props are SHALLOW-equal
+// to the old ones; a hook's dependency array re-runs when any dep changes by Object.is. Implement
+// both — then you'll know exactly why an inline {} or () => {} prop "breaks" memoization.
+
+// Object.is is React's equality primitive: like === but NaN===NaN is true and +0 !== -0.
+function areEqual(a, b) {
+  return Object.is(a, b);
+}
+
+// React.memo's default: compare each top-level prop with Object.is. Same keys + same refs => skip render.
+function shallowEqual(a, b) {
+  if (Object.is(a, b)) return true;
+  if (typeof a !== "object" || a === null || typeof b !== "object" || b === null) return false;
+  const ka = Object.keys(a);
+  const kb = Object.keys(b);
+  if (ka.length !== kb.length) return false;
+  return ka.every((k) => Object.hasOwn(b, k) && Object.is(a[k], b[k]));
+}
+
+// useMemo/useCallback/useEffect deps: recompute when the array changed (null = first render).
+function depsChanged(prev, next) {
+  if (prev === null) return true;             // first render — always run
+  if (prev.length !== next.length) return true;
+  return next.some((dep, i) => !Object.is(dep, prev[i]));
+}
+
+const propsA = { value: 1, onPick: shallowEqual };
+console.log("same refs -> memo skips:", shallowEqual(propsA, { value: 1, onPick: shallowEqual })); // true
+console.log("new fn each render -> re-renders:", shallowEqual(propsA, { value: 1, onPick: () => {} })); // false
+console.log("deps unchanged:", depsChanged([1, "a"], [1, "a"]));  // false (skip)
+console.log("deps changed:  ", depsChanged([1, "a"], [2, "a"]));  // true  (recompute)
+console.log("first render:  ", depsChanged(null, [1]));           // true
+`
+
+const reactMemoStarter = `import { useState, useMemo, useCallback, memo, useRef } from "react";
+
+// A deliberately expensive computation. useMemo caches it so it only re-runs when \`n\` changes —
+// NOT on every keystroke in the unrelated text box.
+function buildSquares(n) {
+  let work = 0;
+  for (let i = 0; i < 1_000_000; i++) work += 1; // simulate real cost
+  return Array.from({ length: n }, (_, i) => i * i);
+}
+
+// memo() skips re-rendering when props are shallow-equal. Watch the per-row render counter.
+const Row = memo(function Row({ value, onPick }) {
+  const renders = useRef(0);
+  renders.current++;
+  return (
+    <li>
+      {value}{" "}
+      <button onClick={() => onPick(value)}>pick</button>
+      <small style={{ color: "#9ca3af" }}> (rendered {renders.current}×)</small>
+    </li>
+  );
+});
+
+export default function App() {
+  const [n, setN] = useState(5);
+  const [text, setText] = useState("");
+  const [picked, setPicked] = useState(null);
+
+  // useMemo: recompute the array only when n changes.
+  const squares = useMemo(() => buildSquares(n), [n]);
+  // useCallback: keep a STABLE function identity so memo(Row) isn't busted every render.
+  const onPick = useCallback((v) => setPicked(v), []);
+
+  return (
+    <div style={{ fontFamily: "system-ui", padding: 24 }}>
+      <p>Type here — the list does NOT recompute or re-render per keystroke:</p>
+      <input value={text} onChange={(e) => setText(e.target.value)} placeholder="type…" />
+      <p>
+        n = {n} <button onClick={() => setN(n + 1)}>+1</button>
+        {picked !== null && <span> · picked {picked}</span>}
+      </p>
+      <ul>
+        {squares.map((v) => (
+          <Row key={v} value={v} onPick={onPick} />
+        ))}
+      </ul>
+      <p style={{ color: "#6b7280" }}>
+        Try removing useCallback (pass onPick={"{(v) => setPicked(v)}"}) — every Row re-renders on each keystroke.
+      </p>
+    </div>
+  );
+}
+`
+
+const reactHooksStarter = `import { useState, useEffect, useCallback } from "react";
+
+// A CUSTOM HOOK is just a function named useXxx that calls other hooks. It extracts reusable
+// STATEFUL LOGIC (single responsibility) — never markup. Two examples:
+
+function useToggle(initial = false) {
+  const [on, setOn] = useState(initial);
+  const toggle = useCallback(() => setOn((v) => !v), []);
+  return [on, toggle];
+}
+
+// Debounce a fast-changing value. The timer logic lives ONCE and is reusable anywhere.
+function useDebouncedValue(value, delay = 500) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(id); // cancel on the next change — the debounce
+  }, [value, delay]);
+  return debounced;
+}
+
+export default function App() {
+  const [dark, toggleDark] = useToggle(false);
+  const [text, setText] = useState("");
+  const debounced = useDebouncedValue(text, 500);
+
+  return (
+    <div style={{ fontFamily: "system-ui", padding: 24, minHeight: 180,
+      background: dark ? "#111827" : "#fff", color: dark ? "#f9fafb" : "#111827" }}>
+      <button onClick={toggleDark}>{dark ? "☀️ light" : "🌙 dark"}</button>
+      <p>Type — “debounced” only catches up 500ms after you stop:</p>
+      <input value={text} onChange={(e) => setText(e.target.value)} placeholder="search…" />
+      <p>live: <b>{text || "—"}</b></p>
+      <p>debounced: <b>{debounced || "—"}</b></p>
+    </div>
+  );
+}
+`
+
+const reactFormsStarter = `import { useState, useRef } from "react";
+
+// CONTROLLED: React state is the single source of truth. ONE handler drives many fields via name.
+// UNCONTROLLED: some inputs (file) can't be controlled — read them from a ref on submit.
+export default function App() {
+  const [form, setForm] = useState({ name: "", email: "", plan: "free" });
+  const fileRef = useRef(null);
+  const [submitted, setSubmitted] = useState(null);
+
+  const update = (e) => {
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value })); // immutable update, computed key
+  };
+
+  const submit = (e) => {
+    e.preventDefault();
+    setSubmitted({ ...form, file: fileRef.current?.files?.[0]?.name ?? null });
+  };
+
+  return (
+    <form onSubmit={submit} style={{ fontFamily: "system-ui", padding: 24, display: "grid", gap: 8, maxWidth: 320 }}>
+      <input name="name" value={form.name} onChange={update} placeholder="name" />
+      <input name="email" value={form.email} onChange={update} placeholder="email" />
+      <select name="plan" value={form.plan} onChange={update}>
+        <option value="free">Free</option>
+        <option value="pro">Pro</option>
+      </select>
+      <label style={{ fontSize: 13, color: "#6b7280" }}>Avatar (uncontrolled): <input type="file" ref={fileRef} /></label>
+      <button type="submit">Submit</button>
+      <pre style={{ background: "#f3f4f6", padding: 8, borderRadius: 6 }}>
+        live state: {JSON.stringify(form)}
+        {submitted ? "\\n\\nsubmitted: " + JSON.stringify(submitted) : ""}
+      </pre>
+    </form>
+  );
+}
+`
+
 export const frontendLessons = [
   // fe-foundations
   {
@@ -1527,5 +1693,207 @@ data-fetching into a hook (single responsibility) and inject the API so it's tes
 inversion)" lands far better than reciting five definitions. These principles are guidelines, not laws —
 apply them to reduce coupling, not to add ceremony. *Source:
 [Wikipedia — SOLID](https://en.wikipedia.org/wiki/SOLID) (Robert C. Martin's principles).*`,
+  },
+
+  // ---------- fe-react-depth (React Depth & Performance) ----------
+  {
+    id: 'fe-react-render', module: 'fe-react-depth', order: 1, kind: 'concept',
+    title: 'Rendering, reconciliation & keys', difficulty: 'medium', tags: ['react', 'reconciliation', 'keys', 'performance'],
+    summary: 'React renders in two phases and diffs a tree. Stable keys tell it which items are the same across renders — index keys quietly corrupt state.',
+    prompt: `A "render" in React is **two phases**: the **render phase** re-runs your component to build a new element tree, then the **commit phase** applies the minimal DOM changes. To do that minimally, React **reconciles** — diffs the new tree against the old, position by position. For lists it can't use position alone, so you give each item a **key**: a stable identity. Get keys wrong (e.g. the array index) and React mismatches items — dropping or duplicating state. This is the same **DOM-as-a-tree** diffing idea from the algorithms track, applied to UI.`,
+    keyTerms: [
+      { term: 'Render vs commit phase', def: 'Render = React calls your component to compute the new element tree (must be pure). Commit = React mutates the real DOM to match. Your effects run after commit.' },
+      { term: 'Reconciliation', def: 'React’s diff of the new element tree against the previous one to compute the smallest set of DOM updates. Same type at the same position → reuse & update; different type → tear down & rebuild.' },
+      { term: 'Key', def: 'A stable, unique identifier you give siblings in a list so React can match an item to the same element across renders — even if the list reorders. Keys must be unique among siblings, not globally.' },
+      { term: 'Index as key (anti-pattern)', def: 'Using the array index as key ties identity to POSITION, not to the item. Insert/remove/reorder and React re-associates state (inputs, focus, animations) with the wrong row.' },
+      { term: 'Position = identity', def: 'React preserves state for an element that stays the same type at the same position. Rendering a different component there (or changing its key) resets its state — a deliberate tool.' },
+    ],
+    codeNotes: [
+      { label: 'Key by stable id, never by index', code: `// ✅ stable identity — survives reorder/insert/delete\n{todos.map((t) => <TodoRow key={t.id} todo={t} />)}\n\n// ⚠️ index key — identity = position; state attaches to the wrong row on reorder\n{todos.map((t, i) => <TodoRow key={i} todo={t} />)}`, note: "The index only works when the list is static (never reordered, inserted, or filtered)." },
+      { label: 'Why index keys corrupt state', code: `// Rows have uncontrolled inputs. With key={index}:\n// prepend a new todo -> every row shifts down one index ->\n// React thinks row 0 is still row 0, so the text you typed\n// stays on the WRONG todo. With key={t.id}, it follows the item.`, note: "Any per-row state — input text, focus, open/closed, animation — is the victim." },
+      { label: 'Change the key to intentionally RESET state', code: `// Remount the form (clear all its internal state) when the user changes:\n<UserForm key={userId} user={user} />\n// New key -> React unmounts the old, mounts a fresh one.`, note: "A changed key is the idiomatic 'reset this subtree' switch." },
+    ],
+    explanation: `**The mental model:** rendering doesn't mean "touch the DOM." React first **re-runs your
+component** (render phase) to produce a fresh tree of elements — cheap, pure JavaScript — then
+**reconciles** that tree against the previous one and **commits** only the differences to the real DOM. This
+is why keeping render pure (the paradigms lesson) matters: React may call it more than once and expects the
+same output.
+
+**Reconciliation works position-by-position.** At a given position, if the element type is the same
+(\`<div>\` → \`<div>\`, \`<TodoRow>\` → \`<TodoRow>\`), React keeps the DOM node and its state and just updates
+props; if the type changed, it tears the subtree down and rebuilds. For **lists**, position isn't enough —
+items move — so you supply a **key** that says "this is the same logical item as before." React matches by
+key, then reorders/updates accordingly.
+
+**The bug that bites everyone: index as key.** With \`key={index}\`, identity is tied to *position*. Prepend
+an item and every row's index shifts, so React believes row 0 is unchanged and keeps its DOM node — including
+any **uncontrolled state** (typed-in text, focus, an open/closed toggle, an in-flight animation) — now
+attached to the **wrong item**. Use a stable \`id\` from your data instead. (Index is only safe for a static,
+never-reordered list.)
+
+**The flip side is a feature:** because state is tied to position+key, **changing a component's key
+deliberately resets its state** — the cleanest way to "start fresh" (e.g. remount a form when the selected
+record changes). **Performance tie-in:** correct keys let React reuse DOM nodes instead of rebuilding them,
+which — with the memoization in the next lessons — is how you keep list updates inside the 16ms frame budget.
+*Sources: [React — Render and Commit](https://react.dev/learn/render-and-commit),
+[React — Rendering Lists (keys)](https://react.dev/learn/rendering-lists),
+[React — Preserving and Resetting State](https://react.dev/learn/preserving-and-resetting-state).*`,
+  },
+  {
+    id: 'fe-react-equality', module: 'fe-react-depth', order: 2, kind: 'utility', template: 'vanilla',
+    title: 'The equality checks behind memo & deps', difficulty: 'medium', tags: ['react', 'memo', 'performance', 'equality'],
+    summary: 'React.memo shallow-compares props; hook deps compare with Object.is. Build both and you’ll know exactly why an inline object or arrow prop “breaks” memoization.',
+    prompt: `Implement the two comparisons React runs constantly: **\`shallowEqual\`** (what \`React.memo\` uses to decide whether to skip a re-render) and **\`depsChanged\`** (what \`useMemo\`/\`useCallback\`/\`useEffect\` use on their dependency arrays). Both are built on **\`Object.is\`**. Once you've written them, it's obvious why passing a fresh \`{}\` or \`() => {}\` as a prop defeats \`memo\` — a new reference is never \`Object.is\`-equal to the old one.`,
+    keyTerms: [
+      { term: 'Object.is', def: 'React’s equality primitive. Like `===` but with two fixes: `Object.is(NaN, NaN)` is `true`, and `Object.is(+0, -0)` is `false`. Compares objects/functions by reference, not contents.' },
+      { term: 'Shallow equality', def: 'Two objects are shallowly equal if they have the same keys and each value is `Object.is`-equal (one level deep). This is what `React.memo` uses on props by default.' },
+      { term: 'Referential equality', def: 'Objects/functions compare by identity: `{} !== {}` and `(() => {}) !== (() => {})`. A new literal each render is a new reference — the root cause of "why does memo still re-render?".' },
+      { term: 'Dependency array', def: 'The `[a, b]` you pass to `useMemo`/`useCallback`/`useEffect`. React re-runs the hook when any dep changed by `Object.is` versus the previous render.' },
+      { term: 'Why useMemo/useCallback exist', def: 'They give you a STABLE reference across renders (a cached value / a cached function) so that reference can be a safe dependency or a `memo` child’s prop.' },
+    ],
+    codeNotes: [
+      { label: 'shallowEqual — what React.memo runs on props', code: `function shallowEqual(a, b) {\n  if (Object.is(a, b)) return true;\n  if (typeof a !== "object" || !a || typeof b !== "object" || !b) return false;\n  const ka = Object.keys(a), kb = Object.keys(b);\n  return ka.length === kb.length && ka.every((k) => Object.is(a[k], b[k]));\n}`, note: "One level deep. A nested object that was rebuilt still compares unequal." },
+      { label: 'depsChanged — what a hook’s deps array runs', code: `function depsChanged(prev, next) {\n  if (prev === null) return true;             // first render\n  if (prev.length !== next.length) return true;\n  return next.some((d, i) => !Object.is(d, prev[i]));\n}`, note: "Object.is per element — same rule as React's internal areHookInputsEqual." },
+      { label: 'The reference trap memoization fixes', code: `<Row onPick={() => pick(v)} />  // NEW function every render -> memo(Row) always re-renders\nconst onPick = useCallback(() => pick(v), [v]); // stable ref -> memo(Row) can skip`, note: "Inline {} / () => {} props are the #1 reason 'I used memo but it still re-renders'." },
+    ],
+    starterCode: { '/index.js': reactEqualityStarter },
+    explanation: `**These two tiny functions explain most of React's performance behavior.**
+
+\`React.memo(Component)\` wraps a component so it **skips re-rendering when its props didn't change** — and
+"didn't change" means **shallow-equal**: same set of keys, and each value \`Object.is\`-equal to last time.
+Because objects and functions compare **by reference**, a prop written inline — \`style={{ }}\`,
+\`onClick={() => …}\`, \`items={[…]}\` — is a **brand-new reference on every render**, so \`memo\` sees "changed"
+and re-renders anyway. That's the classic *"I added memo and nothing got faster."*
+
+The fix is a **stable reference**: \`useMemo(fn, deps)\` caches a computed **value**, and
+\`useCallback(fn, deps)\` caches a **function**, returning the *same reference* until a dependency changes.
+"Changes" is decided by \`depsChanged\` — \`Object.is\` on each element of the deps array — the exact rule
+React uses internally (\`areHookInputsEqual\`). So the three hooks are one idea: *give me a value/function whose
+identity is stable across renders so \`memo\` (or another hook's deps) can trust it.*
+
+**The audit angle** (ties to the AI-review module): memoization is easy to cargo-cult. \`useMemo\` around a
+cheap calculation, or \`useCallback\` on a function that isn't a \`memo\` child's prop or a dependency, just
+adds overhead and noise. Reach for them when (a) the computation is genuinely expensive, or (b) you need a
+stable reference for a \`memo\`'d child or a dependency array — not by reflex. Run the editor to watch
+\`shallowEqual\`/\`depsChanged\` return \`true\`/\`false\` on same-vs-new references. *Sources:
+[React — memo](https://react.dev/reference/react/memo),
+[React — useMemo](https://react.dev/reference/react/useMemo),
+[React — useCallback](https://react.dev/reference/react/useCallback).*`,
+  },
+  {
+    id: 'fe-react-memo', module: 'fe-react-depth', order: 3, kind: 'component', template: 'react',
+    title: 'memo, useMemo & useCallback in action', difficulty: 'medium', tags: ['react', 'memo', 'performance', 'hooks'],
+    summary: 'A live demo: an expensive list stays put while you type, because useMemo caches the value, useCallback keeps the handler stable, and memo skips unchanged rows.',
+    prompt: `Three tools, one job — **skip work you already did**. \`useMemo\` caches an **expensive value**, \`useCallback\` caches a **function's identity**, and \`React.memo\` skips re-rendering a child whose props didn't change. Type in the text box: the expensive list neither recomputes nor re-renders (watch each row's render counter). Then try the experiment in the comment — remove \`useCallback\` and every row re-renders on each keystroke.`,
+    keyTerms: [
+      { term: 'React.memo(Component)', def: 'A wrapper that memoizes a component: it re-renders only when its props change by shallow comparison. Great for pure leaf components that render often with the same props.' },
+      { term: 'useMemo(fn, deps)', def: 'Caches the RESULT of `fn()` and only recomputes when a dep changes. Use for genuinely expensive calculations, or to keep an object/array reference stable.' },
+      { term: 'useCallback(fn, deps)', def: 'Caches a FUNCTION’s identity between renders (it’s `useMemo` for functions). Needed so a `memo`’d child’s callback prop stays referentially stable.' },
+      { term: 'Referential stability', def: 'Keeping the same object/function reference across renders so downstream `memo`/deps comparisons see "unchanged." The reason useMemo/useCallback exist.' },
+      { term: 'When NOT to memoize', def: 'Memoization has a cost (memory + comparison). Skip it for cheap renders/values; reach for it when a render is measurably expensive or a stable reference is required downstream.' },
+    ],
+    codeNotes: [
+      { label: 'The three working together', code: `const squares = useMemo(() => buildSquares(n), [n]);   // cache the value\nconst onPick  = useCallback((v) => setPicked(v), []);  // cache the function\nconst Row = memo(function Row({ value, onPick }) { /* … */ }); // skip if props unchanged`, note: "Value stable + function stable => memo(Row)'s props are shallow-equal => it skips." },
+      { label: 'Remove useCallback and watch it break', code: `// If onPick is inline instead:\n<Row value={v} onPick={(x) => setPicked(x)} />\n// a NEW function each render -> Row's props differ -> memo can't skip -> every row re-renders.`, note: "This is the live experiment in the editor's trailing comment." },
+      { label: 'useMemo for a stable object/array prop', code: `// Not just for expensive math — also to stabilize a reference:\nconst config = useMemo(() => ({ sort: "asc", page }), [page]);\n<List config={config} /> // memo(List) can now skip when page is unchanged`, note: "Without useMemo, {sort,page} is a new object every render." },
+    ],
+    starterCode: { '/App.js': reactMemoStarter },
+    explanation: `**All three are the same idea — cache to avoid redoing work — at three levels:**
+\`useMemo\` caches a **value**, \`useCallback\` caches a **function**, \`React.memo\` caches a **rendered
+component**. They compose: memoize the expensive value *and* stabilize the handler, and the \`memo\`'d child's
+props become shallow-equal across renders, so React skips it.
+
+**Watch the demo.** Typing in the text box updates unrelated state, so \`App\` re-renders — but \`squares\` is
+the same array reference (\`useMemo\`, \`n\` unchanged) and \`onPick\` is the same function (\`useCallback\`), so
+each memoized \`Row\` sees identical props and its render counter **stays put**. Click **+1**: \`n\` changes,
+\`useMemo\` recomputes, and only the new row renders. Delete \`useCallback\` (see the trailing comment) and every
+row re-renders on every keystroke — the classic memo-defeated-by-a-new-function bug from the previous lesson.
+
+**The senior nuance — don't over-memoize.** Each of these adds memory and a comparison on every render; wrap
+them around *cheap* work and you can make things slower and harder to read. The rule: memoize when the
+computation is **measurably expensive**, or when you need a **stable reference** for a \`memo\`'d child or a
+dependency array. (React's own guidance leans this way, and the React Compiler aims to automate much of it.)
+This is exactly the kind of thing to flag when auditing AI-generated components: \`useCallback\`/\`useMemo\`
+sprinkled everywhere is a smell, not a win. *Sources:
+[React — memo](https://react.dev/reference/react/memo),
+[React — useMemo](https://react.dev/reference/react/useMemo),
+[React — useCallback](https://react.dev/reference/react/useCallback).*`,
+  },
+  {
+    id: 'fe-react-custom-hooks', module: 'fe-react-depth', order: 4, kind: 'component', template: 'react',
+    title: 'Custom hooks', difficulty: 'medium', tags: ['react', 'hooks', 'reuse'],
+    summary: 'Extract stateful logic into a reusable useXxx function. Same single-responsibility instinct from SOLID, applied to React.',
+    prompt: `A **custom hook** is just a function named \`useSomething\` that calls other hooks. It lets you **extract and reuse stateful logic** — timers, toggles, subscriptions, data fetching — without copy-paste, and *without* sharing state between components (each call gets its own state). The demo defines \`useToggle\` and \`useDebouncedValue\`; this is the **single-responsibility** instinct from the SOLID lesson, applied to React.`,
+    keyTerms: [
+      { term: 'Custom hook', def: 'A JS function whose name starts with `use` and that calls other hooks. It packages reusable stateful logic. Not markup — it returns values/handlers, not JSX.' },
+      { term: 'Rules of Hooks', def: 'Call hooks only at the TOP LEVEL (never in loops/conditions/nested functions) and only from React components or other hooks. The `use` prefix is how React and the linter enforce this.' },
+      { term: 'Logic reuse, not state sharing', def: 'Each call to a custom hook gets its own independent state. `useToggle()` in two components = two separate toggles. To SHARE state, lift it up or use Context.' },
+      { term: 'Encapsulation', def: 'A custom hook hides its internal state/effects behind a small return value — the same encapsulation idea as a class, but for stateful function logic.' },
+      { term: 'Composability', def: 'Hooks call hooks: a custom hook can use `useState`, `useEffect`, even other custom hooks — so you build complex behavior from small, tested pieces.' },
+    ],
+    codeNotes: [
+      { label: 'A custom hook is a function that uses hooks', code: `function useToggle(initial = false) {\n  const [on, setOn] = useState(initial);\n  const toggle = useCallback(() => setOn((v) => !v), []);\n  return [on, toggle];        // return values + handlers, never JSX\n}\nconst [open, toggleOpen] = useToggle();`, note: "Naming it useX lets React/lint apply the Rules of Hooks." },
+      { label: 'Wrap an effect for reuse (debounce)', code: `function useDebouncedValue(value, delay = 500) {\n  const [v, setV] = useState(value);\n  useEffect(() => {\n    const id = setTimeout(() => setV(value), delay);\n    return () => clearTimeout(id);   // cancel on change = the debounce\n  }, [value, delay]);\n  return v;\n}`, note: "The tricky timer + cleanup lives in ONE place, reused everywhere." },
+      { label: 'Each call is independent state', code: `function A() { const [on] = useToggle(); }  // its own on\nfunction B() { const [on] = useToggle(); }  // a DIFFERENT on\n// Hooks reuse LOGIC, not state. To share state, lift it or use Context.`, note: "A common misconception: custom hooks do not create shared/global state." },
+    ],
+    starterCode: { '/App.js': reactHooksStarter },
+    explanation: `**Why custom hooks matter:** before them, reusing stateful logic (a subscription, a debounce,
+a form field's behavior) meant awkward patterns or copy-paste. A custom hook packages that logic behind a
+clean API — \`const [on, toggle] = useToggle()\` — so the *component* stays focused on rendering. That's the
+**single-responsibility principle** from the paradigms module made concrete: the data/effect logic lives in
+the hook; the JSX lives in the component.
+
+**Two rules keep hooks reliable.** (1) **Call them at the top level only** — never inside a loop, condition,
+or nested function — because React tracks hook state by call *order*, and a conditional call would shift the
+order and corrupt state. (2) **Call them only from React functions or other hooks.** The \`use\` naming
+convention is what lets React and the ESLint plugin *enforce* both rules automatically.
+
+**The key mental model — reuse logic, not state.** Every call to a custom hook gets its **own independent
+state**; \`useToggle()\` in two places gives two separate toggles. Custom hooks are for sharing *behavior*, not
+*data*. To share data across components you still lift state up or use Context. In the demo, \`useToggle\`
+drives the theme and \`useDebouncedValue\` (built on \`useEffect\` + cleanup, reusing the debounce idea from the
+JS-core module) delays the "debounced" readout — two small, composable, independently reusable pieces.
+*Sources: [React — Reusing Logic with Custom Hooks](https://react.dev/learn/reusing-logic-with-custom-hooks),
+[React — Rules of Hooks](https://react.dev/reference/rules/rules-of-hooks).*`,
+  },
+  {
+    id: 'fe-react-forms', module: 'fe-react-depth', order: 5, kind: 'component', template: 'react',
+    title: 'Controlled vs uncontrolled forms', difficulty: 'medium', tags: ['react', 'forms', 'state'],
+    summary: 'Controlled inputs make React state the single source of truth; one handler drives many fields. Uncontrolled inputs (via refs) suit files and simple cases.',
+    prompt: `A **controlled** input keeps its value in React state (\`value\` + \`onChange\`), so state is the **single source of truth** — easy to validate, transform, and reset. An **uncontrolled** input lets the DOM hold the value and you read it via a **ref** on submit. The demo is controlled for text/select — with **one \`onChange\` handler driving many fields** via the input's \`name\` — and uncontrolled for the file input (which must be).`,
+    keyTerms: [
+      { term: 'Controlled component', def: 'An input whose value comes from React state (`value={x}` + `onChange`). React is the single source of truth — the DOM shows exactly what state says.' },
+      { term: 'Uncontrolled component', def: 'An input that keeps its own value in the DOM; you read it with a `ref` when needed (often on submit). Use `defaultValue` for its initial value.' },
+      { term: 'One handler, many fields', def: 'Give each input a `name` and use `setForm(f => ({ ...f, [e.target.name]: e.target.value }))` — a single `onChange` and an immutable, computed-key update for the whole form.' },
+      { term: 'Single source of truth', def: 'Form data lives in one place (state). Validation, formatting, conditional fields, and reset all read/write that one object — no scraping the DOM.' },
+      { term: 'When to go uncontrolled', def: '`<input type="file">` is always uncontrolled; also fine for very simple or integration-with-non-React cases. React docs: prefer controlled for anything you validate or transform.' },
+    ],
+    codeNotes: [
+      { label: 'Controlled: state is the source of truth', code: `const [form, setForm] = useState({ name: "", email: "" });\nconst update = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));\n<input name="name" value={form.name} onChange={update} />\n<input name="email" value={form.email} onChange={update} />`, note: "One handler + name attribute + immutable computed-key update = the whole form." },
+      { label: 'Uncontrolled: read from a ref on submit', code: `const fileRef = useRef(null);\n<input type="file" ref={fileRef} />           // DOM holds the value\n<input defaultValue="hi" ref={nameRef} />     // defaultValue, not value\nconst onSubmit = () => console.log(fileRef.current.files[0]);`, note: "File inputs are ALWAYS uncontrolled; use defaultValue for others." },
+      { label: 'Controlled unlocks derived UI for free', code: `<input value={q} onChange={(e) => setQ(e.target.value)} />\n<button disabled={!q.trim()}>Search</button>   // validate from state\n<p>{q.length}/100</p>                            // live counter`, note: "Because the value is in state, validation/counters/format are trivial." },
+    ],
+    starterCode: { '/App.js': reactFormsStarter },
+    explanation: `**Controlled is the React default and the one to reach for.** The input's \`value\` is bound to
+state and every keystroke flows through \`onChange\` back into state — so the DOM always mirrors state exactly.
+That single source of truth is what makes **validation, formatting, conditional fields, disabling submit, and
+reset** trivial: they all just read and write one \`form\` object. The scaling trick in the demo is **one
+\`onChange\` for the whole form** — give each field a \`name\`, then
+\`setForm(f => ({ ...f, [e.target.name]: e.target.value }))\` updates the right key immutably (note the
+computed-key + spread — the immutability lesson again).
+
+**Uncontrolled inputs** let the DOM keep the value; you grab it with a \`ref\` when you need it (usually on
+submit), and set initial values with \`defaultValue\` (not \`value\`). They're less code for trivial forms and
+are **required** for \`<input type="file">\` (its value can't be set programmatically for security). React's
+guidance: prefer **controlled** for anything you validate or transform, and use **uncontrolled** for
+file inputs or quick integrations.
+
+**Performance & audit notes:** controlled forms re-render the component on every keystroke — fine for normal
+forms, but for a huge form on a hot path you'd debounce (the custom-hook lesson) or isolate fields. And a
+frequent AI-generated bug here is a **half-controlled input** — passing \`value\` without \`onChange\`, which
+makes the field read-only and logs a React warning. When you review generated form code, check that every
+\`value\` has a matching \`onChange\` (or is intentionally \`defaultValue\`). *Sources:
+[React — Reacting to Input with State](https://react.dev/learn/reacting-to-input-with-state),
+[React — Controlling an input with a state variable](https://react.dev/reference/react-dom/components/input#controlling-an-input-with-a-state-variable).*`,
   },
 ]

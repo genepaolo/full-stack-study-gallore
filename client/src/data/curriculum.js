@@ -40,6 +40,7 @@ export const MODULES = [
   { slug: 'fe-ui', track: 'frontend', title: 'UI Component Challenges', level: 3, blurb: 'Build the classics: accordion, tabs, modal.' },
   { slug: 'fe-typescript', track: 'frontend', title: 'TypeScript Essentials', level: 3, blurb: 'Types, interfaces, unions, narrowing, and generics — JavaScript that catches bugs before runtime.' },
   { slug: 'fe-performance', track: 'frontend', title: 'Front-End Performance', level: 4, blurb: 'The pixel pipeline, reflow/repaint, virtualization, code-splitting, and Core Web Vitals.' },
+  { slug: 'fe-react-depth', track: 'frontend', title: 'React Depth & Performance', level: 4, blurb: 'Reconciliation & keys, memo/useMemo/useCallback, custom hooks, and controlled vs uncontrolled forms.' },
   // Backend
   { slug: 'be-node', track: 'backend', title: 'Node & Express', level: 3, blurb: 'The runtime, the HTTP server, and middleware.' },
   { slug: 'be-rest', track: 'backend', title: 'REST API Design', level: 4, blurb: 'Resources, verbs, status codes, and CRUD handlers.' },

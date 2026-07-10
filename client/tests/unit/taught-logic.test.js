@@ -574,3 +574,34 @@ describe('Higher-order functions & composition (fe-fp-compose)', () => {
     expect(sumOfEvenSquares).toBe(56) // 2²+4²+6²
   })
 })
+
+describe('React equality checks (fe-react-equality)', () => {
+  it('shallowEqual matches React.memo: same keys + Object.is-equal values', () => {
+    const { shallowEqual } = extract('fe-react-equality', ['shallowEqual'])
+    const fn = () => {}
+    expect(shallowEqual({ a: 1, onPick: fn }, { a: 1, onPick: fn })).toBe(true)
+    expect(shallowEqual({ a: 1, onPick: fn }, { a: 1, onPick: () => {} })).toBe(false) // new fn ref
+    expect(shallowEqual({ a: 1 }, { a: 1, b: 2 })).toBe(false) // different key count
+    expect(shallowEqual({ nested: {} }, { nested: {} })).toBe(false) // shallow: rebuilt object differs
+  })
+
+  it('shallowEqual short-circuits on identical/primitive references', () => {
+    const { shallowEqual } = extract('fe-react-equality', ['shallowEqual'])
+    const obj = { a: 1 }
+    expect(shallowEqual(obj, obj)).toBe(true) // same reference
+    expect(shallowEqual(1, 1)).toBe(true)
+    expect(shallowEqual(null, null)).toBe(true)
+    expect(shallowEqual(null, { a: 1 })).toBe(false)
+  })
+
+  it('depsChanged matches a hook deps array (Object.is per element)', () => {
+    const { depsChanged } = extract('fe-react-equality', ['depsChanged'])
+    expect(depsChanged(null, [1])).toBe(true) // first render
+    expect(depsChanged([1, 'a'], [1, 'a'])).toBe(false) // unchanged -> skip
+    expect(depsChanged([1, 'a'], [2, 'a'])).toBe(true) // one changed
+    expect(depsChanged([1], [1, 2])).toBe(true) // length changed
+    const obj = {}
+    expect(depsChanged([obj], [obj])).toBe(false) // same reference
+    expect(depsChanged([{}], [{}])).toBe(true) // new reference each render
+  })
+})

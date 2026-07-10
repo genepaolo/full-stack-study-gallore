@@ -9,6 +9,21 @@ tags: [meta, log]
 
 # Log (newest on top)
 
+## 2026-07-10 — New `fe-react-depth` module (5 lessons): React Depth & Performance
+- Built P1 #5 (last P1 for the target). Frontend, level 4 (next to `fe-performance`). Committed `fe-paradigms`
+  first (`621df0f`), then this. Lessons: `fe-react-render` (render/commit, reconciliation, keys, index-key
+  state-corruption bug), `fe-react-equality` (live+**tested**: `shallowEqual` = React.memo's prop check +
+  `depsChanged` = hook deps `Object.is` — explains why inline {}/() => {} props defeat memo), `fe-react-memo`
+  (live: memo/useMemo/useCallback together + per-row render counter + "remove useCallback" experiment),
+  `fe-react-custom-hooks` (live: `useToggle` + `useDebouncedValue`, Rules of Hooks, reuse-logic-not-state),
+  `fe-react-forms` (live: controlled one-handler-many-fields via `name` + immutable computed-key update;
+  uncontrolled file input via ref).
+- 3 live React demos + 1 tested vanilla (equality) + 1 concept. Framed to role: 16ms budget / reconciliation,
+  don't-over-memoize audit angle, half-controlled-input AI bug. Verified vs react.dev (Render and Commit,
+  Rendering Lists, Preserving/Resetting State, memo, useMemo, useCallback, Custom Hooks, Rules of Hooks,
+  Reacting to Input with State). Tests **148 → 155** (+3 taught-logic, +4 auto-compile), build clean.
+- **All five P1 gaps now closed.** Next: **P2** — FE system design, deepen MongoDB (`be-data`), then GraphQL.
+
 ## 2026-07-10 — New `fe-paradigms` module (5 lessons): OOP & Functional Programming
 - Built P1 #4 (JD: "OOP + functional programming principles"). Frontend track, level 3, placed after
   `fe-js-core`, before `fe-react`. Lessons: `fe-para-intro` (multi-paradigm; imperative vs declarative),
