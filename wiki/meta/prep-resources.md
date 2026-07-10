@@ -49,10 +49,22 @@ only behavioral prep is personalized (kept privately, out of this repo).
 - ashishps1/awesome-behavioral-interviews — STAR sample answers.
 - Snap values to prep stories against: *move fast with precision · privacy at the forefront · default together*.
 
-## 🎯 AI-assisted engineering + auditing output
-- ⭐ OpenSSF — Security-Focused Guide for AI Code Assistant Instructions.
-- Bright Security — reviewing AI-generated code · ClackyAI — AI code review checklist.
-- Know: "slopsquatting" (hallucinated packages); tools Semgrep / Snyk / CodeQL; OWASP Top 10.
+## 🎯 AI-assisted engineering + auditing output — VERIFIED sources (built into `adv-ai`)
+All figures below were fetched from primary sources on 2026-07-09 (per owner's "no hallucination —
+verify against solid/highly-starred sources" rule). Used in `adv-ai-auditing/-security/-audit-drill`.
+- ⭐ **OWASP Top 10 for LLM Applications 2025** — https://genai.owasp.org/llm-top-10/ — LLM01 Prompt
+  Injection · LLM02 Sensitive Info Disclosure · LLM03 Supply Chain · LLM04 Data/Model Poisoning ·
+  LLM05 Improper Output Handling · LLM06 Excessive Agency · LLM07 System Prompt Leakage · LLM08 Vector/
+  Embedding · LLM09 Misinformation · LLM10 Unbounded Consumption. (Consumer-of-AI-code angle: LLM02/03/05.)
+- **Package-hallucination study** ("We Have a Package for You!", arXiv 2406.10279, USENIX Security '25) —
+  576k samples / 16 models → **205,474 unique hallucinated package names**; non-existent imports in
+  **5.2%** of commercial-model vs **21.7%** of open-source-model outputs. Basis of **slopsquatting**.
+- **Veracode 2025 GenAI Code Security Report** (100+ models) — https://www.veracode.com/blog/genai-code-security-report/
+  — **45%** of AI-generated code introduced an OWASP Top 10 vuln; unsafe XSS **86%**, log-injection **88%**;
+  models improved at functional but NOT secure code.
+- **GitHub Docs — Review AI-generated code** — https://docs.github.com/en/copilot/tutorials/review-ai-generated-code
+  — "assume confidently incomplete"; run tests + static analysis (CodeQL, Dependabot) before human review.
+- Tools to name: Semgrep / Snyk / CodeQL / Dependabot · OpenSSF Security-Focused Guide for AI Code Assistants.
 
 ## Snap-flavored preferred quals
 - Real-time / WebSockets + GraphQL: howtographql.com (subscriptions), MDN WebSockets, Hasura Learn.

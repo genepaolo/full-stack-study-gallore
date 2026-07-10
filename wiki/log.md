@@ -9,6 +9,19 @@ tags: [meta, log]
 
 # Log (newest on top)
 
+## 2026-07-09 — AI-code-auditing: +3 `adv-ai` lessons, every figure primary-source verified
+- Built the P1 "audit AI output" content (JD names it twice): `adv-ai-auditing` (5-pass checklist:
+  correctness/security/performance/dependencies/maintainability; "assume confidently incomplete"),
+  `adv-ai-security` (classic bugs AI repeats + **slopsquatting**/package hallucination + OWASP LLM Top 10),
+  and `adv-ai-audit-drill` (live vanilla: plausible AI code with a hidden **O(n²)** + a correctness bug;
+  taught-logic-tested that the bug is real and the fix dedupes).
+- **Per owner's "no hallucination" rule, every stat was fetched from the primary source** and filed to
+  [[prep-resources]]: OWASP LLM Top 10 2025 (genai.owasp.org) · package-hallucination study (arXiv
+  2406.10279: 205,474 unique fake names; 5.2% commercial vs 21.7% OSS) · Veracode 2025 GenAI report
+  (45% introduce an OWASP Top 10 vuln; XSS 86%, log-injection 88%) · GitHub Docs review guide.
+- `adv-ai` = 5 lessons. Tests 126 → **130**; build clean. Updated [[target-role-profile]]: AI-audit ✅;
+  **TypeScript** is next.
+
 ## 2026-07-09 — Pivot to front-end performance: new `fe-performance` module (5 lessons)
 - With DSA complete, built the #1 target-weighted module ([[target-role-profile]] P1): **`fe-performance`**
   (frontend track, level 4) — (1) the pixel pipeline / critical rendering path, (2) reflow vs repaint +

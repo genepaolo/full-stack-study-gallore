@@ -10,9 +10,9 @@ tags: [meta, cache]
 # Recent Context
 
 ## Last Updated
-2026-07-09. **DSA taxonomy complete AND the Front-End Performance module is built.** `adv-algorithms` =
-16 lessons; new **`fe-performance`** = 5 lessons (the #1 target-weighted P1 gap — now ✅). Tests **126**,
-build clean. Next P1: **AI-assisted engineering — auditing generated code** (expand `adv-ai`).
+2026-07-09. Three P1 gaps closed today: **DSA taxonomy** (`adv-algorithms` = 16), **Front-End Performance**
+(`fe-performance` = 5), and **AI-assisted engineering + auditing** (`adv-ai` = 5). Tests **130**, build clean.
+Every AI-audit statistic was **primary-source verified** (owner's no-hallucination rule). Next P1: **TypeScript**.
 
 ## Headlines
 - **`adv-algorithms` = 16 lessons**, all JS (not Java), each brute→optimized + `codeNotes` + full
@@ -27,14 +27,19 @@ build clean. Next P1: **AI-assisted engineering — auditing generated code** (e
   thrashing (read-then-write batching, rAF, transform/opacity) · list virtualization (testable
   `visibleRange` windowing math) · code-splitting (dynamic import, React.lazy, tree-shaking) · Core Web
   Vitals (LCP/CLS/INP; INP replaced FID Mar 2024). Web-verified; concept lessons + one live vanilla editor.
-- **Curation target** → [[target-role-profile]] (Snap-style FS Eng): P1 = FE perf ✅ →
-  **AI-code-auditing (next)** → TypeScript → FE system design → behavioral.
+- **`adv-ai` = 5 lessons**: workflow · prompting · **auditing** (5-pass checklist) · **security** (OWASP
+  LLM Top 10 2025, slopsquatting/package hallucination, Veracode stats) · **audit drill** (live: spot the
+  hidden O(n²) + correctness bug, tested). All stats primary-source verified → [[prep-resources]].
+- **Curation target** → [[target-role-profile]] (Snap-style FS Eng): P1 = FE perf ✅ · AI-audit ✅ →
+  **TypeScript (next)** → OOP/FP → React depth → behavioral.
 - **Security**: live-editor host-isolated (Sandpack sandboxed iframe + double ErrorBoundary + Reset).
   `autorun:false` still offered as a stronger infinite-loop guard (owner's call, not applied).
 
 ## Active Threads
-- **NEXT: AI-assisted engineering — auditing generated code** (expand `adv-ai`): review AI output for
-  correctness, performance, security. Then TypeScript module, FE system design, deepen MongoDB.
+- **NEXT: TypeScript module** — types, interfaces, generics, narrowing; grow from the cheat-sheet TS seed
+  in `adv-cheatsheet`. Then OOP/FP, React depth (useMemo/useCallback), FE system design, deepen MongoDB.
+- **Verify-don't-hallucinate is now a standing rule**: every factual claim/stat must be backed by a solid
+  primary source or a highly-starred repo before it ships (see [[prep-resources]] for the AI-audit set).
 - **Practice**: verify each solution/complexity vs public LeetCode before it ships; keep explanations simple.
 - **Personalized (gitignored)**: behavioral prep in `wiki/private/` — 70/30 FE/BE, honest on DB depth.
 - **Open**: README stale (says "Four categories"/MongoDB progress) — refresh candidate; Notes UI + mobile

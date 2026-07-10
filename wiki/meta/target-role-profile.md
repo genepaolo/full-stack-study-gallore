@@ -36,7 +36,7 @@ From the JD, in rough priority for *our* content:
 | Node/Express, REST, Mongo, auth | ✅ covered | backend track |
 | Algorithms & DS (coding round) | ✅ **covered** | `adv-algorithms` — 16 lessons, full NeetCode taxonomy (patterns + cheat sheet) |
 | **JS performance + browser rendering** | ✅ **covered (new)** | `fe-performance` — pixel pipeline, reflow/thrashing, virtualization, code-splitting, Core Web Vitals |
-| **AI-assisted dev + auditing output** | ⚠️ partial | `adv-ai` (workflow, prompting); missing the *audit* lens |
+| **AI-assisted dev + auditing output** | ✅ **covered (new)** | `adv-ai` — workflow, prompting, + auditing / security (OWASP LLM Top 10, slopsquatting) / hands-on audit drill |
 | OOP + functional programming | ⚠️ partial | scattered; no dedicated lessons |
 | Unit testing | ⚠️ partial | app has a Vitest suite ([[testing]]); no lesson |
 | UI components | ✅ covered | fe-ui (8 components) |
@@ -52,11 +52,13 @@ Supersedes the generic P1 order in [[expansion-roadmap]] when optimizing for *th
   1. ✅ **DONE — Front-end performance & browser rendering** (`fe-performance`, 5 lessons): pixel pipeline,
      reflow/repaint + layout thrashing, list virtualization (testable windowing math), code-splitting,
      Core Web Vitals (LCP/CLS/INP). *(JD names it.)*
-  2. **AI-assisted engineering — auditing generated code** ← **NEXT** — expand `adv-ai`: review AI output for
-     correctness, performance, and security. *(JD names it; owner interest.)*
-  3. **OOP & functional programming principles** — pure functions, immutability, composition;
+  2. ✅ **DONE — AI-assisted engineering + auditing generated code** (`adv-ai`, +3 lessons): 5-pass audit
+     checklist, security risks (OWASP LLM Top 10 2025, slopsquatting/package hallucination, Veracode stats),
+     and a hands-on audit drill (spot the hidden O(n²) + correctness bug). All figures primary-source
+     verified → [[prep-resources]]. *(JD names it; owner interest.)*
+  3. **TypeScript basics** ← **NEXT** — types, interfaces, generics, narrowing (grow from the cheat-sheet seed).
+  4. **OOP & functional programming principles** — pure functions, immutability, composition;
      classes, encapsulation, a light-touch SOLID.
-  4. **TypeScript basics** — types, interfaces, generics, narrowing.
   5. **React depth** — `useMemo`/`useCallback`/`memo`, controlled forms, custom hooks (ties to perf).
 - **P2:** GraphQL · advanced front-end (Canvas/WebGL/Service Workers/WASM) · Redis/caching ·
   distributed systems / [[system-design-plan]] · a unit-testing lesson · domain-driven design.

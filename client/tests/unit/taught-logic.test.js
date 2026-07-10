@@ -441,3 +441,27 @@ describe('list virtualization (fe-perf-virtualization)', () => {
     expect(offsetFor(100, 30)).toBe(3000)
   })
 })
+
+describe('AI audit drill (adv-ai-audit-drill)', () => {
+  const data = [1, 2, 3, 2, 4, 2, 5, 3]
+
+  it('the audited fix is correct: each duplicate reported exactly once', () => {
+    const { findDuplicates } = extract('adv-ai-audit-drill', ['findDuplicates'])
+    expect(findDuplicates(data)).toEqual([2, 3])
+    expect(findDuplicates([1, 2, 3])).toEqual([]) // no duplicates
+    expect(findDuplicates([])).toEqual([])
+    const out = findDuplicates(data)
+    expect(new Set(out).size).toBe(out.length) // output is deduped
+  })
+
+  it('the AI version has the correctness bug the lesson calls out (reports a value more than once)', () => {
+    const { findDuplicatesAI } = extract('adv-ai-audit-drill', ['findDuplicatesAI'])
+    const buggy = findDuplicatesAI(data)
+    expect(new Set(buggy).size).not.toBe(buggy.length) // 2 appears twice — the bug is real
+  })
+
+  it('both agree on the SET of duplicates (the fix preserves intent)', () => {
+    const { findDuplicates, findDuplicatesAI } = extract('adv-ai-audit-drill', ['findDuplicates', 'findDuplicatesAI'])
+    expect(new Set(findDuplicates(data))).toEqual(new Set(findDuplicatesAI(data)))
+  })
+})
