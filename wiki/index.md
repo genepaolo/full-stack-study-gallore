@@ -45,3 +45,4 @@ tags: [index]
 - [[2026-07-07-init]] — initial build
 - [[2026-07-07-curriculum]] — curriculum restructure & full-stack expansion
 - [[2026-07-07-expansion-and-tooling]] — progress model, GSAP, tests, CI, security, P0 content
+- [[2026-07-09-content-buildout]] — DSA taxonomy finished; FE performance, AI-audit & TypeScript modules
