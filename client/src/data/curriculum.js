@@ -37,6 +37,7 @@ export const MODULES = [
   { slug: 'fe-js-core', track: 'frontend', title: 'JavaScript Core', level: 2, blurb: 'Closures, `this`, async, and the utility functions interviewers love.' },
   { slug: 'fe-react', track: 'frontend', title: 'React Essentials', level: 3, blurb: 'State, effects, and thinking in components.' },
   { slug: 'fe-ui', track: 'frontend', title: 'UI Component Challenges', level: 3, blurb: 'Build the classics: accordion, tabs, modal.' },
+  { slug: 'fe-performance', track: 'frontend', title: 'Front-End Performance', level: 4, blurb: 'The pixel pipeline, reflow/repaint, virtualization, code-splitting, and Core Web Vitals.' },
   // Backend
   { slug: 'be-node', track: 'backend', title: 'Node & Express', level: 3, blurb: 'The runtime, the HTTP server, and middleware.' },
   { slug: 'be-rest', track: 'backend', title: 'REST API Design', level: 4, blurb: 'Resources, verbs, status codes, and CRUD handlers.' },

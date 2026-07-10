@@ -9,6 +9,16 @@ tags: [meta, log]
 
 # Log (newest on top)
 
+## 2026-07-09 — Pivot to front-end performance: new `fe-performance` module (5 lessons)
+- With DSA complete, built the #1 target-weighted module ([[target-role-profile]] P1): **`fe-performance`**
+  (frontend track, level 4) — (1) the pixel pipeline / critical rendering path, (2) reflow vs repaint +
+  **layout thrashing** (read-then-write batching, rAF, transform/opacity), (3) **list virtualization**
+  (pure `visibleRange` windowing math — testable), (4) **code-splitting** (dynamic import, React.lazy,
+  tree-shaking), (5) **Core Web Vitals** (LCP ≤2.5s / CLS ≤0.1 / INP ≤200ms — INP replaced FID Mar 2024).
+- Each concept lesson has keyTerms + a `codeNotes` panel + GFM tables; virtualization is a live vanilla
+  editor with a taught-logic test (10k-row list → ~16 nodes; clamps to bounds). Web-verified vs public docs.
+- Tests 122 → **126**; build clean. Updated [[target-role-profile]]: FE-perf ✅ done; **AI-code-auditing** next.
+
 ## 2026-07-09 — +3 patterns: Graphs, Tries, Bit Manipulation — DSA taxonomy complete
 - Built `adv-graphs` (Number of Islands via DFS **and** BFS flood fill — a grid is a graph; test asserts
   the two engines agree and neither mutates the caller), `adv-tries` (Trie class: insert/search/startsWith,

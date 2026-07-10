@@ -34,8 +34,8 @@ From the JD, in rough priority for *our* content:
 | **TypeScript** | ❌ gap | none — JD says "and/or TS"; table stakes |
 | React (a UI framework) | ✅ covered | fe-react, fe-ui |
 | Node/Express, REST, Mongo, auth | ✅ covered | backend track |
-| Algorithms & DS (coding round) | ✅ **covered (new)** | `adv-algorithms` (Big-O, two-pointers, recursion, trees/DOM, hashmaps) |
-| **JS performance + browser rendering** | ⚠️ partial | touched in `adv-big-o`; no dedicated module |
+| Algorithms & DS (coding round) | ✅ **covered** | `adv-algorithms` — 16 lessons, full NeetCode taxonomy (patterns + cheat sheet) |
+| **JS performance + browser rendering** | ✅ **covered (new)** | `fe-performance` — pixel pipeline, reflow/thrashing, virtualization, code-splitting, Core Web Vitals |
 | **AI-assisted dev + auditing output** | ⚠️ partial | `adv-ai` (workflow, prompting); missing the *audit* lens |
 | OOP + functional programming | ⚠️ partial | scattered; no dedicated lessons |
 | Unit testing | ⚠️ partial | app has a Vitest suite ([[testing]]); no lesson |
@@ -49,9 +49,10 @@ From the JD, in rough priority for *our* content:
 Supersedes the generic P1 order in [[expansion-roadmap]] when optimizing for *this* role.
 
 - **P1 (build next, highest JD signal):**
-  1. **Front-end performance & browser rendering** module — reflow vs repaint, layout thrashing,
-     `requestAnimationFrame`, list virtualization, code-splitting, Core Web Vitals. *(JD names it.)*
-  2. **AI-assisted engineering — auditing generated code** — expand `adv-ai`: review AI output for
+  1. ✅ **DONE — Front-end performance & browser rendering** (`fe-performance`, 5 lessons): pixel pipeline,
+     reflow/repaint + layout thrashing, list virtualization (testable windowing math), code-splitting,
+     Core Web Vitals (LCP/CLS/INP). *(JD names it.)*
+  2. **AI-assisted engineering — auditing generated code** ← **NEXT** — expand `adv-ai`: review AI output for
      correctness, performance, and security. *(JD names it; owner interest.)*
   3. **OOP & functional programming principles** — pure functions, immutability, composition;
      classes, encapsulation, a light-touch SOLID.

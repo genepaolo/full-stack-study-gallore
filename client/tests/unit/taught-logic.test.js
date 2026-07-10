@@ -417,3 +417,27 @@ describe('bit manipulation (adv-bit-manipulation)', () => {
     expect(countBits(7)).toBe(3) // 111
   })
 })
+
+describe('list virtualization (fe-perf-virtualization)', () => {
+  it('visibleRange windows to the rows in view (plus overscan), clamped to bounds', () => {
+    const { visibleRange } = extract('fe-perf-virtualization', ['visibleRange'])
+    // at the top: no negative start, ~10 visible + 3 overscan below
+    expect(visibleRange(0, 30, 300, 10000)).toEqual([0, 13])
+    // scrolled into the middle
+    expect(visibleRange(3000, 30, 300, 10000)).toEqual([97, 113])
+    // near the bottom clamps to total, never past it
+    expect(visibleRange(299970, 30, 300, 10000)).toEqual([9996, 10000])
+  })
+
+  it('renders far fewer nodes than the list length', () => {
+    const { visibleRange } = extract('fe-perf-virtualization', ['visibleRange'])
+    const [start, end] = visibleRange(3000, 30, 300, 10000)
+    expect(end - start).toBeLessThan(20) // ~16 of 10,000
+  })
+
+  it('totalHeight keeps the scrollbar honest', () => {
+    const { totalHeight, offsetFor } = extract('fe-perf-virtualization', ['totalHeight', 'offsetFor'])
+    expect(totalHeight(10000, 30)).toBe(300000)
+    expect(offsetFor(100, 30)).toBe(3000)
+  })
+})

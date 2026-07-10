@@ -524,6 +524,38 @@ export default function Stopwatch() {
 }
 `
 
+// ---------- fe-performance ----------
+const virtualizationStarter = `// List virtualization ("windowing"): render only the rows visible in the viewport — not all 10,000.
+// The whole trick is pure math: compute WHICH rows to render from the scroll position.
+
+// Given the scroll position + sizes, return the [start, end) row range to actually render.
+// 'overscan' renders a few extra above/below so a fast scroll does not flash blank.
+function visibleRange(scrollTop, rowHeight, viewportHeight, total, overscan = 3) {
+  const first = Math.floor(scrollTop / rowHeight);
+  const visibleCount = Math.ceil(viewportHeight / rowHeight);
+  const start = Math.max(0, first - overscan);
+  const end = Math.min(total, first + visibleCount + overscan);
+  return [start, end];
+}
+
+// The scrollbar must still reflect ALL rows, so the spacer is the full height...
+function totalHeight(total, rowHeight) {
+  return total * rowHeight;
+}
+// ...and each rendered row is pushed to its true position (absolute top, or a translateY).
+function offsetFor(index, rowHeight) {
+  return index * rowHeight;
+}
+
+const TOTAL = 10000, ROW = 30, VIEWPORT = 300;
+const [aStart, aEnd] = visibleRange(0, ROW, VIEWPORT, TOTAL);
+const [bStart, bEnd] = visibleRange(3000, ROW, VIEWPORT, TOTAL);
+console.log("at top:          rows", aStart, "..", aEnd);          // 0 .. 13
+console.log("scrolled 3000px: rows", bStart, "..", bEnd);          // 97 .. 113
+console.log("DOM nodes rendered:", bEnd - bStart, "of", TOTAL);    // 16 of 10000
+console.log("spacer height:", totalHeight(TOTAL, ROW), "px (scrollbar stays correct)");
+`
+
 export const frontendLessons = [
   // fe-foundations
   {
@@ -854,5 +886,170 @@ const f = obj.regular; f();  // ?
     ],
     starterCode: { '/App.js': stopwatchStarter },
     explanation: `Why timestamp math: intervals aren’t exact, so **counting ticks drifts**. Reading \`Date.now() - startedAt\` stays accurate. \`startedAt = Date.now() - ms\` lets Start **resume** from the paused time. In a fuller version, clear the interval in a \`useEffect\` cleanup so it’s torn down on unmount too.`,
+  },
+
+  // ---------- fe-performance ----------
+  {
+    id: 'fe-perf-rendering', module: 'fe-performance', order: 1, kind: 'concept',
+    title: 'How the browser renders (the pixel pipeline)', difficulty: 'medium', tags: ['performance', 'rendering', 'browser'],
+    summary: 'DOM + CSSOM → render tree → layout → paint → composite. Know the pipeline to know what makes it slow.',
+    prompt: `Every frame, the browser turns your HTML/CSS/JS into pixels through a fixed **pipeline**. To hit **60fps** you have ~**16.7ms per frame** — so the goal of most front-end perf work is to do *less* of the expensive stages. This is exactly the "rendering & performance" work a Snap-style role centers on.`,
+    keyTerms: [
+      { term: 'Critical rendering path', def: 'The sequence the browser runs to first paint: parse HTML → DOM, parse CSS → CSSOM, combine into the render tree, then layout → paint → composite.' },
+      { term: 'DOM & CSSOM', def: 'The Document Object Model (element tree) and CSS Object Model (computed styles). The render tree is their intersection — only visible, styled nodes.' },
+      { term: 'Layout (reflow)', def: 'Computing the geometry — size and position — of every box. Triggered by changes to width, height, position, font-size, adding/removing nodes. Expensive.' },
+      { term: 'Paint', def: 'Filling in pixels: text, colors, borders, shadows, images. Happens into layers.' },
+      { term: 'Composite', def: 'Assembling painted layers into the final image on the GPU. transform and opacity changes can be composite-only — no layout, no paint.' },
+      { term: 'Frame budget (16.7ms)', def: 'At 60fps each frame has ~16.7ms; after the browser’s own overhead you get ~10ms. Blow it and the frame drops → visible jank.' },
+    ],
+    codeNotes: [
+      { label: 'Which stages does a CSS change trigger?', code: `/* Layout + Paint + Composite (expensive): */\nel.style.width = "200px";   top / left / height / margin / font-size\n\n/* Paint + Composite (cheaper): */\nel.style.background = "red"; color / box-shadow / border-radius\n\n/* Composite only (cheapest — GPU, no layout/paint): */\nel.style.transform = "translateX(20px)";\nel.style.opacity = "0.5";`, note: 'Animate with transform/opacity to stay on the compositor. See csstriggers.com.' },
+    ],
+    explanation: `## The pipeline, stage by stage
+
+| Stage | What happens | Triggered by |
+|---|---|---|
+| **JavaScript** | Your code mutates the DOM/styles | event handlers, timers, \`fetch\` callbacks |
+| **Style** | Recalculate which CSS rules apply | class/attr changes, added nodes |
+| **Layout** *(reflow)* | Compute geometry of every box | size/position/text changes |
+| **Paint** | Rasterize pixels into layers | color, shadow, image changes |
+| **Composite** | Assemble layers on the GPU | \`transform\`, \`opacity\` |
+
+**The key insight:** the stages run top-to-bottom, and each one you *skip* is time saved. Changing a
+geometric property (\`width\`, \`top\`) forces **Layout → Paint → Composite** — the whole chain. Changing
+\`background\` skips Layout. Changing \`transform\`/\`opacity\` can skip **both** Layout and Paint and run
+purely on the **compositor** (GPU) — which is why smooth animations use them.
+
+**Why it matters for the role:** hitting 60fps means keeping each frame under ~16.7ms. When a scroll or
+animation janks, you open DevTools → Performance, find which stage is eating the frame (long *Layout* =
+reflow thrash, long *Paint* = expensive fills, long *Scripting* = JS), and remove that work. The next
+lessons drill into the two biggest wins: **avoiding layout thrash** and **rendering less** (virtualization).`,
+  },
+  {
+    id: 'fe-perf-reflow', module: 'fe-performance', order: 2, kind: 'concept',
+    title: 'Reflow, repaint & layout thrashing', difficulty: 'medium', tags: ['performance', 'reflow', 'dom'],
+    summary: 'Interleaving DOM reads and writes forces synchronous reflows in a loop — batch them to stay smooth.',
+    prompt: `**Layout thrashing** is the #1 self-inflicted jank bug: reading a layout property right after writing one forces the browser to **reflow synchronously**, over and over inside a loop. The fix is a discipline — **read everything first, then write everything** — plus \`requestAnimationFrame\` for visual updates.`,
+    keyTerms: [
+      { term: 'Reflow vs repaint', def: 'Reflow (layout) recomputes geometry; repaint just refills pixels. Reflow is the pricier of the two and often forces a repaint after it.' },
+      { term: 'Layout thrashing', def: 'Alternating DOM writes and layout reads in a loop, each read forcing the browser to flush a fresh layout. Turns O(n) work into O(n) forced reflows.' },
+      { term: 'Forced synchronous layout', def: 'Reading offsetHeight / getBoundingClientRect / offsetTop / scrollTop / getComputedStyle after a write makes the browser reflow NOW to give you a fresh value.' },
+      { term: 'Read-then-write batching', def: 'Do all measurements first (reads), then all mutations (writes). One reflow instead of n. Libraries like FastDOM formalize this.' },
+      { term: 'requestAnimationFrame', def: 'Schedules a callback right before the next paint (~60fps). Batch visual DOM writes here so they land once per frame, aligned with the pipeline.' },
+    ],
+    codeNotes: [
+      { label: 'The thrash — write then read, in a loop (BAD)', code: `for (const box of boxes) {\n  box.style.width = box.offsetWidth + 10 + "px"; // WRITE then READ\n  // offsetWidth forces a synchronous reflow every iteration -> O(n) reflows\n}`, note: 'Each read must flush the pending write to be accurate.' },
+      { label: 'The fix — batch: read all, then write all (GOOD)', code: `const widths = boxes.map((b) => b.offsetWidth);      // READ phase (one reflow)\nboxes.forEach((b, i) => { b.style.width = widths[i] + 10 + "px"; }); // WRITE phase`, note: 'One reflow total instead of n.' },
+      { label: 'Layout-reading properties to watch', code: `offsetTop / offsetLeft / offsetWidth / offsetHeight\nclientTop / clientWidth / scrollTop / scrollHeight\ngetBoundingClientRect()  getComputedStyle(el)`, note: 'Reading any of these after a write forces a reflow.' },
+      { label: 'Batch visual writes into a frame', code: `requestAnimationFrame(() => {\n  el.style.transform = "translateY(" + y + "px)"; // lands once, right before paint\n});`, note: 'Prefer transform/opacity — composite-only, no reflow.' },
+    ],
+    explanation: `**What goes wrong:** the browser is lazy — it queues style/DOM changes and reflows *once* when it
+has to. But the moment you **read** a layout value (\`offsetHeight\`, \`getBoundingClientRect()\`, …), it
+must give you an accurate answer, so it **flushes a full reflow right then**. Do that inside a loop that
+also writes, and you force a reflow on every iteration — a smooth O(n) pass becomes n synchronous
+layouts and the frame blows past 16.7ms.
+
+**The fix is ordering, not cleverness:** separate the **read phase** from the **write phase**. Measure
+everything you need first, then apply all mutations. One reflow instead of n. For animations, push the
+writes into a \`requestAnimationFrame\` callback so they align with the paint, and prefer **\`transform\`/
+\`opacity\`** so the change is composite-only (no reflow at all).
+
+**In an interview / audit:** this is a textbook thing to spot in AI-generated or legacy code — a loop
+that reads \`el.offsetTop\` and then sets \`el.style.top\`. Call out the forced synchronous layout and
+propose the read/write split. It’s the same instinct as spotting a hidden O(n²) in the algorithms track.`,
+  },
+  {
+    id: 'fe-perf-virtualization', module: 'fe-performance', order: 3, kind: 'utility', template: 'vanilla',
+    title: 'List virtualization (windowing)', difficulty: 'medium', tags: ['performance', 'virtualization', 'dom'],
+    summary: 'Render only the rows in view — 16 DOM nodes for a 10,000-item list. The math is pure and testable.',
+    prompt: `Implement **\`visibleRange(scrollTop, rowHeight, viewportHeight, total, overscan)\`**: return the \`[start, end)\` rows to actually render for a scrolled list. A 10,000-row list should mount ~**16** nodes, not 10,000 — the core technique behind fast feeds and long lists.`,
+    keyTerms: [
+      { term: 'Virtualization / windowing', def: 'Render only the items currently visible (plus a small buffer); as the user scrolls, recycle nodes and re-render the new window. Keeps the DOM tiny.' },
+      { term: 'Overscan', def: 'A few extra rows rendered just above/below the viewport so a fast scroll does not flash blank before the next update.' },
+      { term: 'Spacer / total height', def: 'A container sized to total × rowHeight so the scrollbar reflects the full list even though most rows are not in the DOM.' },
+      { term: 'Row offset', def: 'Each rendered row is positioned at index × rowHeight (absolute top or translateY) so it sits where it belongs inside the tall spacer.' },
+    ],
+    codeNotes: [
+      { label: 'Which rows to render', code: `const first = Math.floor(scrollTop / rowHeight);\nconst count = Math.ceil(viewportHeight / rowHeight);\nconst start = Math.max(0, first - overscan);\nconst end = Math.min(total, first + count + overscan);`, note: 'Clamp to [0, total] so you never index past the ends.' },
+      { label: 'Keep the scrollbar honest', code: `spacer.style.height = total * rowHeight + "px"; // full height\nrow.style.transform = "translateY(" + index * rowHeight + "px)"; // true position`, note: 'translateY is composite-only — cheaper than top.' },
+    ],
+    starterCode: { '/index.js': virtualizationStarter },
+    explanation: `**The problem:** a 10,000-row list = 10,000 DOM nodes = slow layout, huge memory, janky scroll.
+**The fix:** only rows in the viewport exist in the DOM. From \`scrollTop\` you compute the first visible
+row (\`scrollTop / rowHeight\`) and how many fit (\`viewportHeight / rowHeight\`), add a little **overscan**,
+and render just that window — ~16 nodes regardless of list size. A full-height **spacer** keeps the
+scrollbar correct, and each row is offset to its real position with \`translateY\`.
+
+**Wiring it up:** attach a \`scroll\` handler (throttled with \`requestAnimationFrame\`), recompute
+\`visibleRange\`, and re-render the window. In React this is what **react-window** / **react-virtualized**
+/ TanStack Virtual do; the pure \`visibleRange\` math above is the part interviewers actually probe.
+Follow-ups: **variable row heights** (measure + prefix-sum offsets), **horizontal** virtualization, and
+**infinite scroll** (fetch the next page as \`end\` approaches \`total\`).`,
+  },
+  {
+    id: 'fe-perf-splitting', module: 'fe-performance', order: 4, kind: 'concept',
+    title: 'Code-splitting & lazy loading', difficulty: 'medium', tags: ['performance', 'bundling', 'react'],
+    summary: 'Ship less JavaScript up front — split by route/component with dynamic import() and React.lazy.',
+    prompt: `The fastest code is the code you don’t send. **Code-splitting** breaks one giant bundle into chunks loaded **on demand** (per route or interaction), so the first load is small. \`import()\`, \`React.lazy\`, and route-based splitting are the tools — this very app **lazy-loads Sandpack** so the editor’s weight isn’t in the initial bundle.`,
+    keyTerms: [
+      { term: 'Bundle', def: 'The JS your bundler (Vite/webpack) produces. One big bundle blocks first render; splitting it defers what’s not needed yet.' },
+      { term: 'Dynamic import()', def: 'import("./Heavy.js") returns a Promise and creates a separate chunk fetched at runtime — the primitive all code-splitting builds on.' },
+      { term: 'React.lazy + Suspense', def: 'React.lazy(() => import("./Chart")) renders a component only when needed; <Suspense fallback> shows a placeholder while its chunk loads.' },
+      { term: 'Route-based splitting', def: 'Split at the router so each page loads its own chunk — the highest-leverage split, since users rarely visit every route.' },
+      { term: 'Tree-shaking', def: 'Dead-code elimination: bundlers drop unused ES-module exports. Import only what you use (named imports) so unused code never ships.' },
+    ],
+    codeNotes: [
+      { label: 'Lazy-load a heavy component', code: `import { lazy, Suspense } from "react";\nconst Chart = lazy(() => import("./Chart")); // its own chunk\n\n<Suspense fallback={<Spinner />}>\n  <Chart />\n</Suspense>`, note: 'The Chart bundle is fetched only when it first renders.' },
+      { label: 'Split at the route', code: `const Settings = lazy(() => import("./pages/Settings"));\n<Route path="/settings" element={<Settings />} />`, note: 'Users pay for a page only when they visit it.' },
+      { label: 'Defer non-critical work', code: `button.onclick = async () => {\n  const { exportPdf } = await import("./pdf"); // load the big lib on click\n  exportPdf(data);\n};`, note: 'Keep rarely-used heavy deps out of the initial bundle.' },
+    ],
+    explanation: `**Why it matters:** JavaScript is the most expensive resource — it must download, parse, compile,
+and execute before the page is interactive. A smaller initial bundle means a faster **LCP** and **INP**
+(next lesson). Splitting defers everything the first screen doesn’t need.
+
+**The three moves, in order of leverage:** (1) **route-based** splitting — each page its own chunk;
+(2) **component-level** \`React.lazy\` for heavy widgets (charts, editors, maps) behind a \`Suspense\`
+fallback; (3) **on-interaction** \`import()\` for big libraries used only after a click (PDF export,
+a rich-text editor). Underneath, **tree-shaking** trims unused exports, and a bundle analyzer
+(\`rollup-plugin-visualizer\`) shows what’s actually shipping.
+
+**The trade-off to name in an interview:** splitting adds network round-trips (a chunk must be fetched
+when needed), so you **preload/prefetch** likely-next chunks and avoid over-splitting tiny modules.
+This app applies it directly — the Sandpack live editor is \`lazy\`-loaded so lessons without it start fast.`,
+  },
+  {
+    id: 'fe-perf-web-vitals', module: 'fe-performance', order: 5, kind: 'concept',
+    title: 'Core Web Vitals (LCP, CLS, INP)', difficulty: 'medium', tags: ['performance', 'metrics', 'web-vitals'],
+    summary: 'The three user-centric metrics Google measures — what they mean, their targets, and how to fix each.',
+    prompt: `**Core Web Vitals** are Google’s user-centric performance metrics — how fast the main content **loads** (LCP), how **stable** the layout is (CLS), and how **responsive** it feels to input (INP). They’re measured on real users and affect search ranking, so they’re the shared vocabulary for "is this fast?"`,
+    keyTerms: [
+      { term: 'LCP — Largest Contentful Paint', def: 'Time until the largest visible element (hero image, heading block) has rendered. Good: ≤ 2.5s. Loading speed.' },
+      { term: 'CLS — Cumulative Layout Shift', def: 'How much visible content unexpectedly jumps during load. Good: ≤ 0.1. Visual stability.' },
+      { term: 'INP — Interaction to Next Paint', def: 'Responsiveness: the latency from a user interaction to the next visual update, across the whole visit. Good: ≤ 200ms. Replaced FID in March 2024.' },
+      { term: 'Field vs lab data', def: 'Field (RUM, real users, e.g. CrUX) is what counts; lab (Lighthouse, synthetic) is for debugging. They can disagree.' },
+      { term: 'web-vitals library', def: 'Google’s tiny JS library (onLCP/onCLS/onINP) to measure the vitals on real users and send them to analytics.' },
+    ],
+    codeNotes: [
+      { label: 'Measure vitals on real users', code: `import { onLCP, onCLS, onINP } from "web-vitals";\nonLCP(console.log);\nonCLS(console.log);\nonINP(console.log);   // send these to your analytics endpoint`, note: 'Field data is the source of truth; lab tools are for debugging.' },
+      { label: 'Reserve space to prevent CLS', code: `<img src="hero.jpg" width="1200" height="600" /> {/* aspect ratio reserved */}\n.skeleton { aspect-ratio: 16 / 9; }`, note: 'Images/ads without dimensions are the classic layout-shift culprit.' },
+    ],
+    explanation: `## The three vitals
+
+| Metric | Measures | Good | Main fixes |
+|---|---|---|---|
+| **LCP** | Loading — largest element painted | ≤ 2.5s | optimize/prioritize the hero image, cut render-blocking JS/CSS, faster server/CDN, preload key assets |
+| **CLS** | Stability — unexpected layout jumps | ≤ 0.1 | set width/height on images & embeds, reserve space for ads/skeletons, avoid inserting content above existing content |
+| **INP** | Responsiveness — input → next paint | ≤ 200ms | break up long tasks, defer/split JS, keep the main thread free, avoid heavy handlers |
+
+**How to think about them:** LCP is a *loading* problem (get the important pixels on screen fast), CLS
+is a *layout* problem (don’t move things after the user starts reading), and INP is a *main-thread*
+problem (don’t block the thread so interactions can paint quickly). **INP replaced FID** in March 2024 —
+it’s stricter because it watches every interaction across the visit, not just the first.
+
+**The connective tissue:** everything in this module feeds the vitals — **code-splitting** improves LCP
+and INP (less JS to load and run), **avoiding layout thrash** and **transform/opacity** animations protect
+INP and CLS, and **virtualization** keeps the DOM small so interactions stay responsive. Measure with the
+**web-vitals** library on real users, debug in Lighthouse/DevTools, and always cite the metric you’re
+moving.`,
   },
 ]

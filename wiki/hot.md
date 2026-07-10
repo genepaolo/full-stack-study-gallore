@@ -10,9 +10,9 @@ tags: [meta, cache]
 # Recent Context
 
 ## Last Updated
-2026-07-09. **DSA taxonomy is complete.** Finished the NeetCode pattern coverage from `Paolo 114.docx`:
-`adv-algorithms` is now **16 lessons** (15 patterns + cheat sheet), tests **122**, build clean. Next up:
-**pivot to the Front-End Performance module** (the #1 target-weighted P1 gap).
+2026-07-09. **DSA taxonomy complete AND the Front-End Performance module is built.** `adv-algorithms` =
+16 lessons; new **`fe-performance`** = 5 lessons (the #1 target-weighted P1 gap — now ✅). Tests **126**,
+build clean. Next P1: **AI-assisted engineering — auditing generated code** (expand `adv-ai`).
 
 ## Headlines
 - **`adv-algorithms` = 16 lessons**, all JS (not Java), each brute→optimized + `codeNotes` + full
@@ -23,14 +23,18 @@ tags: [meta, cache]
   Advanced Graphs, Math & Geo). `Paolo 114.docx` stays gitignored in `dropoff/`.
 - **`codeNotes`** field + `<CodeNotes>` callout ("🧩 Code to reach for", read-only, never executed);
   remark-gfm enabled so markdown tables render. `DESIGN.md` (repo root) documents the whole system.
-- **Curation target** → [[target-role-profile]] (Snap-style FS Eng): P1 = **FE perf/rendering** →
-  AI-code-auditing → TypeScript → FE system design → behavioral.
+- **`fe-performance` = 5 lessons** (frontend, level 4): pixel pipeline · reflow/repaint + layout
+  thrashing (read-then-write batching, rAF, transform/opacity) · list virtualization (testable
+  `visibleRange` windowing math) · code-splitting (dynamic import, React.lazy, tree-shaking) · Core Web
+  Vitals (LCP/CLS/INP; INP replaced FID Mar 2024). Web-verified; concept lessons + one live vanilla editor.
+- **Curation target** → [[target-role-profile]] (Snap-style FS Eng): P1 = FE perf ✅ →
+  **AI-code-auditing (next)** → TypeScript → FE system design → behavioral.
 - **Security**: live-editor host-isolated (Sandpack sandboxed iframe + double ErrorBoundary + Reset).
   `autorun:false` still offered as a stronger infinite-loop guard (owner's call, not applied).
 
 ## Active Threads
-- **NEXT: Front-End Performance & browser rendering module** — reflow/repaint, layout thrashing, rAF,
-  virtualization, code-splitting, Core Web Vitals. Then AI-code-auditing, TypeScript, FE system design.
+- **NEXT: AI-assisted engineering — auditing generated code** (expand `adv-ai`): review AI output for
+  correctness, performance, security. Then TypeScript module, FE system design, deepen MongoDB.
 - **Practice**: verify each solution/complexity vs public LeetCode before it ships; keep explanations simple.
 - **Personalized (gitignored)**: behavioral prep in `wiki/private/` — 70/30 FE/BE, honest on DB depth.
 - **Open**: README stale (says "Four categories"/MongoDB progress) — refresh candidate; Notes UI + mobile
