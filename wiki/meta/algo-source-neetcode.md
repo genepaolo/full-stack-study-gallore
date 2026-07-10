@@ -44,24 +44,29 @@ Advanced Graphs (1) · Greedy (5) · Intervals (5) · Math & Geo (3) · Bit Mani
 | **Binary Search** | `adv-binary-search` | classic binary search | ✅ **new** |
 | **Linked List** | `adv-linked-list` | Reverse list (LC 206) | ✅ **new** |
 | **Heap / Priority Queue** | `adv-heap` | Kth largest (min-heap, no built-in) | ✅ **new** |
-| **Intervals** | `adv-intervals` | Merge intervals (sort + sweep) | ✅ **new** |
-| **Greedy** | `adv-greedy` | Max subarray / Kadane | ✅ **new** |
-| Graphs (grid/adjacency) | — | Number of islands / course schedule | ⏳ pending |
-| Tries | — | Implement trie | ⏳ pending |
-| Bit Manipulation | — | Single number / counting bits | ⏳ pending |
+| **Intervals** | `adv-intervals` | Merge intervals (sort + sweep) | ✅ |
+| **Greedy** | `adv-greedy` | Max subarray / Kadane | ✅ |
+| **Graphs (grid/adjacency)** | `adv-graphs` | Number of islands (DFS + BFS flood fill) | ✅ **new** |
+| **Tries** | `adv-tries` | Implement trie (insert/search/startsWith) | ✅ **new** |
+| **Bit Manipulation** | `adv-bit-manipulation` | Single number (XOR) + counting bits | ✅ **new** |
 | Trees (depth) | (in `adv-trees-dom`) | invert / max depth / LCA — could deepen | ⏳ optional |
+| Advanced Graphs / Math & Geo | — | Dijkstra / geometry — thin in the doc | ⏳ optional |
 | — cheat sheet — | `adv-cheatsheet` | pattern table + JS idioms + TS seed | ✅ |
 
-Result so far: `adv-algorithms` is **13 lessons** (12 patterns + cheat sheet). 11 taught-logic-tested;
-each shows the brute→optimized journey and lists its full category question set. Every lesson also carries
-a **`codeNotes`** ("Code to reach for") panel of the concrete JS idioms it uses.
+**Result: the core NeetCode taxonomy is covered.** `adv-algorithms` is **16 lessons** (15 patterns +
+cheat sheet), 14 taught-logic-tested. Every pattern lesson shows the brute→optimized journey, lists its
+full category question set, and carries a **`codeNotes`** ("Code to reach for") panel of the concrete JS
+idioms it uses. Only optional/thin categories remain (deepen trees, Advanced Graphs, Math & Geo).
 
-## Next batches (suggested order)
-1. **Heap/Priority Queue** + **Intervals** — high interview frequency, small in the doc.
-2. **Greedy** (Kadane's max-subarray) + **Graphs** (number-of-islands, BFS/DFS on a grid — extends `adv-trees-dom`).
-3. **Tries** + **Bit Manipulation** — round out the taxonomy.
-4. Optionally split `adv-algorithms` into sub-modules if it grows past ~15 lessons (the Track→Module→Lesson
-   model supports adding modules under Advanced — see [[expansion-roadmap]] decision).
+## Done — remaining is optional
+The 13 substantive NeetCode pattern categories are all represented. Optional future depth:
+- Deepen `adv-trees-dom` with invert / max-depth / LCA / serialize as their own worked problems.
+- **Advanced Graphs** (Dijkstra, union-find) and **Math & Geo** — thin in the doc, low interview weight.
+- Optionally split `adv-algorithms` into sub-modules now that it is 16 lessons (Track→Module→Lesson
+  supports adding modules under Advanced — see [[expansion-roadmap]]).
+
+**Pivot:** with DSA complete, the next priority is the **Front-End Performance** module (the top
+target-weighted P1 gap in [[target-role-profile]]).
 
 ## Notes
 - **Language focus: TypeScript / JavaScript only — not Java.** The doc includes Java snippets; we drop

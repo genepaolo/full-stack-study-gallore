@@ -9,6 +9,16 @@ tags: [meta, log]
 
 # Log (newest on top)
 
+## 2026-07-09 — +3 patterns: Graphs, Tries, Bit Manipulation — DSA taxonomy complete
+- Built `adv-graphs` (Number of Islands via DFS **and** BFS flood fill — a grid is a graph; test asserts
+  the two engines agree and neither mutates the caller), `adv-tries` (Trie class: insert/search/startsWith,
+  O(word length); the autocomplete structure), `adv-bit-manipulation` (Single Number via XOR vs a Map count
+  + countBits/Hamming weight). All brute→optimized (or two-engine) + codeNotes + full category lists;
+  taught-logic-tested. Cheat-sheet table + "pick in 15s" extended with Trie / Bit rows.
+- `adv-algorithms` = **16 lessons** (15 patterns + cheat sheet). **The core NeetCode taxonomy is covered** —
+  only optional/thin categories remain (deepen trees, Advanced Graphs, Math & Geo). Tests 114 → **122**.
+- **Next: pivot to the Front-End Performance module** (top target-weighted P1 gap, [[target-role-profile]]).
+
 ## 2026-07-09 — +3 patterns: Heap, Intervals, Greedy
 - Built `adv-heap` (Kth largest via a hand-rolled MinHeap — JS has no built-in), `adv-intervals`
   (merge, sort+sweep), `adv-greedy` (max-subarray / Kadane). All brute→optimized + codeNotes +

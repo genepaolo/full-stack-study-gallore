@@ -360,3 +360,60 @@ describe('greedy — Kadane (adv-greedy)', () => {
     }
   })
 })
+
+describe('graphs & grids (adv-graphs)', () => {
+  it('numIslands counts connected land regions', () => {
+    const { numIslandsDFS } = extract('adv-graphs', ['numIslandsDFS'])
+    expect(numIslandsDFS([[1, 1, 0], [0, 1, 0], [0, 0, 1]])).toBe(2)
+    expect(numIslandsDFS([[0, 0], [0, 0]])).toBe(0)
+    expect(numIslandsDFS([[1, 1], [1, 1]])).toBe(1)
+  })
+
+  it('DFS and BFS flood fill agree, and neither mutates the caller grid', () => {
+    const { numIslandsDFS, numIslandsBFS } = extract('adv-graphs', ['numIslandsDFS', 'numIslandsBFS'])
+    const grid = [
+      [1, 1, 0, 0, 0],
+      [1, 1, 0, 0, 1],
+      [0, 0, 0, 1, 1],
+      [0, 0, 0, 0, 0],
+      [1, 0, 1, 0, 1],
+    ]
+    const snapshot = JSON.stringify(grid)
+    expect(numIslandsDFS(grid)).toBe(numIslandsBFS(grid))
+    expect(numIslandsDFS(grid)).toBe(5)
+    expect(JSON.stringify(grid)).toBe(snapshot) // input untouched
+  })
+})
+
+describe('tries (adv-tries)', () => {
+  it('search needs a full word; startsWith needs only the prefix path', () => {
+    const { Trie } = extract('adv-tries', ['Trie'])
+    const trie = new Trie()
+    trie.insert('apple')
+    expect(trie.search('apple')).toBe(true)
+    expect(trie.search('app')).toBe(false) // prefix, not a word
+    expect(trie.startsWith('app')).toBe(true)
+    expect(trie.startsWith('axe')).toBe(false)
+    trie.insert('app')
+    expect(trie.search('app')).toBe(true) // now a word
+  })
+})
+
+describe('bit manipulation (adv-bit-manipulation)', () => {
+  it('singleNumber finds the loner via XOR, agreeing with the map count', () => {
+    const { singleNumber, singleNumberBrute } = extract('adv-bit-manipulation', ['singleNumber', 'singleNumberBrute'])
+    expect(singleNumber([4, 1, 2, 1, 2])).toBe(4)
+    expect(singleNumber([2, 2, 1])).toBe(1)
+    expect(singleNumber([7])).toBe(7)
+    for (const a of [[4, 1, 2, 1, 2], [2, 2, 1], [7], [0, 1, 0]]) {
+      expect(singleNumber(a)).toBe(singleNumberBrute(a))
+    }
+  })
+
+  it('countBits counts set bits (Hamming weight)', () => {
+    const { countBits } = extract('adv-bit-manipulation', ['countBits'])
+    expect(countBits(11)).toBe(3) // 1011
+    expect(countBits(0)).toBe(0)
+    expect(countBits(7)).toBe(3) // 111
+  })
+})

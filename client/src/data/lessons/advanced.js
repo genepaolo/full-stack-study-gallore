@@ -432,6 +432,144 @@ const a = [-2, 1, -3, 4, -1, 2, 1, -5, 4];
 console.log("max subarray -> brute:", maxSubArrayBrute(a), " kadane:", maxSubArray(a)); // 6  ([4,-1,2,1])
 `
 
+const graphsStarter = `// Number of Islands (LeetCode 200). A grid IS a graph: each cell connects to its 4 neighbors.
+// Count connected groups of land (1). Two ways to flood-fill each island — DFS and BFS — same answer.
+
+// ---- DFS flood fill: "sink" each island by marking land as 0 and recursing into 4 neighbors. ----
+function numIslandsDFS(gridInput) {
+  const grid = gridInput.map((row) => [...row]);   // copy so we do not mutate the caller
+  const rows = grid.length, cols = grid[0].length;
+  let count = 0;
+  function sink(r, c) {
+    if (r < 0 || c < 0 || r >= rows || c >= cols || grid[r][c] !== 1) return;
+    grid[r][c] = 0;                                 // mark visited (part of this island)
+    sink(r + 1, c); sink(r - 1, c); sink(r, c + 1); sink(r, c - 1);
+  }
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (grid[r][c] === 1) { count++; sink(r, c); }  // new island -> flood the whole thing
+    }
+  }
+  return count;
+}
+
+// ---- BFS flood fill: same idea, but sink each island with a queue instead of recursion. ----
+function numIslandsBFS(gridInput) {
+  const grid = gridInput.map((row) => [...row]);
+  const rows = grid.length, cols = grid[0].length;
+  const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+  let count = 0;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (grid[r][c] !== 1) continue;
+      count++;
+      const queue = [[r, c]];
+      grid[r][c] = 0;                               // mark on enqueue, never twice
+      while (queue.length) {
+        const [cr, cc] = queue.shift();
+        for (const [dr, dc] of dirs) {
+          const nr = cr + dr, nc = cc + dc;
+          if (nr >= 0 && nc >= 0 && nr < rows && nc < cols && grid[nr][nc] === 1) {
+            grid[nr][nc] = 0;
+            queue.push([nr, nc]);
+          }
+        }
+      }
+    }
+  }
+  return count;
+}
+
+const island = [
+  [1, 1, 0, 0, 0],
+  [1, 1, 0, 0, 1],
+  [0, 0, 0, 1, 1],
+  [0, 0, 0, 0, 0],
+  [1, 0, 1, 0, 1],
+];
+console.log("islands -> dfs:", numIslandsDFS(island), " bfs:", numIslandsBFS(island)); // 5
+`
+
+const triesStarter = `// Trie (prefix tree, LeetCode 208). Store words along a character path so prefix lookups
+// cost O(word length) — no matter how many words you inserted. Autocomplete lives here.
+
+class TrieNode {
+  constructor() {
+    this.children = new Map();   // char -> TrieNode
+    this.isEnd = false;          // does a complete word end exactly here?
+  }
+}
+
+class Trie {
+  constructor() { this.root = new TrieNode(); }
+
+  insert(word) {
+    let node = this.root;
+    for (const ch of word) {
+      if (!node.children.has(ch)) node.children.set(ch, new TrieNode());
+      node = node.children.get(ch);
+    }
+    node.isEnd = true;                     // mark the end of a full word
+  }
+
+  // Walk the path; return the node it ends on, or null if the path breaks.
+  walk(prefix) {
+    let node = this.root;
+    for (const ch of prefix) {
+      if (!node.children.has(ch)) return null;
+      node = node.children.get(ch);
+    }
+    return node;
+  }
+
+  search(word) {
+    const node = this.walk(word);
+    return node !== null && node.isEnd;    // must be a full word, not merely a prefix
+  }
+
+  startsWith(prefix) {
+    return this.walk(prefix) !== null;     // any surviving path is enough
+  }
+}
+
+const trie = new Trie();
+trie.insert("apple");
+console.log("search 'apple'   ->", trie.search("apple"));       // true
+console.log("search 'app'     ->", trie.search("app"));         // false (prefix, not a word)
+console.log("startsWith 'app' ->", trie.startsWith("app"));     // true
+trie.insert("app");
+console.log("search 'app'     ->", trie.search("app"));         // true (now it is a word)
+`
+
+const bitStarter = `// Single Number (LeetCode 136): every value appears twice except one. Find the loner.
+
+// ---- Brute force: tally counts in a Map, return the one seen once. O(n) time, O(n) space. ----
+function singleNumberBrute(nums) {
+  const count = new Map();
+  for (const n of nums) count.set(n, (count.get(n) || 0) + 1);
+  for (const [n, c] of count) if (c === 1) return n;
+}
+
+// ---- Optimized: XOR everything. x ^ x === 0 and x ^ 0 === x, so pairs cancel and the loner
+//      is all that survives. O(n) time, O(1) space — zero extra memory. ----
+function singleNumber(nums) {
+  let acc = 0;
+  for (const n of nums) acc ^= n;          // duplicates cancel to 0
+  return acc;
+}
+
+// Bonus — count set bits (Hamming weight). n & (n - 1) clears the lowest set 1 each step.
+function countBits(n) {
+  let bits = 0;
+  while (n) { n &= n - 1; bits++; }
+  return bits;
+}
+
+const nums = [4, 1, 2, 1, 2];
+console.log("single -> brute:", singleNumberBrute(nums), " xor:", singleNumber(nums)); // 4
+console.log("countBits(11) =", countBits(11)); // 1011 -> 3
+`
+
 export const advancedLessons = [
   // adv-algorithms — Snap-curated: JS-centric patterns, DOM-as-a-tree, performance framing.
   {
@@ -676,6 +814,68 @@ export const advancedLessons = [
 **Your Greedy set (5):** **maximum subarray** (this) · jump game (can you reach the end?) · jump game II (fewest jumps) · gas station · hand of straights. The hard part of greedy isn't the code — it's **arguing the local choice is safe**. If it isn't, reach for DP.`,
   },
   {
+    id: 'adv-graphs', module: 'adv-algorithms', order: 10, kind: 'utility', template: 'vanilla',
+    title: 'Graphs & grids (flood fill)', difficulty: 'medium', tags: ['algorithms', 'graphs', 'bfs-dfs', 'grid'],
+    summary: 'A grid is a graph in disguise — each cell links to its neighbors. BFS/DFS flood-fill counts connected regions.',
+    prompt: `Implement **\`numIslands(grid)\`** (LeetCode 200): count groups of connected land (\`1\`) in a 2D grid, where cells connect up/down/left/right. Flood-fill each island — the editor shows it both **DFS** (recursion) and **BFS** (queue). Same answer, two engines.`,
+    keyTerms: [
+      { term: 'Graph', def: 'Nodes (vertices) joined by edges. A grid is a graph where every cell is a node with edges to its 4 (or 8) neighbors.' },
+      { term: 'Connected component', def: 'A maximal set of nodes reachable from each other. "Number of islands" = number of connected components of land.' },
+      { term: 'Flood fill', def: 'Start at one cell and visit everything reachable (BFS or DFS), marking as you go so you never revisit — the core of the island count.' },
+      { term: 'Visited marking', def: 'Sink visited land to 0 (or keep a Set) so the traversal terminates and each cell is counted once. Forgetting this = infinite loop or double-count.' },
+    ],
+    codeNotes: [
+      { label: '4-directional neighbors', code: `const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];\nfor (const [dr, dc] of dirs) {\n  const nr = r + dr, nc = c + dc; // neighbor cell\n}`, note: 'Add [1,1],[1,-1],[-1,1],[-1,-1] for 8-directional.' },
+      { label: 'Bounds check before touching a cell', code: `if (nr < 0 || nc < 0 || nr >= rows || nc >= cols) return; // off-grid\nif (grid[nr][nc] !== 1) return;                          // water or visited`, note: 'Always bounds-check first, or you index undefined.' },
+      { label: 'Mark visited by sinking to 0', code: `grid[r][c] = 0; // this land is now counted — never revisit`, note: 'Copy the grid first if you must not mutate the caller.' },
+    ],
+    starterCode: { '/index.js': graphsStarter },
+    explanation: `**The idea:** scan every cell; each time you find an unvisited \`1\`, that's a **new island** — so increment the count, then **flood-fill** the whole island (mark all its land visited) so you don't count it again. DFS uses recursion (the call stack); BFS uses a queue. Both are **O(rows × cols)** — every cell is visited once. The only bug that matters: **mark visited** as you go, or you loop forever.
+
+**Your Graph set (7):** **number of islands** (this) · clone graph · pacific atlantic water flow · course schedule (cycle detection via topological sort) · number of connected components · graph valid tree · word ladder (BFS shortest path). Grid problems are flood-fill; dependency problems (course schedule) are **topological sort**; shortest-path-in-unweighted is **BFS**.`,
+  },
+  {
+    id: 'adv-tries', module: 'adv-algorithms', order: 14, kind: 'utility', template: 'vanilla',
+    title: 'Tries (prefix trees)', difficulty: 'medium', tags: ['algorithms', 'trie', 'strings', 'data-structures'],
+    summary: 'A tree keyed by characters — prefix lookups in O(word length), the structure behind autocomplete.',
+    prompt: `Implement a **\`Trie\`** (LeetCode 208) with \`insert(word)\`, \`search(word)\`, and \`startsWith(prefix)\`. Each node holds a map of next characters and an \`isEnd\` flag. \`search\` needs a full word; \`startsWith\` only needs the path to exist.`,
+    keyTerms: [
+      { term: 'Trie (prefix tree)', def: 'A tree where each edge is a character and each path from the root spells a prefix. Shared prefixes share nodes.' },
+      { term: 'isEnd flag', def: 'Marks a node where a complete word ends — the only difference between search (needs isEnd) and startsWith (needs only the path).' },
+      { term: 'O(length), not O(count)', def: 'insert/search cost scales with the word length, independent of how many words the trie holds — the win over scanning a list.' },
+      { term: 'Children map', def: 'Each node maps a character to a child node (Map or a 26-slot array for a..z). The map keys are the outgoing edges.' },
+    ],
+    codeNotes: [
+      { label: 'Node = children map + end flag', code: `class TrieNode {\n  constructor() { this.children = new Map(); this.isEnd = false; }\n}`, note: 'A 26-slot array works too when the alphabet is fixed a..z.' },
+      { label: 'Insert: create missing links, then mark the end', code: `for (const ch of word) {\n  if (!node.children.has(ch)) node.children.set(ch, new TrieNode());\n  node = node.children.get(ch);\n}\nnode.isEnd = true;`, note: 'search vs startsWith differ only by checking isEnd at the end.' },
+    ],
+    starterCode: { '/index.js': triesStarter },
+    explanation: `**The idea:** a plain list of words makes a prefix query O(number of words × length). A **trie** shares common prefixes on the same path, so \`insert\`/\`search\`/\`startsWith\` cost only **O(word length)**. Walk character by character from the root; the sole difference between \`search\` and \`startsWith\` is whether you require an \`isEnd\` flag at the last node.
+
+**Your Trie set (3):** **implement trie** (this) · design add-and-search words (\`.\` wildcard → DFS over children) · word search II (a trie of the word list + grid DFS). This is the data structure Snap-style **typeahead / autocomplete** is built on — prefix-match a query against millions of terms in time that depends only on the query length.`,
+  },
+  {
+    id: 'adv-bit-manipulation', module: 'adv-algorithms', order: 15, kind: 'utility', template: 'vanilla',
+    title: 'Bit manipulation', difficulty: 'medium', tags: ['algorithms', 'bit-manipulation'],
+    summary: 'XOR, AND, and shifts do in O(1) space what a hash map does in O(n) — when the trick fits.',
+    prompt: `Implement **\`singleNumber(nums)\`** (LeetCode 136): every value appears twice except one — return the loner. The trick is **XOR**: pairs cancel (\`x ^ x === 0\`), so XOR-ing everything leaves just the unique value. Compare it to the Map-counting brute force.`,
+    keyTerms: [
+      { term: 'XOR (^)', def: 'Bitwise exclusive-or. Key identities: x ^ x === 0, x ^ 0 === x, and it is commutative/associative — so duplicates cancel regardless of order.' },
+      { term: 'AND / OR / NOT / shifts', def: '& masks bits, | sets bits, ~ flips them, << / >> shift left/right (× or ÷ by powers of two). The toolkit for flags and math tricks.' },
+      { term: 'n & (n - 1)', def: 'Clears the lowest set bit of n. Loop it to count set bits (Hamming weight) or test power-of-two (n & (n-1)) === 0.' },
+      { term: 'Bitmask', def: 'Using the bits of one integer as a set of on/off flags — compact state for subsets and DP-over-subsets.' },
+    ],
+    codeNotes: [
+      { label: 'XOR to cancel pairs', code: `let acc = 0;\nfor (const n of nums) acc ^= n; // x ^ x = 0, so pairs vanish`, note: 'Also swaps two numbers without a temp: a ^= b; b ^= a; a ^= b.' },
+      { label: 'Count set bits (Hamming weight)', code: `let bits = 0;\nwhile (n) { n &= n - 1; bits++; } // clear lowest set bit each step`, note: 'Faster than checking all 32 bits when few are set.' },
+      { label: 'Common bit tests', code: `(n & 1) === 0;        // even?\n(n & (n - 1)) === 0;  // power of two? (n > 0)\nn >> 1;               // floor(n / 2)`, note: 'Shifts and masks replace slower arithmetic.' },
+    ],
+    starterCode: { '/index.js': bitStarter },
+    explanation: `**The journey (run both above):** counting occurrences in a \`Map\` finds the loner in **O(n) time but O(n) space**. **XOR** does it in **O(1) space**: since \`x ^ x === 0\` and \`x ^ 0 === x\`, XOR-ing the whole array cancels every pair and leaves the unique number. Same answer, no extra memory.
+
+**Your Bit set (5):** **single number** (this) · number of 1 bits (Hamming weight) · counting bits (DP + \`i & (i-1)\`) · reverse bits · missing number (XOR indices vs values, or Gauss sum). The recurring moves: **XOR to cancel**, **\`n & (n-1)\`** to strip the lowest bit, and **masks/shifts** to replace arithmetic.`,
+  },
+  {
     id: 'adv-cheatsheet', module: 'adv-algorithms', order: 99, kind: 'concept',
     title: 'Cheat sheet — patterns & JS idioms', difficulty: 'easy', tags: ['algorithms', 'cheatsheet', 'reference', 'javascript'],
     summary: 'One-page recap: which pattern to reach for, plus the JavaScript one-liners you actually code them with.',
@@ -706,10 +906,12 @@ export const advancedLessons = [
 | Binary search | sorted input, or "smallest value that works" | halve the search space | O(log n) |
 | Linked list | reverse/reorder/cycle/middle in place | dummy head; fast & slow pointers | O(n) |
 | Recursion / backtracking | permutations, subsets, tree walks | base case + smaller subproblem | varies |
-| Trees / graphs | hierarchy, grid, connectivity | BFS = queue, DFS = stack/recursion | O(V+E) |
+| Trees / graphs | hierarchy, grid, connectivity, islands | BFS = queue, DFS = stack/recursion; flood fill | O(V+E) |
 | Heap / priority queue | top/smallest K, streaming median | keep-k min-heap | O(n log k) |
 | Intervals | overlapping ranges, meeting rooms | sort by start, then sweep | O(n log n) |
 | Greedy | max subarray, jumps, scheduling | best local choice (when provably safe) | O(n) |
+| Trie (prefix tree) | autocomplete, prefix/word lookups | tree keyed by character; isEnd flag | O(word length) |
+| Bit manipulation | "appears once", flags, subsets | XOR cancels pairs; n & (n-1) strips a bit | O(n), O(1) space |
 
 ## How to pick, in 15 seconds
 1. **Is the input sorted?** → binary search or two pointers.
@@ -717,7 +919,8 @@ export const advancedLessons = [
 3. **Contiguous "longest/shortest with property"** → sliding window.
 4. **Matching, nesting, or most-recent-first** → stack.
 5. **All arrangements / explore then undo** → recursion + backtracking.
-6. **Tree/grid/graph** → BFS (shortest/level) or DFS (explore a branch).
+6. **Tree/grid/graph** → BFS (shortest/level) or DFS (explore a branch); count regions with flood fill.
+7. **Prefix / autocomplete** → trie. **"Appears once" / flags / subsets** → bit tricks (XOR, masks).
 
 Then check the **Code to reach for** panel above for the exact JavaScript one-liners. Everything here
 generalizes to TypeScript — you just add types to the inputs and outputs (see the last snippet).`,
