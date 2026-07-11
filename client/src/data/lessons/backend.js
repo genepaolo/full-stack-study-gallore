@@ -424,4 +424,106 @@ refund, \`$group\` sum per customer, and \`$sort\`+\`$limit\` produce the top 2.
     starterCode: { '/index.js': jwtStarter },
     explanation: `Because anyone can *read* a JWT, **never put secrets in the payload**. Store tokens carefully (httpOnly cookies resist XSS; localStorage is convenient but exposed). JWTs are hard to revoke before expiry — keep them short-lived and pair with a refresh token. Server **sessions** are easier to revoke but need shared storage to scale.`,
   },
+
+  // ---------- be-graphql (high-level tour) ----------
+  {
+    id: 'be-gql-what', module: 'be-graphql', order: 1, kind: 'concept',
+    title: 'What GraphQL is (vs REST)', difficulty: 'easy', tags: ['graphql', 'api', 'rest'],
+    summary: 'A query language for your API: one endpoint, and the client asks for exactly the fields it needs — no over- or under-fetching.',
+    prompt: `**GraphQL is "a query language for APIs"** (and a runtime to answer those queries), open-sourced by Facebook. The headline idea: instead of many REST endpoints that each return a **fixed** shape, GraphQL exposes **one endpoint** and lets the **client ask for exactly the fields it wants** — "a client can specify exactly what data it needs." That single move fixes REST's two classic annoyances: **over-fetching** and **under-fetching**. This is a *high-level* tour — enough to hold a confident interview conversation, not a deep implementation.`,
+    keyTerms: [
+      { term: 'Query language for your API', def: 'GraphQL sits between client and server: the client sends a query describing the shape of data it wants, the server returns JSON in exactly that shape. It’s not a database — it’s an API layer over whatever data sources you have.' },
+      { term: 'Single endpoint', def: 'Typically one URL (e.g. `POST /graphql`) handles everything, versus REST’s many resource URLs (`/users`, `/users/1/posts`, …). What you get back is decided by the query, not the URL.' },
+      { term: 'Over-fetching', def: 'REST endpoints return a fixed payload, so you often get more than you need (a whole user object when you wanted the name). GraphQL returns only the fields you asked for.' },
+      { term: 'Under-fetching (n+1 requests)', def: 'A REST screen often needs several endpoints (user, then their posts, then each post’s comments) — multiple round trips. One GraphQL query can fetch it all at once.' },
+      { term: 'Schema as a typed contract', def: 'The API is described by a strongly-typed schema both sides share. It documents what’s available and is validated automatically — a big part of GraphQL’s appeal.' },
+    ],
+    codeNotes: [
+      { label: 'Ask for exactly what you need', code: `# one request, only these fields:\nquery {\n  user(id: 1) {\n    name\n    posts { title }      # nested — no second round trip\n  }\n}`, note: "The response JSON mirrors the query shape: { user: { name, posts: [{title}] } }." },
+      { label: 'The REST equivalent (more trips, fixed shapes)', code: `GET /users/1            # returns the WHOLE user (over-fetch)\nGET /users/1/posts      # a second round trip (under-fetch fix)\n// N screens -> N+ endpoints, each a fixed payload`, note: "REST: the URL decides the shape; GraphQL: the query does." },
+    ],
+    explanation: `**The one-paragraph version to say in an interview:** GraphQL is a query language and runtime for
+APIs. Rather than many REST endpoints that each return a fixed JSON shape, you expose a **single endpoint**
+and the client sends a **query naming exactly the fields it wants**, nested as deeply as it needs. The server
+resolves that and returns JSON in the same shape. Because the client picks the fields, you avoid
+**over-fetching** (REST handing you data you didn't want) and **under-fetching** (having to hit several
+endpoints to assemble one screen — the "n+1 requests" problem).
+
+**Why teams adopt it:** efficient data-loading for mobile/low-bandwidth (its original motivation at Facebook),
+a **strongly-typed schema** that self-documents and validates, and the ability to evolve the API by adding
+fields without versioning. **When REST is still fine:** simple CRUD, heavy reliance on HTTP caching/CDNs, file
+uploads/downloads, or when you don't want the extra server-side machinery. Interviewers rarely want you to
+*build* a GraphQL server on the spot — they want to hear that you understand **what problem it solves and its
+trade-offs**. *Sources: [How to GraphQL — Introduction](https://www.howtographql.com/basics/0-introduction/),
+[graphql.org](https://graphql.org/).*`,
+  },
+  {
+    id: 'be-gql-schema', module: 'be-graphql', order: 2, kind: 'concept',
+    title: 'Schema, queries & mutations', difficulty: 'medium', tags: ['graphql', 'schema', 'resolvers'],
+    summary: 'A typed schema defines the data; three operation types use it — Query (read), Mutation (write), Subscription (real-time) — and resolvers return the data per field.',
+    prompt: `The heart of GraphQL is the **schema**: a strongly-typed description of your data written in the Schema Definition Language (SDL). Clients then use **three operation types** against it — **Query** (read), **Mutation** (write), and **Subscription** (real-time updates). On the server, **resolvers** are the functions that actually return the data for each field. High-level is enough here — recognize the pieces and how they fit.`,
+    keyTerms: [
+      { term: 'Schema (SDL)', def: 'The typed contract: `type User { id: ID!, name: String!, posts: [Post!]! }`. `!` means non-null, `[ ]` a list. Both client and server share it, and it’s introspectable (self-documenting).' },
+      { term: 'Query (read)', def: 'The read operation — like GET. `query { user(id: 1) { name } }`. Fields can take arguments and nest arbitrarily.' },
+      { term: 'Mutation (write)', def: 'The write operation — like POST/PUT/DELETE. `mutation { createPost(title: "Hi") { id } }`. By convention it also returns the changed data.' },
+      { term: 'Subscription (real-time)', def: 'A long-lived operation that pushes updates to the client (usually over WebSockets) when events happen — e.g. new chat messages. The third, less-common operation type.' },
+      { term: 'Resolver', def: 'A server-side function that returns the value for one field. GraphQL walks the query and calls a resolver per field; a resolver can read a DB, call a REST API, anything.' },
+    ],
+    codeNotes: [
+      { label: 'A tiny schema (SDL)', code: `type User { id: ID!, name: String!, posts: [Post!]! }\ntype Post { id: ID!, title: String! }\n\ntype Query    { user(id: ID!): User }\ntype Mutation { createPost(title: String!): Post }`, note: "Types + the Query/Mutation entry points = the whole API surface." },
+      { label: 'Query and mutation in action', code: `query    { user(id: "1") { name posts { title } } }\nmutation { createPost(title: "Hello") { id title } }\n// mutations conventionally return the object they changed`, note: "Same endpoint; the operation keyword says read vs write." },
+      { label: 'A resolver returns one field’s data', code: `const resolvers = {\n  Query: { user: (_, { id }) => db.users.find(id) },\n  User:  { posts: (user) => db.posts.byAuthor(user.id) },\n};`, note: "GraphQL calls a resolver per field — which is where the N+1 gotcha (next lesson) comes from." },
+    ],
+    explanation: `**Three pieces, and they interlock.** (1) The **schema** declares your types and the two/three
+root operations. (2) The client sends an **operation**: a **Query** to read, a **Mutation** to change data
+(conventionally returning the changed object), or a **Subscription** to receive a live stream of updates over
+a persistent connection. (3) On the server, **resolvers** produce the data — GraphQL walks the requested
+query tree and calls **one resolver per field**, so a resolver can pull from a database, another service, or a
+REST API underneath.
+
+**What to take away:** the schema is the **typed contract** everyone codes against — it's introspectable, so
+tools like GraphiQL/Apollo Studio give you autocomplete and live docs for free. You don't need to memorize SDL
+syntax for a high-level interview; just be able to say *"types in a schema, Query to read, Mutation to write,
+Subscription for real-time, and resolvers fetch each field."* That per-field resolver model is elegant — and
+it's exactly what creates the performance gotcha in the next lesson. *Sources:
+[graphql.org — Learn](https://graphql.org/learn/),
+[Apollo — Resolvers](https://www.apollographql.com/docs/apollo-server/data/resolvers/).*`,
+  },
+  {
+    id: 'be-gql-tradeoffs', module: 'be-graphql', order: 3, kind: 'concept',
+    title: 'Trade-offs & the N+1 gotcha', difficulty: 'medium', tags: ['graphql', 'performance', 'tradeoffs'],
+    summary: 'GraphQL’s flexibility costs you easy HTTP caching and invites the N+1 query problem (fixed with DataLoader) and query-complexity abuse.',
+    prompt: `GraphQL isn't free lunch — and interviewers probe whether you know the **trade-offs**. The big three: **caching is harder** than REST, resolvers invite the **N+1 query problem** (solved with **DataLoader**), and a single flexible endpoint means you must guard against **expensive/abusive queries**. Knowing these signals real experience, even at a high level.`,
+    keyTerms: [
+      { term: 'N+1 query problem', def: 'The classic GraphQL performance bug: a list field runs one query for the list, then one more **per item** (1 + N). A `users { posts }` over 100 users can fire 101 DB queries.' },
+      { term: 'DataLoader (batching + caching)', def: 'The standard fix: it "combines loads during a single event-loop tick into a batched request" and "provides a memoization cache" so the same object isn’t loaded twice — created **per request** to avoid cross-request cache leaks.' },
+      { term: 'Caching is harder', def: 'REST gets HTTP/CDN caching almost free (GET + URL = cache key). GraphQL usually POSTs to one URL, so you lean on client caches (Apollo/Relay) and server field-caches instead of the HTTP layer.' },
+      { term: 'Query complexity / abuse', def: 'Because clients compose their own queries, a deeply nested or huge query can be expensive. Defenses: depth limiting, complexity/cost analysis, timeouts, and persisted queries.' },
+      { term: 'No versioning (schema evolution)', def: 'GraphQL avoids `/v2` URLs: you add fields freely and mark old ones `@deprecated` rather than versioning the whole API. A stated benefit, but it puts schema stewardship on you.' },
+    ],
+    codeNotes: [
+      { label: 'The N+1 problem, concretely', code: `query { users { name posts { title } } }\n// naive resolvers:\n//   1 query  -> get all users\n//   N queries -> posts for EACH user (one per user)\n// => 1 + N database round trips`, note: "The per-field resolver model causes this the moment you nest a list." },
+      { label: 'DataLoader batches the N into 1', code: `const postLoader = new DataLoader(\n  (userIds) => db.posts.byAuthors(userIds) // ONE batched query\n);\n// resolver: User.posts = (u) => postLoader.load(u.id)\n// new DataLoader PER REQUEST (don't share the cache across users)`, note: "Batches all .load() calls in a tick into one query; memoizes within the request." },
+    ],
+    explanation: `**Three trade-offs worth naming out loud:**
+
+1. **The N+1 query problem.** GraphQL calls a resolver **per field**, so nesting a list — \`users { posts }\`
+   — naively runs 1 query for the users plus **N** more (one per user). The fix is **DataLoader**, which
+   **batches** all the per-item loads in one tick into a single query and **caches** repeats within the
+   request. Crucially you create a **new DataLoader per request** so one user's cache never leaks into
+   another's. Just saying "resolvers can cause N+1; you fix it with DataLoader batching" is a strong signal.
+2. **Caching is harder.** REST rides HTTP/CDN caching almost for free (a \`GET\` URL is a natural cache key).
+   GraphQL typically \`POST\`s to one endpoint, so that free layer largely goes away — you rely on **client
+   caches** (Apollo/Relay normalize by object id) and server-side field caching instead.
+3. **A flexible endpoint is an attack surface.** Clients write their own queries, so a maliciously deep or
+   broad query can be expensive. Real servers add **depth limiting, query cost/complexity analysis, timeouts,
+   and persisted queries.**
+
+Plus a genuine upside to mention: **no version churn** — you evolve the schema by adding fields and
+\`@deprecated\`-ing old ones instead of shipping \`/v2\`. **Bottom line for the interview:** GraphQL trades
+REST's simplicity and free HTTP caching for precise, typed, client-driven data-fetching — and you pay for that
+flexibility with N+1 management, caching effort, and query-abuse defenses. *Sources:
+[Apollo — Fetching data / N+1 & DataLoader](https://www.apollographql.com/docs/apollo-server/data/fetching-data/),
+[graphql.org](https://graphql.org/learn/).*`,
+  },
 ]

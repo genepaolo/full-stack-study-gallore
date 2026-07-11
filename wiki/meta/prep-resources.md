@@ -96,6 +96,9 @@ All facts fetched from primary sources on 2026-07-10 (no-hallucination rule). Us
   vasanthk/how-web-works (request lifecycle, SOP/CORS) · ntthanh2603/fullstack-interviews (security Q set).
 
 ## Snap-flavored preferred quals
-- Real-time / WebSockets + GraphQL: howtographql.com (subscriptions), MDN WebSockets, Hasura Learn.
+- **GraphQL** (built into `be-graphql`, high-level; verified 2026-07-10): [graphql.org](https://graphql.org/) +
+  [How to GraphQL](https://www.howtographql.com/basics/0-introduction/) (query language, single endpoint,
+  over/under-fetching) · [Apollo docs](https://www.apollographql.com/docs/apollo-server/data/fetching-data/)
+  (resolvers, N+1, DataLoader = batching + per-request cache). Real-time: MDN WebSockets, Hasura Learn.
 - Canvas / WebGL / WASM / Service Workers: webglfundamentals.org (gfxfundamentals/webgl-fundamentals),
   MDN Canvas/WebGL/Service Worker/WebAssembly.

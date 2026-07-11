@@ -46,6 +46,7 @@ export const MODULES = [
   { slug: 'be-rest', track: 'backend', title: 'REST API Design', level: 4, blurb: 'Resources, verbs, status codes, and CRUD handlers.' },
   { slug: 'be-data', track: 'backend', title: 'Data & MongoDB', level: 4, blurb: 'Documents, schemas, and Mongoose models.' },
   { slug: 'be-auth', track: 'backend', title: 'Auth & Security', level: 5, blurb: 'Password hashing, JWTs, sessions, and common pitfalls.' },
+  { slug: 'be-graphql', track: 'backend', title: 'GraphQL Basics', level: 5, blurb: 'A high-level tour: the query language vs REST, schema/queries/mutations, and the trade-offs interviewers ask about.' },
   // Full-stack
   { slug: 'fs-connect', track: 'fullstack', title: 'Connecting Frontend & Backend', level: 4, blurb: 'CORS, the request lifecycle, and the end-to-end flow.' },
   { slug: 'fs-data', track: 'fullstack', title: 'Data Fetching & State', level: 4, blurb: 'Loading/error states, caching, and optimistic UI.' },

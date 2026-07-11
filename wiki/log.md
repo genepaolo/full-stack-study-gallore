@@ -9,6 +9,18 @@ tags: [meta, log]
 
 # Log (newest on top)
 
+## 2026-07-10 — New `be-graphql` module (3 concept lessons, deliberately light)
+- Owner asked for GraphQL kept **light / high-level** ("not too familiar, just high-level topics"). Built 3
+  concept lessons (no live editor — awareness-level): `be-gql-what` (query language vs REST; single endpoint;
+  over/under-fetching; typed schema; when REST still fine), `be-gql-schema` (SDL types; Query/Mutation/
+  Subscription; resolvers = per-field functions), `be-gql-tradeoffs` (harder caching; **N+1 problem +
+  DataLoader** batching/per-request cache; query-complexity abuse + depth limiting; no versioning via schema
+  evolution). Backend track, level 5 (contrasts `be-rest`).
+- Verified vs graphql.org / howtographql / Apollo docs (resolvers, N+1, DataLoader). Filed sources to
+  [[prep-resources]]. Tests **171** (unchanged — concept-only), build clean, browser-verified via run-skill.
+- Closes the last-named P2 tech gap (GraphQL was ❌ in the JD table). Remaining P2 is optional/preferred:
+  advanced FE (Canvas/WebGL/SW/WASM), Redis, unit-testing lesson, backend sysdesign, **README refresh** (stale).
+
 ## 2026-07-10 — New `fs-security` module (6 lessons) + SECURITY.md accuracy fix
 - Triggered by a user question on the box-model page ("how do I test malicious inputs in the live editor?").
   **Empirically probed** the Sandpack iframe with Playwright: preview is served from

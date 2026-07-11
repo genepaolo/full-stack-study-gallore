@@ -41,7 +41,7 @@ From the JD, in rough priority for *our* content:
 | Unit testing | ⚠️ partial | app has a Vitest suite ([[testing]]); no lesson |
 | UI components | ✅ covered | fe-ui (8 components) |
 | Canvas/WebGL/WASM/Service Workers | ⚠️ partial | Snake uses Canvas; rest missing |
-| GraphQL | ❌ gap | none |
+| GraphQL | ✅ **covered (high-level)** | `be-graphql` — what it is vs REST, schema/queries/mutations, trade-offs + N+1/DataLoader (light tour by request) |
 | Microservices / distributed / scale | ⚠️ partial | `adv-sysdesign` (backend scaling); **FE system design ✅ new** — typeahead, news feed, component-API, chat; deeper plan in [[system-design-plan]] |
 | NoSQL/Redis/K8s/cloud | ⚠️ partial | Mongo covered; Redis/caching missing |
 
@@ -75,8 +75,11 @@ Supersedes the generic P1 order in [[expansion-roadmap]] when optimizing for *th
   3. ✅ **DONE — Web Security** (new `fs-security`, 6 lessons): same-origin policy/CORS/sandboxing, XSS
      (live+tested `escapeHtml`), CSRF & SameSite, injection (SQL/NoSQL), CSP & security headers, and the
      OWASP Top 10 (2025) checklist. All facts verified vs MDN/OWASP/web.dev; repos in [[prep-resources]].
-  4. **GraphQL** ← **NEXT** · then advanced front-end (Canvas/WebGL/Service Workers/WASM) · Redis/caching ·
-     unit-testing lesson · DDD · backend system-design building-blocks ([[system-design-plan]]).
+  4. ✅ **DONE — GraphQL (high-level)** (`be-graphql`, 3 concept lessons, light by request): what it is vs
+     REST (over/under-fetching, single endpoint), schema/queries/mutations/resolvers, trade-offs (harder
+     caching, N+1 + DataLoader, query-abuse). Verified vs graphql.org / howtographql / Apollo docs.
+  5. **NEXT (open):** advanced front-end (Canvas/WebGL/Service Workers/WASM) · Redis/caching · unit-testing
+     lesson · DDD · backend system-design building-blocks ([[system-design-plan]]) · **README refresh** (stale).
 - **Behavioral** stays valuable (a real round) but is secondary to the technical gaps above.
 
 ## Framing guidance (apply to every new lesson)
