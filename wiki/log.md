@@ -9,6 +9,21 @@ tags: [meta, log]
 
 # Log (newest on top)
 
+## 2026-07-10 — FE system design batch: `adv-sysdesign` +4 lessons (first P2)
+- First P2 item after all P1 closed. Front-end exercises from [[system-design-plan]] (highest signal for the
+  FE-leaning target). `adv-sysdesign` 2 → 6 lessons: `adv-sd-typeahead` (utility/vanilla, live+**tested**:
+  `createRaceGuard` drops out-of-order responses; debounce + AbortController + cache + combobox a11y in
+  codeNotes), `adv-sd-news-feed` (utility/vanilla, live+**tested**: `mergeFeed` dedupe-by-id + `nextCursor`;
+  cursor vs offset, IntersectionObserver, virtualization, optimistic likes), `adv-sd-component-api` (concept:
+  props vs composition, compound components, controlled/uncontrolled, a11y contract, ref+rest escape hatches),
+  `adv-sd-chat` (concept: WebSocket vs SSE/polling, optimistic send + client-id dedupe, ordering by seq,
+  reconnect backoff + gap-fill).
+- Committed `fe-react-depth` first (`55f5750`). Ties across modules: debounce (fe-js-core), virtualization
+  (fe-performance), immutability + SOLID + controlled forms (fe-paradigms/fe-react-depth). Verified vs MDN
+  (AbortController, IntersectionObserver, WebSocket, ARIA combobox, SSE) + react.dev. Tests **155 → 163**
+  (+6 taught-logic, +2 auto-compile), build clean. Hit and fixed an escaped-backtick paste error via
+  `node --check` before running. Next: **deepen MongoDB** (`be-data`).
+
 ## 2026-07-10 — New `fe-react-depth` module (5 lessons): React Depth & Performance
 - Built P1 #5 (last P1 for the target). Frontend, level 4 (next to `fe-performance`). Committed `fe-paradigms`
   first (`621df0f`), then this. Lessons: `fe-react-render` (render/commit, reconciliation, keys, index-key

@@ -51,6 +51,21 @@ messaging · url-shortener (exercise) · news-feed-backend (exercise).
 Frontend: (have framework) + typeahead · news-feed · component-api-design.
 OOD bonus: LRU cache (ties to caching + could be an algorithms/DS lesson).
 
+## Status (2026-07-10)
+**Frontend exercises shipped** as the first P2 batch — `adv-sysdesign` now has 6 lessons:
+- `adv-sysdesign-frontend` (RADIO framework), `adv-sysdesign-scale` (backend scaling) — original.
+- **`adv-sd-typeahead`** (live+tested `createRaceGuard` — out-of-order response drop; debounce/AbortController/
+  cache/combobox-a11y in codeNotes).
+- **`adv-sd-news-feed`** (live+tested `mergeFeed` dedupe + `nextCursor`; cursor vs offset, IntersectionObserver,
+  virtualization, optimistic likes).
+- **`adv-sd-component-api`** (props vs composition, compound components, controlled/uncontrolled, a11y contract).
+- **`adv-sd-chat`** (WebSocket vs SSE/polling, optimistic send + dedupe, ordering, reconnect backoff + gap-fill).
+
+**Still unbuilt from this plan (future P2):** the backend/distributed building-block lessons (scalability,
+load balancing, caching, databases-at-scale, CAP, messaging, communication) and the backend exercises
+(URL shortener, Twitter timeline, web crawler, rate limiter, LRU cache). Frontend chose first — highest signal
+for the front-end-leaning target.
+
 ## Sequencing
 After the chosen P0 (UI components + JS utilities). System design is **P2** in
-[[expansion-roadmap]] — plan captured here; build after P0/P1.
+[[expansion-roadmap]] — plan captured here; FE batch built 2026-07-10 (all P1 done first).

@@ -42,7 +42,7 @@ From the JD, in rough priority for *our* content:
 | UI components | ✅ covered | fe-ui (8 components) |
 | Canvas/WebGL/WASM/Service Workers | ⚠️ partial | Snake uses Canvas; rest missing |
 | GraphQL | ❌ gap | none |
-| Microservices / distributed / scale | ⚠️ partial | `adv-sysdesign`; deeper plan in [[system-design-plan]] |
+| Microservices / distributed / scale | ⚠️ partial | `adv-sysdesign` (backend scaling); **FE system design ✅ new** — typeahead, news feed, component-API, chat; deeper plan in [[system-design-plan]] |
 | NoSQL/Redis/K8s/cloud | ⚠️ partial | Mongo covered; Redis/caching missing |
 
 ## Re-prioritized roadmap for this target
@@ -66,8 +66,12 @@ Supersedes the generic P1 order in [[expansion-roadmap]] when optimizing for *th
   5. ✅ **DONE — React depth** (`fe-react-depth`, 5 lessons): reconciliation & keys (index-key bug), the
      equality checks behind memo/deps (`shallowEqual`/`depsChanged`, live+tested), memo/useMemo/useCallback
      in action (live), custom hooks (live), controlled vs uncontrolled forms (live). Verified vs react.dev.
-- **P2 (build next):** FE system design ([[system-design-plan]]) · deepen MongoDB (`be-data`) · GraphQL ·
-  advanced front-end (Canvas/WebGL/Service Workers/WASM) · Redis/caching · a unit-testing lesson · DDD.
+- **P2:**
+  1. ✅ **DONE — FE system design** (`adv-sysdesign` +4): Autocomplete/Typeahead (race guard live+tested),
+     News Feed/Infinite Scroll (cursor merge/dedupe live+tested), reusable component API, real-time chat UI.
+     Verified vs MDN (AbortController, IntersectionObserver, WebSocket, ARIA combobox) + react.dev.
+  2. **Deepen MongoDB** (`be-data`, the thinnest area) ← **NEXT**
+  3. GraphQL · advanced front-end (Canvas/WebGL/Service Workers/WASM) · Redis/caching · unit-testing lesson · DDD.
 - **Behavioral** stays valuable (a real round) but is secondary to the technical gaps above.
 
 ## Framing guidance (apply to every new lesson)

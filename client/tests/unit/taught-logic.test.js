@@ -605,3 +605,57 @@ describe('React equality checks (fe-react-equality)', () => {
     expect(depsChanged([{}], [{}])).toBe(true) // new reference each render
   })
 })
+
+describe('Typeahead race guard (adv-sd-typeahead)', () => {
+  it('start returns increasing ids', () => {
+    const { createRaceGuard } = extract('adv-sd-typeahead', ['createRaceGuard'])
+    const g = createRaceGuard()
+    expect(g.start()).toBe(1)
+    expect(g.start()).toBe(2)
+    expect(g.start()).toBe(3)
+  })
+
+  it('drops out-of-order (stale) responses, keeps only the latest', () => {
+    const { createRaceGuard } = extract('adv-sd-typeahead', ['createRaceGuard'])
+    const g = createRaceGuard()
+    const id1 = g.start() // "re"
+    const id2 = g.start() // "rea"
+    const id3 = g.start() // "reac"
+    expect(g.isStale(id3)).toBe(false) // newest — apply
+    expect(g.isStale(id1)).toBe(true) // slow first request — drop
+    expect(g.isStale(id2)).toBe(true) // also superseded — drop
+  })
+
+  it('a fresh request revalidates the latest id', () => {
+    const { createRaceGuard } = extract('adv-sd-typeahead', ['createRaceGuard'])
+    const g = createRaceGuard()
+    const a = g.start()
+    expect(g.isStale(a)).toBe(false)
+    const b = g.start()
+    expect(g.isStale(a)).toBe(true)
+    expect(g.isStale(b)).toBe(false)
+  })
+})
+
+describe('News feed merge & cursor (adv-sd-news-feed)', () => {
+  it('mergeFeed appends new items and dedupes by id, preserving order', () => {
+    const { mergeFeed } = extract('adv-sd-news-feed', ['mergeFeed'])
+    const page1 = [{ id: 1 }, { id: 2 }, { id: 3 }]
+    const page2 = [{ id: 3 }, { id: 4 }] // id 3 overlaps
+    expect(mergeFeed(page1, page2).map((p) => p.id)).toEqual([1, 2, 3, 4])
+  })
+
+  it('mergeFeed is immutable (does not mutate the existing feed)', () => {
+    const { mergeFeed } = extract('adv-sd-news-feed', ['mergeFeed'])
+    const existing = [{ id: 1 }]
+    const merged = mergeFeed(existing, [{ id: 2 }])
+    expect(existing).toHaveLength(1)
+    expect(merged).not.toBe(existing)
+  })
+
+  it('nextCursor returns the last id, or null when empty', () => {
+    const { nextCursor } = extract('adv-sd-news-feed', ['nextCursor'])
+    expect(nextCursor([{ id: 1 }, { id: 2 }, { id: 4 }])).toBe(4)
+    expect(nextCursor([])).toBeNull()
+  })
+})

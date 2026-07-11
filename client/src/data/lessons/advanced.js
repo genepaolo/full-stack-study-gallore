@@ -602,6 +602,54 @@ console.log("AI version:  ", findDuplicatesAI(data)); // [2, 3, 2] — 2 reporte
 console.log("audited fix: ", findDuplicates(data));    // [2, 3]    — correct, each once, O(n)
 `
 
+// ---------- adv-sysdesign (frontend exercises) ----------
+const raceGuardStarter = `// TYPEAHEAD race condition: you type "re", "rea", "reac"... three requests fly out. If "re" is slow
+// and lands AFTER "reac", it OVERWRITES the newer results with stale ones. The fix is a sequence guard:
+// tag each request, and when a response arrives, drop it unless it's still the latest.
+
+function createRaceGuard() {
+  let latest = 0;
+  return {
+    start() { return ++latest; },          // call BEFORE each request; returns this request's id
+    isStale(id) { return id !== latest; },  // call WHEN the response lands; true => throw it away
+  };
+}
+
+// Simulate out-of-order responses: request #1 ("re") resolves last.
+const guard = createRaceGuard();
+const id1 = guard.start(); // "re"
+const id2 = guard.start(); // "rea"
+const id3 = guard.start(); // "reac"
+
+// Responses come back in the order 3, then 1 (slow), then... :
+console.log("apply #3 (reac)?", !guard.isStale(id3)); // true  — newest, render it
+console.log("apply #1 (re)?  ", !guard.isStale(id1)); // false — STALE, drop it (would clobber #3)
+console.log("apply #2 (rea)? ", !guard.isStale(id2)); // false — also stale now
+`
+
+const feedStarter = `// NEWS FEED / infinite scroll: pages come from a CURSOR ("give me items after id X"). Pages can
+// OVERLAP (new posts shift the window) so you must DEDUPE by id while preserving order, and compute the
+// next cursor from the last item. These are the two pure functions the UI leans on.
+
+// Append a new page, dropping any ids we've already shown. Order is preserved (existing first).
+function mergeFeed(existing, page) {
+  const seen = new Set(existing.map((p) => p.id));
+  return [...existing, ...page.filter((p) => !seen.has(p.id))];
+}
+
+// The cursor for the NEXT request is the id of the last item we have (null when the feed is empty).
+function nextCursor(items) {
+  return items.length ? items[items.length - 1].id : null;
+}
+
+const page1 = [{ id: 1, t: "a" }, { id: 2, t: "b" }, { id: 3, t: "c" }];
+const page2 = [{ id: 3, t: "c" }, { id: 4, t: "d" }]; // note: id 3 overlaps
+const feed = mergeFeed(page1, page2);
+console.log("merged ids:", feed.map((p) => p.id)); // [1, 2, 3, 4] — 3 not duplicated
+console.log("next cursor:", nextCursor(feed));      // 4
+console.log("empty cursor:", nextCursor([]));       // null
+`
+
 export const advancedLessons = [
   // adv-algorithms — Snap-curated: JS-centric patterns, DOM-as-a-tree, performance framing.
   {
@@ -1006,6 +1054,172 @@ For a **news feed**: infinite scroll with **cursor pagination**, **list virtuali
       { term: 'Replication & sharding', def: 'Copies for read scale/failover (replication); splitting data across nodes for write scale (sharding).' },
     ],
     explanation: `A typical progression: **1)** one server + DB → **2)** add a **cache** for hot reads → **3)** go **stateless** and put N servers behind a **load balancer** → **4)** move slow work to a **queue + workers** → **5)** add **read replicas**, then **shard** when writes dominate. Every step trades simplicity for scale — interviewers want you to justify *why* and name the new failure modes (cache invalidation, replication lag, hot shards).`,
+  },
+  {
+    id: 'adv-sd-typeahead', module: 'adv-sysdesign', order: 3, kind: 'utility', template: 'vanilla',
+    title: 'Design: Autocomplete / Typeahead', difficulty: 'hard', tags: ['system-design', 'frontend', 'performance', 'a11y'],
+    summary: 'The canonical FE design question. The hard parts aren’t the UI — they’re debouncing, request race conditions, caching, and keyboard a11y.',
+    prompt: `"Design an autocomplete" is the most common FE system-design prompt. Walk **RADIO**, but the signal is in the **non-obvious failure modes**: you don’t fire a request per keystroke (**debounce**), an earlier slow response must not overwrite a newer one (**race conditions**), repeat queries shouldn’t refetch (**cache**), and the whole thing must be **keyboard-navigable** for a11y. The live editor implements the race guard — the piece most people forget.`,
+    keyTerms: [
+      { term: 'Debounce', def: 'Wait until the user pauses typing (e.g. 300ms) before firing a request — collapses a burst of keystrokes into one call. (See the JS-core debounce lesson.)' },
+      { term: 'Race condition / out-of-order responses', def: 'Requests for "re", "rea", "reac" can resolve in any order. If "re" lands last it clobbers the newer results. Guard by tagging each request and dropping stale responses (or abort them).' },
+      { term: 'AbortController', def: 'The browser API to cancel an in-flight fetch: pass `controller.signal` to `fetch`, call `controller.abort()` when a newer query starts. Cancels the stale request outright.' },
+      { term: 'Caching', def: 'Memoize results by query string so re-typing a prior query is instant and network-free. A small LRU bounds memory. Ties to the caching lesson.' },
+      { term: 'Keyboard a11y', def: '↑/↓ to move, Enter to select, Esc to close; use a `listbox`/`option` role with `aria-activedescendant` so screen readers announce the highlighted item. This is often the deciding signal.' },
+      { term: 'Min chars & trimming', def: 'Don’t query on 1 character or whitespace-only input — reduces load and noise. Show recent/popular as a fallback.' },
+    ],
+    codeNotes: [
+      { label: 'Debounce + abort the previous request', code: `let controller;\nconst run = debounce(async (q) => {\n  controller?.abort();                 // cancel the in-flight one\n  controller = new AbortController();\n  const res = await fetch(url(q), { signal: controller.signal });\n  setResults(await res.json());\n}, 300);`, note: "AbortController cancels stale requests; debounce collapses keystrokes." },
+      { label: 'The race guard (implemented in the editor)', code: `const guard = createRaceGuard();\nasync function search(q) {\n  const id = guard.start();\n  const items = await api(q);\n  if (guard.isStale(id)) return;   // a newer query already went out — drop this\n  render(items);\n}`, note: "Even with debounce, two requests can overlap — sequence them." },
+      { label: 'Accessible combobox wiring', code: `<input role="combobox" aria-expanded={open} aria-controls="lb"\n  aria-activedescendant={"opt-" + active} />\n<ul id="lb" role="listbox">\n  <li id={"opt-" + i} role="option" aria-selected={i === active}>…</li>\n</ul>`, note: "Roles + aria-activedescendant let screen readers follow ↑/↓ selection." },
+    ],
+    starterCode: { '/index.js': raceGuardStarter },
+    explanation: `**Framework, then the real signal.** Open with **RADIO** — Requirements (debounced remote
+search? how many results? a11y? mobile?), Architecture (a controlled input + a results \`listbox\` + a data
+layer), Data/API (\`GET /search?q=\` returning ranked items, cursor if paginated), Interface, Optimizations.
+But what separates a strong answer is naming the **four things that go wrong**:
+
+1. **Too many requests** → **debounce** the input (and set a **min length**), so you fetch on a pause, not
+   per keystroke. This is the JS-core debounce utility in a real setting.
+2. **Out-of-order responses (the race)** → the bug in the live editor. You type \`re\` → \`rea\` → \`reac\`; if
+   the \`re\` request is slow and resolves *last*, it overwrites the \`reac\` results with stale data. Fix with
+   a **sequence guard** (drop any response that isn't the latest) and/or **\`AbortController\`** to cancel the
+   older request outright. Interviewers love this because most candidates miss it.
+3. **Wasteful refetching** → **cache** results by query (a bounded LRU); re-typing a previous query is
+   instant and offline-friendly.
+4. **Inaccessible** → full **keyboard** support (↑/↓/Enter/Esc) and a \`combobox\`/\`listbox\` with
+   \`aria-activedescendant\`. On a front-end-leaning team this is table stakes, not a bonus.
+
+Close with edge cases: empty state, no results, network error + retry, very long lists (virtualize — see the
+performance module), and mobile. Run the editor to see the race guard drop the stale \`re\` response.
+*Sources: [MDN — AbortController](https://developer.mozilla.org/en-US/docs/Web/API/AbortController),
+[MDN — ARIA combobox role](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/combobox_role).*`,
+  },
+  {
+    id: 'adv-sd-news-feed', module: 'adv-sysdesign', order: 4, kind: 'utility', template: 'vanilla',
+    title: 'Design: News Feed / Infinite Scroll', difficulty: 'hard', tags: ['system-design', 'frontend', 'performance'],
+    summary: 'Infinite scroll = cursor pagination + dedupe + virtualization + optimistic updates. The live editor implements the merge/dedupe and cursor logic.',
+    prompt: `"Design a news feed" pulls together everything: **cursor pagination** (not offset — it’s stable as new posts arrive), **dedupe on merge** (overlapping pages), **list virtualization** so a 10k-item feed keeps a small DOM, **optimistic** likes, and robust **loading/empty/error** states. The editor implements the two pure functions the feed leans on: \`mergeFeed\` (append + dedupe by id) and \`nextCursor\`.`,
+    keyTerms: [
+      { term: 'Cursor vs offset pagination', def: 'Offset (`?page=3`) breaks when new items shift everything down — you get duplicates/skips. Cursor (`?after=<lastId>`) is stable under insertion: "give me items after this one."' },
+      { term: 'Dedupe on merge', def: 'Because the feed shifts, consecutive pages can overlap. Merge new pages while dropping ids you already have — a `Set` of seen ids, order preserved.' },
+      { term: 'Infinite scroll trigger', def: 'Use an `IntersectionObserver` on a sentinel element near the list end to fetch the next page — cheaper and smoother than a scroll-event handler.' },
+      { term: 'List virtualization', def: 'Render only the ~visible rows (windowing) so a huge feed keeps the DOM tiny and scrolling at 60fps. Ties directly to the performance module.' },
+      { term: 'Optimistic update', def: 'Apply a like immediately in local (immutable) state, then reconcile with the server response; roll back on failure. Ties to the immutability lesson.' },
+      { term: 'Loading / empty / error states', def: 'Skeletons while loading, a friendly empty state, and an error state with retry. Interviewers check you handle all three, not just the happy path.' },
+    ],
+    codeNotes: [
+      { label: 'Merge + dedupe (implemented in the editor)', code: `function mergeFeed(existing, page) {\n  const seen = new Set(existing.map((p) => p.id));\n  return [...existing, ...page.filter((p) => !seen.has(p.id))];\n}\nconst next = nextCursor(feed); // id of the last item -> ?after=next`, note: "Pure, immutable, O(n): the core of a correct infinite feed." },
+      { label: 'IntersectionObserver beats scroll handlers', code: `const io = new IntersectionObserver(([e]) => {\n  if (e.isIntersecting) loadNextPage();   // sentinel entered viewport\n}, { rootMargin: "400px" });               // prefetch a bit early\nio.observe(sentinelEl);`, note: "No scroll-event thrash; the browser tells you when to fetch." },
+      { label: 'Optimistic like (immutable update)', code: `setPosts((posts) => posts.map((p) =>\n  p.id === id ? { ...p, liked: true, likes: p.likes + 1 } : p));\n// then POST; on failure, revert with the same map pattern.`, note: "Instant UI; reconcile/rollback on the server response." },
+    ],
+    starterCode: { '/index.js': feedStarter },
+    explanation: `**RADIO for a feed, with the parts that actually earn points:**
+
+- **Pagination — cursor, not offset.** With offset (\`?page=2\`), a post added at the top shifts everything
+  down, so page 2 repeats an item from page 1 (or skips one). A **cursor** ("items after id X") is stable
+  under insertion. \`nextCursor\` derives the next request from the last item you hold.
+- **Dedupe on merge.** Even with cursors, refresh/overlap can hand you an item you already have, so
+  \`mergeFeed\` filters new pages against a \`Set\` of seen ids — **immutably**, order preserved. This is the
+  hidden correctness bug in most naive infinite-scroll code (duplicate React keys, flickering rows).
+- **Keep the DOM small.** A long feed must **virtualize** (windowing from the performance module) or the node
+  count tanks scroll performance — tie it back to the 16ms frame budget.
+- **Feel instant.** **Optimistic** likes/follows update local immutable state immediately, then reconcile
+  with the server and roll back on error.
+- **Trigger fetches with \`IntersectionObserver\`** on a sentinel, not a scroll handler (which fires
+  constantly and causes jank).
+
+Close with the states interviewers probe: **loading skeletons, empty, error + retry**, pull-to-refresh, and
+what happens when a brand-new post arrives while you're scrolled down. Run the editor to watch \`mergeFeed\`
+drop the overlapping id and \`nextCursor\` advance. *Sources:
+[MDN — IntersectionObserver](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API),
+[React — Updating Arrays in State](https://react.dev/learn/updating-arrays-in-state).*`,
+  },
+  {
+    id: 'adv-sd-component-api', module: 'adv-sysdesign', order: 5, kind: 'concept',
+    title: 'Design: a reusable component API',
+    difficulty: 'hard', tags: ['system-design', 'frontend', 'react', 'api-design'],
+    summary: 'Designing a Modal/Select/Tabs the whole team uses: props vs composition, controlled vs uncontrolled, sensible defaults, and accessibility built in.',
+    prompt: `A quieter but high-signal FE design prompt: "**design the API for a \`<Modal>\` (or \`<Select>\`, \`<Tabs>\`)** other teams will use." Now the interface *is* the product. The tensions to reason about out loud: **props vs composition** (children/slots), **controlled vs uncontrolled** state, good **defaults**, and **accessibility** baked in rather than bolted on. This is SOLID and the controlled-forms lesson applied to library design.`,
+    keyTerms: [
+      { term: 'Props vs composition', def: 'A prop for every option (`title`, `footer`, `icon`…) explodes and can’t cover every case. Composition — accepting `children`/slots — is open-ended and flexible. Prefer composition for content, props for behavior.' },
+      { term: 'Compound components', def: 'A set that shares implicit state via context: `<Tabs><Tab/><TabPanel/></Tabs>`. Callers compose the pieces; the parent coordinates. Flexible and readable.' },
+      { term: 'Controlled vs uncontrolled', def: 'Support both: `value`/`onChange` for callers who want control, `defaultValue` for those who don’t. The same pattern as native inputs (see the forms lesson).' },
+      { term: 'Sensible defaults', def: 'The component should do the right thing with minimal props (Open/Closed: extend via props, don’t force config). Optional complexity, not required.' },
+      { term: 'Accessibility as a contract', def: 'Focus trap + `Esc` + `aria-modal` for a dialog; roving tabindex + arrow keys for tabs/menus. Bake it in so every consumer gets it for free.' },
+      { term: 'Escape hatches', def: 'Allow `className`/`style`/`...rest` passthrough and `ref` forwarding so consumers can extend without forking the component.' },
+    ],
+    codeNotes: [
+      { label: 'Composition over a prop explosion', code: `// ❌ every option becomes a prop — never enough\n<Modal title="…" body="…" footer="…" icon="…" />\n// ✅ open-ended via children/slots\n<Modal>\n  <Modal.Header>…</Modal.Header>\n  <Modal.Body>…</Modal.Body>\n  <Modal.Footer>…</Modal.Footer>\n</Modal>`, note: "Compound components + slots scale to cases you didn't foresee." },
+      { label: 'Support controlled AND uncontrolled', code: `function Select({ value, defaultValue, onChange }) {\n  const isControlled = value !== undefined;\n  const [inner, setInner] = useState(defaultValue);\n  const current = isControlled ? value : inner;\n  const set = (v) => { if (!isControlled) setInner(v); onChange?.(v); };\n}`, note: "Mirror native inputs: value = controlled, defaultValue = uncontrolled." },
+      { label: 'Forward ref + spread rest (escape hatches)', code: `const Button = forwardRef(function Button({ variant = "primary", ...rest }, ref) {\n  return <button ref={ref} className={styles[variant]} {...rest} />;\n});`, note: "ref forwarding + {...rest} let consumers extend without forking." },
+    ],
+    explanation: `**When you design a component API, the API is the interface everyone lives with — treat it
+like designing a public function.** The trade-offs to talk through:
+
+- **Props vs composition.** A prop per feature (\`title\`, \`subtitle\`, \`footer\`, \`icon\`, \`onIconClick\`…)
+  balloons and still can't express every layout. **Composition** — accept \`children\` and named slots, or go
+  **compound** (\`<Tabs><Tab/></Tabs>\` sharing state via context) — stays open-ended. Rule of thumb: **props
+  for behavior, composition for content.**
+- **Controlled vs uncontrolled.** Offer **both**, exactly like native inputs: \`value\`+\`onChange\` for callers
+  who own the state, \`defaultValue\` for those who don't. (Directly the forms lesson, now as library design.)
+- **Sensible defaults (Open/Closed).** The zero-config case should just work; advanced needs are opt-in via
+  props — you extend behavior without editing the component or forcing every caller to configure it.
+- **Accessibility as part of the contract.** A \`<Modal>\` ships a **focus trap**, \`Esc\` to close,
+  \`aria-modal\`, and focus restore on close; \`<Tabs>\`/menus ship **arrow-key** roving focus. Bake it in so
+  every consumer inherits it — retrofitting a11y per-consumer never happens.
+- **Escape hatches.** Forward \`ref\`, spread \`...rest\` onto the root, and allow \`className\`/\`style\` so teams
+  can extend without forking.
+
+This maps cleanly onto **SOLID**: single responsibility (the component does one thing), open/closed (extend
+via props/slots), and interface segregation (small, focused props over a God-object config). Strong close:
+"I'd ship it controlled-or-uncontrolled, composition-first, accessible by default, with ref + rest
+passthrough — and document the two or three props that matter." *Sources:
+[React — Passing Props / Children](https://react.dev/learn/passing-props-to-a-component),
+[React — Sharing State Between Components](https://react.dev/learn/sharing-state-between-components).*`,
+  },
+  {
+    id: 'adv-sd-chat', module: 'adv-sysdesign', order: 6, kind: 'concept',
+    title: 'Design: a real-time chat UI',
+    difficulty: 'hard', tags: ['system-design', 'frontend', 'realtime'],
+    summary: 'Real-time UI: WebSockets vs polling/SSE, message ordering, optimistic send + dedupe, and reconnection with backoff.',
+    prompt: `"Design a chat / live comments" adds the **real-time** dimension. Decide the **transport** (WebSocket vs SSE vs polling), then handle the things that make real-time hard on the client: **message ordering**, **optimistic send** with server **reconciliation/dedupe**, **reconnection** with backoff + gap-fill, and rendering a long, growing message list efficiently.`,
+    keyTerms: [
+      { term: 'WebSocket vs SSE vs polling', def: 'WebSocket = full-duplex, best for chat (send + receive). SSE = server→client only, simpler, auto-reconnect. Long/short polling = fallback when sockets aren’t available. Pick by direction + infra.' },
+      { term: 'Optimistic send', def: 'Render your message immediately with a temporary client id and a "sending" state; when the server acks (with the real id), reconcile; on failure, mark it failed with retry.' },
+      { term: 'Dedupe & reconciliation', def: 'The echoed message from the server may arrive as a "new" message — match it to your optimistic one by client id so it isn’t shown twice.' },
+      { term: 'Message ordering', def: 'Network reordering and multiple senders mean arrival order ≠ true order. Sort by a server timestamp/sequence, not receive time; handle late arrivals by inserting in place.' },
+      { term: 'Reconnection & gap-fill', def: 'On disconnect, reconnect with exponential backoff (+ jitter); on reconnect, fetch any messages missed since your last known id so the timeline has no holes.' },
+      { term: 'Backpressure / batching', def: 'A firehose of events can overwhelm React — batch/coalesce incoming messages per frame and virtualize the list so the DOM stays small.' },
+    ],
+    codeNotes: [
+      { label: 'Optimistic send with a client id', code: `const tempId = "tmp-" + crypto.randomUUID();\nsetMsgs((m) => [...m, { id: tempId, text, status: "sending" }]);\nsocket.send({ clientId: tempId, text });\n// on ack { clientId, id }: swap tempId -> real id, status "sent"\n// on timeout: mark status "failed" (offer retry)`, note: "clientId lets you reconcile the server echo with your optimistic bubble." },
+      { label: 'Reconnect with exponential backoff + jitter', code: `let delay = 1000;\nfunction connect() {\n  const ws = new WebSocket(url);\n  ws.onclose = () => {\n    setTimeout(connect, delay + Math.random() * 300); // jitter\n    delay = Math.min(delay * 2, 30000);               // cap at 30s\n  };\n  ws.onopen = () => { delay = 1000; fetchSince(lastId); }; // gap-fill\n}`, note: "Backoff avoids hammering; on reopen, fetch what you missed." },
+      { label: 'Order by server sequence, not arrival', code: `setMsgs((m) => [...m, incoming].sort((a, b) => a.seq - b.seq));\n// a late message inserts into its correct slot, not at the end.`, note: "Arrival order ≠ true order across reconnects and multiple senders." },
+    ],
+    explanation: `**Start with the transport trade-off.** Chat is bidirectional, so **WebSocket** is the default
+(full-duplex, low latency). **SSE** is a fine choice for one-way live feeds (notifications, live comments) —
+simpler and auto-reconnecting. **Polling** is the compatibility fallback. State your pick and why.
+
+Then the client-side hard parts — this is where FE system-design points are won:
+
+- **Optimistic send.** Show the message instantly with a **temporary client id** and a "sending" state; the
+  UI never waits for the round-trip. When the server acks with the real id, **reconcile**; on failure, mark
+  it **failed** with a retry affordance.
+- **Dedupe / reconciliation.** The server usually **echoes** your message to everyone, including you — match
+  that echo to your optimistic bubble by **client id** so it doesn't render twice (the same duplicate-key
+  hazard as the feed lesson).
+- **Ordering.** Messages arrive out of order across senders and reconnects, so sort by a **server
+  sequence/timestamp**, not arrival time, and insert late arrivals in place.
+- **Reconnection.** Disconnects are normal. Reconnect with **exponential backoff + jitter**, and on reopen
+  **gap-fill** (fetch everything since your last known id) so the timeline has no holes.
+- **Volume.** A busy room is a firehose — **batch** incoming events per frame and **virtualize** the list
+  (performance module) so React and the DOM keep up.
+
+Close with presence/typing indicators, read receipts, offline queueing, and scroll behavior (stick to bottom
+unless the user scrolled up). *Sources:
+[MDN — WebSocket API](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API),
+[MDN — Server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events).*`,
   },
 
   // adv-ai
