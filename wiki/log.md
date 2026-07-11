@@ -9,6 +9,16 @@ tags: [meta, log]
 
 # Log (newest on top)
 
+## 2026-07-11 — README refresh (was badly stale)
+- Old README described a "Frontend Interview Handbook" app with **"four categories"** (UI/JS/Quiz/CSS),
+  claimed **progress persisted to MongoDB Atlas** (it's localStorage-only), and pointed adds at a nonexistent
+  `data/challenges/` path. Rewrote to reflect reality: a progressive full-stack **curriculum** (4 tracks / 22
+  modules / ~98 lessons), a "what's covered" table per track (incl. TS, FE performance, React depth, OOP/FP,
+  MongoDB, Auth, GraphQL, web security, algorithms, system design, AI-in-workflow), **offline-first
+  localStorage progress**, **170 Vitest tests** (taught-logic runs the real lesson code), the stacked live
+  editor, and the correct add-a-lesson path (`data/lessons/<track>.js`). Linked SETUP/CLAUDE/DESIGN/SECURITY/
+  CONTENT. Numbers verified by grep + a test run before shipping.
+
 ## 2026-07-10 — Navigation + live-editor UX overhaul (owner request)
 - **Sandpack stacked vertically**: preview now sits UNDER the editor (was side-by-side and clipped long
   lines). Added a `.livecode` wrapper class + CSS forcing `.sp-layout` to `flex-direction: column`. Gotcha:

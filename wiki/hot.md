@@ -63,8 +63,8 @@ optional P2 (advanced FE / Redis / a unit-testing lesson).
 - **Verify-don't-hallucinate is a standing rule**: primary source or highly-starred repo before it ships;
   browser-verify via the run-skill; `node --check` our own lesson code. Empirical > assumed (see the iframe probe).
 - **Personalized (gitignored)**: behavioral prep in `wiki/private/` — 70/30 FE/BE, honest on DB depth.
-- **Open**: README stale ("Four categories", understates MongoDB, no security/TS/perf) — strong refresh
-  candidate now. Notes UI + mobile nav backlog.
+- **Open**: Notes UI backlog. (README **refreshed 2026-07-11** — now accurate: 4 tracks / 22 modules / ~98
+  lessons, offline localStorage progress, 170 tests, stacked editor.)
 - **Owner**: `npm test` before commits; `npm run dev:client` → :5173; `npm run kill`; run-skill
   (`full-stack-gallore:run`) for the in-browser pass.
 - Git identity is the noreply address — never commit the personal gmail; never stage `dropoff/` or `wiki/private/`.
