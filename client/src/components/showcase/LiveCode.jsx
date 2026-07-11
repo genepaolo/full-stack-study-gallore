@@ -48,7 +48,7 @@ export default function LiveCode({
   const hasLocks = readOnly || lockedFiles?.length > 0
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-surface">
+    <div className="livecode overflow-hidden rounded-xl border border-border bg-surface">
       <div className="flex items-center justify-between border-b border-border bg-surface-2 px-3 py-2">
         <span className="text-xs font-medium text-muted">
           {readOnly
@@ -82,8 +82,9 @@ export default function LiveCode({
             showConsoleButton: showConsole,
             showTabs: true,
             showLineNumbers: true,
-            editorHeight: 420,
-            editorWidthPercentage: 55,
+            // Editor and preview are stacked vertically (see `.livecode` CSS in index.css),
+            // so the editor gets the full width — long lines are never clipped by the preview.
+            editorHeight: 360,
           }}
         />
       </Suspense>

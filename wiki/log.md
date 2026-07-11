@@ -9,6 +9,22 @@ tags: [meta, log]
 
 # Log (newest on top)
 
+## 2026-07-10 — Navigation + live-editor UX overhaul (owner request)
+- **Sandpack stacked vertically**: preview now sits UNDER the editor (was side-by-side and clipped long
+  lines). Added a `.livecode` wrapper class + CSS forcing `.sp-layout` to `flex-direction: column`. Gotcha:
+  Sandpack sets an inline `flex: 50 50 0px` on each `.sp-stack`, which collapsed the panels to 0 height in a
+  column (CodeMirror never mounted) — fixed with `flex: none !important` + explicit heights (editor 360px,
+  preview/console 300px). Verified via Playwright (layout 663px, cm mounts). Removed `editorWidthPercentage`.
+- **Sidebar → collapsible dropdowns + progress reflection**: refactored `Sidebar.jsx` into a shared
+  `NavContent` (used by desktop aside AND a new mobile drawer). Each track is a collapsible dropdown (chevron,
+  auto-opens the active track) with its own `learned/total` count + mini progress bar; module rows show ✓ when
+  learned. Added an overall "Your progress X/Y + %" card linking to /progress.
+- **Mobile nav fixed** (was hidden entirely below md): `TopBar` gains a hamburger (md:hidden) that opens a
+  slide-in drawer (`AppShell` owns the open state; backdrop, body-scroll lock, close on route change, Esc-free
+  close button). Drawer/fade keyframes in index.css, reduced-motion-safe. Responsive verified at 390px + 1280px.
+- Files: `Sidebar.jsx`, `AppShell.jsx`, `TopBar.jsx`, `LiveCode.jsx`, `index.css`. Tests 170, build clean,
+  browser-verified (desktop stacked editor + mobile drawer + progress bars all correct).
+
 ## 2026-07-10 — Refine `fe-center-a-div` (per owner UX feedback)
 - Moved all 4 centering approaches into ONE code block with 3 **commented out** (flexbox active; grid,
   absolute+margin:auto, absolute+translate as uncomment-to-compare blocks) — easier to just read.

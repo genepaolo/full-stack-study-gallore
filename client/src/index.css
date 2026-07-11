@@ -93,7 +93,42 @@
   }
 }
 
+/* ---- Live editor (Sandpack): stack the preview UNDER the code ----
+   By default Sandpack renders editor | preview side-by-side, which clips long
+   lines and hides part of the code. Force a vertical stack so the editor gets
+   the full width and the preview sits below it. Scoped to our `.livecode` wrapper. */
+.livecode .sp-layout {
+  flex-direction: column;
+  height: auto; /* override Sandpack's fixed row height so stacked panels can size themselves */
+}
+/* Sandpack sizes each panel with an inline `flex: 50 50 0px` (for the side-by-side split); in an
+   auto-height COLUMN that collapses them to 0 (and CodeMirror never mounts). `!important` is needed
+   to beat Sandpack's inline styles — force explicit heights and no flex grow/shrink instead. */
+.livecode .sp-layout > .sp-stack {
+  width: 100% !important;
+  flex: none !important;
+}
+.livecode .sp-layout > .sp-stack:first-child {
+  height: 360px !important; /* the code editor */
+}
+.livecode .sp-layout > .sp-stack:not(:first-child) {
+  height: 300px !important; /* the preview (and console, if shown) below it */
+}
+
+/* ---- Mobile nav drawer animations ---- */
+@keyframes drawer-in {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-drawer { animation: drawer-in 0.24s cubic-bezier(0.16, 1, 0.3, 1); }
+.animate-fade { animation: fade-in 0.2s ease-out; }
+
 @media (prefers-reduced-motion: reduce) {
   .hero-mesh::before { animation: none; }
+  .animate-drawer, .animate-fade { animation: none; }
   * { scroll-behavior: auto !important; }
 }
