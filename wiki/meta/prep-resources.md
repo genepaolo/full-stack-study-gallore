@@ -72,6 +72,29 @@ verify against solid/highly-starred sources" rule). Used in `adv-ai-auditing/-se
   — "assume confidently incomplete"; run tests + static analysis (CodeQL, Dependabot) before human review.
 - Tools to name: Semgrep / Snyk / CodeQL / Dependabot · OpenSSF Security-Focused Guide for AI Code Assistants.
 
+## 🎯 Web security — VERIFIED sources (built into `fs-security`)
+All facts fetched from primary sources on 2026-07-10 (no-hallucination rule). Used in
+`fs-sec-sop/-xss/-csrf/-injection/-headers/-owasp`.
+- ⭐ **OWASP Top 10:2025** — https://owasp.org/Top10/ — A01 Broken Access Control · A02 Security
+  Misconfiguration · A03 **Software Supply Chain Failures** (new, ↑#3) · A04 Cryptographic Failures ·
+  A05 Injection · A06 Insecure Design · A07 Authentication Failures · A08 Software or Data Integrity
+  Failures · A09 Security Logging & Alerting Failures · A10 **Mishandling of Exceptional Conditions** (new).
+- ⭐ **OWASP Cheat Sheet Series** — https://github.com/OWASP/CheatSheetSeries — authoritative "how to defend X".
+- **OWASP** attacks: [XSS](https://owasp.org/www-community/attacks/xss/) (reflected/stored/DOM; steals
+  cookies/session, rewrites page; defend: output-encode + validate + CSP) · [CSRF](https://owasp.org/www-community/attacks/csrf)
+  (forces authed state-change via ambient cookies; defend: SameSite + synchronizer token + Origin check;
+  "HTTPS is a prerequisite") · [SQL Injection](https://owasp.org/www-community/attacks/SQL_Injection)
+  (parameterized queries = #1 defense; allowlist; least privilege).
+- **MDN** — [Same-origin policy](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy)
+  (origin = scheme/host/port; blocks cross-origin DOM/storage/response reads; allows embedding+writes → CSRF)
+  · [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS) (server opts callers in; browser-enforced;
+  not authz) · [CSP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP) (`script-src 'self'`, nonces/
+  hashes, avoid `'unsafe-inline'`, `frame-ancestors` = anti-clickjacking).
+- **web.dev** — [SameSite cookies explained](https://web.dev/articles/samesite-cookies-explained) (Strict/Lax/
+  None; default Lax when unset; None requires Secure) + `HttpOnly`/`Secure` flags.
+- Interview-framed repos: ⭐ yangshun/front-end-interview-handbook (44k★) & tech-interview-handbook (138k★) ·
+  vasanthk/how-web-works (request lifecycle, SOP/CORS) · ntthanh2603/fullstack-interviews (security Q set).
+
 ## Snap-flavored preferred quals
 - Real-time / WebSockets + GraphQL: howtographql.com (subscriptions), MDN WebSockets, Hasura Learn.
 - Canvas / WebGL / WASM / Service Workers: webglfundamentals.org (gfxfundamentals/webgl-fundamentals),

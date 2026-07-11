@@ -9,6 +9,26 @@ tags: [meta, log]
 
 # Log (newest on top)
 
+## 2026-07-10 — New `fs-security` module (6 lessons) + SECURITY.md accuracy fix
+- Triggered by a user question on the box-model page ("how do I test malicious inputs in the live editor?").
+  **Empirically probed** the Sandpack iframe with Playwright: preview is served from
+  `*.sandpack-static-server.codesandbox.io` (cross-origin to :5173) with `sandbox` INCLUDING
+  `allow-same-origin` — so isolation is the **different host origin**, NOT an opaque-origin sandbox.
+  Tightened `SECURITY.md` point 1 + threat table to say this precisely, and added the supply-chain caveat.
+- Built **`fs-security`** (fullstack track, level 5, 6 lessons): `fs-sec-sop` (same-origin policy, CORS,
+  iframe sandbox + the sandbox-probe tool tips from the discussion), `fs-sec-xss` (utility/vanilla,
+  live+**tested** `escapeHtml`; reflected/stored/DOM, dangerous sinks, defense-in-depth), `fs-sec-csrf`
+  (SameSite Lax default/Strict/None+Secure, synchronizer token, XSS-vs-CSRF), `fs-sec-injection` (SQL +
+  NoSQL/operator injection, parameterized queries, least privilege), `fs-sec-headers` (CSP script-src/
+  nonces/frame-ancestors, HSTS, helmet), `fs-sec-owasp` (the **OWASP Top 10 2025** checklist mapped to
+  prior lessons + a self-audit + vetted repos).
+- **No hallucination**: every claim fetched from MDN (SOP/CORS/CSP), OWASP (XSS/CSRF/SQLi/Top10:2025),
+  web.dev (SameSite). Repos vetted + filed to [[prep-resources]] (OWASP CheatSheetSeries, yangshun
+  handbooks 44k/138k★, vasanthk/how-web-works). Interview-tight per owner ("don't spiral").
+- Tests **167 → 171** (+3 taught-logic, +1 auto-compile), build clean, browser-verified via run-skill (XSS
+  editor executes and neutralizes the payload). Hit + fixed a `\\'`-in-single-quoted-string bug (13 sites)
+  via `node --check`. Next: **GraphQL**.
+
 ## 2026-07-10 — Deepen MongoDB: `be-data` +4 lessons · run-skill added · pushed to origin
 - `be-data` 2 → 6 lessons (the ⚠️-partial area): `be-mongo-crud` (concept: operators $gt/$in/$regex,
   projection, $set/$inc/$push, upsert; the whole-doc-replace footgun), `be-mongo-modeling` (concept:

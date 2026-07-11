@@ -50,6 +50,7 @@ export const MODULES = [
   { slug: 'fs-connect', track: 'fullstack', title: 'Connecting Frontend & Backend', level: 4, blurb: 'CORS, the request lifecycle, and the end-to-end flow.' },
   { slug: 'fs-data', track: 'fullstack', title: 'Data Fetching & State', level: 4, blurb: 'Loading/error states, caching, and optimistic UI.' },
   { slug: 'fs-deploy', track: 'fullstack', title: 'Deployment & DevOps', level: 5, blurb: 'Environments, secrets, and shipping a MERN app.' },
+  { slug: 'fs-security', track: 'fullstack', title: 'Web Security Essentials', level: 5, blurb: 'The security an interviewer expects a full-stack dev to know: same-origin policy, XSS, CSRF, injection, CSP, and the OWASP Top 10.' },
   // Advanced
   { slug: 'adv-algorithms', track: 'advanced', title: 'Algorithms & Data Structures', level: 4, blurb: 'Big-O, the DOM as a tree, and the coding-round patterns — tuned for front-end performance.' },
   { slug: 'adv-projects', track: 'advanced', title: 'Projects: Snake Game', level: 5, blurb: 'A full interactive game with the game loop and canvas.' },

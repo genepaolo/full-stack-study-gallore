@@ -50,3 +50,4 @@ tags: [index]
 - [[2026-07-10-react-depth]] — React Depth & Performance module (`fe-react-depth`, 5 lessons); all P1 closed
 - [[2026-07-10-fe-system-design]] — Frontend system design batch (`adv-sysdesign` +4); first P2
 - [[2026-07-10-mongodb-and-run-skill]] — Deepen MongoDB (`be-data` +4) + project run-skill + push to origin
+- [[2026-07-10-web-security]] — Web Security module (`fs-security` +6) + SECURITY.md accuracy fix

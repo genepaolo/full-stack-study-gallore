@@ -72,7 +72,10 @@ Supersedes the generic P1 order in [[expansion-roadmap]] when optimizing for *th
      Verified vs MDN (AbortController, IntersectionObserver, WebSocket, ARIA combobox) + react.dev.
   2. ✅ **DONE — Deepen MongoDB** (`be-data` 2 → 6): CRUD & query operators, embed-vs-reference modeling,
      indexes & the ESR rule, aggregation pipeline (live+tested pure-JS stages). Verified vs the MongoDB Manual.
-  3. **GraphQL** ← **NEXT** · then advanced front-end (Canvas/WebGL/Service Workers/WASM) · Redis/caching ·
+  3. ✅ **DONE — Web Security** (new `fs-security`, 6 lessons): same-origin policy/CORS/sandboxing, XSS
+     (live+tested `escapeHtml`), CSRF & SameSite, injection (SQL/NoSQL), CSP & security headers, and the
+     OWASP Top 10 (2025) checklist. All facts verified vs MDN/OWASP/web.dev; repos in [[prep-resources]].
+  4. **GraphQL** ← **NEXT** · then advanced front-end (Canvas/WebGL/Service Workers/WASM) · Redis/caching ·
      unit-testing lesson · DDD · backend system-design building-blocks ([[system-design-plan]]).
 - **Behavioral** stays valuable (a real round) but is secondary to the technical gaps above.
 

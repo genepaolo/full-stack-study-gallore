@@ -689,3 +689,25 @@ describe('Aggregation pipeline (be-mongo-aggregation)', () => {
     expect(top.map((r) => r.customerId).sort()).toEqual(['ada', 'lin'])
   })
 })
+
+describe('XSS output encoding (fs-sec-xss)', () => {
+  it('escapeHtml encodes all five HTML-significant characters', () => {
+    const { escapeHtml } = extract('fs-sec-xss', ['escapeHtml'])
+    expect(escapeHtml('<>&"\'')).toBe('&lt;&gt;&amp;&quot;&#39;')
+  })
+
+  it('escapes & first so existing entities are not double-mangled predictably', () => {
+    const { escapeHtml } = extract('fs-sec-xss', ['escapeHtml'])
+    // "&<" -> "&amp;&lt;" (the & becomes &amp; then the < becomes &lt;)
+    expect(escapeHtml('&<')).toBe('&amp;&lt;')
+  })
+
+  it('safeRender neutralizes an injection payload; unsafeRender does not', () => {
+    const { safeRender, unsafeRender } = extract('fs-sec-xss', ['safeRender', 'unsafeRender'])
+    const payload = '<img src=x onerror="steal()">'
+    const safe = safeRender(payload)
+    expect(safe).not.toContain('<img') // the tag is escaped -> inert text
+    expect(safe).toContain('&lt;img')
+    expect(unsafeRender(payload)).toContain('<img') // the vulnerable version keeps the live tag
+  })
+})

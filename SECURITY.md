@@ -13,10 +13,23 @@ malicious JS against the host page?
 
 ## Why editor code can't harm the app
 
-1. **Sandboxed, cross-origin iframe.** Every live editor is powered by **Sandpack**, which executes
-   your code inside a sandboxed `<iframe>` served from a *different origin*. Cross-origin isolation
-   means the code **cannot read or modify** the host page's DOM, its React state, `localStorage`
-   (your progress), or cookies. It runs in its own world.
+1. **Different-origin iframe (the same-origin policy is what isolates it).** Every live editor is
+   powered by **Sandpack**, which runs your code inside an `<iframe>` served from a **different
+   origin** than the app — a `*.sandpack-static-server.codesandbox.io` host, versus this app's own
+   origin. The browser's **same-origin policy** then forbids that code from reading or modifying the
+   host page's DOM, React state, `localStorage` (your progress), or cookies — those belong to a
+   *different* origin. Verified empirically: host↔iframe reads are blocked in both directions.
+
+   > **Where the isolation actually comes from (precise):** the preview iframe's `sandbox` attribute
+   > grants `allow-same-origin`, so it is **not** forced into an opaque origin — the wall is purely
+   > the **different host origin**. If the preview were ever served *same-origin* with the app
+   > (e.g. same host, or via `srcdoc` + `allow-same-origin`), editor code *could* reach your
+   > `localStorage`. The safety is the origin split, not the sandbox flag.
+   >
+   > **Supply-chain caveat:** CodeSandbox's bundler/static-server builds and hosts the preview, so it
+   > is a third-party dependency. Your browser still keeps it off this app's origin, but a compromised
+   > bundler could run code *inside* the (origin-isolated) preview — e.g. capture what you type into
+   > that one editor. Low risk for an offline, single-user tool; that's the honest boundary.
 2. **Blast radius = that one block.** A broken edit only affects **its own preview**. Every editor is
    wrapped in a React **`ErrorBoundary`** — both by `LessonView` *and* internally by `LiveCode` itself
    (defense-in-depth) — so even a host-side render or chunk-load error is contained to that section
@@ -33,7 +46,7 @@ malicious JS against the host page?
 
 | Concern | Status | How |
 |---|---|---|
-| **Malicious code** (touch host, steal progress) | **Prevented** | Cross-origin sandbox iframe — no access to host DOM/state/`localStorage`/cookies. |
+| **Malicious code** (touch host, steal progress) | **Prevented** | Preview runs on a **different origin**; the same-origin policy blocks access to host DOM/state/`localStorage`/cookies. |
 | **Runtime errors / crashes** | **Contained** | Sandpack shows the error inside its own iframe; the host is protected by two layers of `ErrorBoundary`. |
 | **Infinite loops** (`while(true){}`) | **Isolated + recoverable** (see below) | Runs on the iframe's own thread — the **host app stays responsive**. Not *prevented*: the preview itself freezes until you Reset. |
 | **External network requests** | **Low risk** | The iframe *can* `fetch()` external URLs, but it's isolated from all host data, so there's nothing sensitive to exfiltrate. Offline, single-user tool. |
