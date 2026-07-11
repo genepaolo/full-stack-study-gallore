@@ -10,10 +10,22 @@ tags: [meta, cache]
 # Recent Context
 
 ## Last Updated
-2026-07-10. All P1 done. P2: FE system design ✅ · MongoDB ✅ · Web Security ✅ · **GraphQL ✅ (new
-`be-graphql`, 3 concept lessons, light by request)**. All named JD tech gaps now closed. Tests **171**,
-build clean, browser-verified. Remaining P2 is optional/preferred (advanced FE, Redis, testing lesson) +
-a **README refresh** (stale).
+2026-07-10 (session closed). All P1 + all named JD tech gaps done (FE sysdesign, MongoDB, Web Security,
+GraphQL). Last work was a **UX overhaul** (owner request): live editor stacked (preview under code),
+collapsible nav dropdowns + progress reflection, mobile drawer. Tests **170**, build clean, all
+browser-verified, everything pushed to origin/main (`809c526`). **Next session:** README refresh (stale) or
+optional P2 (advanced FE / Redis / a unit-testing lesson).
+
+## UI/UX state (as of session close)
+- **Live editor (LiveCode.jsx + `.livecode` CSS in index.css)**: Sandpack preview is **stacked UNDER** the
+  editor (was side-by-side + clipped). Column forced via CSS; the catch was Sandpack's inline `flex:50 50 0px`
+  collapsing panels to 0 — beaten with `flex:none !important` + explicit heights (editor 360 / preview 300).
+- **Sidebar (`Sidebar.jsx` → shared `NavContent`)**: collapsible dropdown per track (chevron, auto-opens the
+  active track) with per-track learned/total + mini bar and per-module ✓; overall "Your progress X/Y + %" card.
+- **Mobile nav**: was hidden below md; `TopBar` hamburger opens a slide-in drawer (state in `AppShell`, backdrop,
+  body-scroll lock, close-on-navigate). Drawer/fade keyframes in index.css, reduced-motion-safe.
+- Verify UI changes with the run-skill's Playwright (seed progress via `localStorage['gallore:progress:v2']`;
+  check both 390px and 1280px).
 
 ## Headlines
 - **`be-graphql` = 3 concept lessons** (backend, level 5, deliberately **light/high-level** by owner request):
@@ -56,4 +68,5 @@ a **README refresh** (stale).
 - **Owner**: `npm test` before commits; `npm run dev:client` → :5173; `npm run kill`; run-skill
   (`full-stack-gallore:run`) for the in-browser pass.
 - Git identity is the noreply address — never commit the personal gmail; never stage `dropoff/` or `wiki/private/`.
-- **origin/main current** through `ef3f79f` (fs-security); GraphQL commit pending push. Dev server may be on :5173.
+- **origin/main current** through `809c526` — everything today is committed + pushed; working tree clean.
+  Recent: `425b8d5` GraphQL · `769c41e` center-a-div refine · `809c526` UX overhaul (editor/nav/mobile).
