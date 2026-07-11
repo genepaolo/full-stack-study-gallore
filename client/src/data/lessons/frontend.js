@@ -34,28 +34,42 @@ const centerStarter = `<!doctype html>
   <head>
     <style>
       body { margin: 0; font-family: system-ui; }
+
+      /* The classic "center a div". Four ways to center .box on BOTH axes.
+         Approach 1 (flexbox) is active — uncomment another block to compare. */
       .stage {
         height: 100vh;
         background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        /* Three lines centre anything. Try swapping for grid + place-items. */
+        position: relative; /* lets the absolute approaches (3 & 4) center against .stage */
+
+        /* ── 1 · FLEXBOX (active) — the modern default, 3 lines ── */
         display: flex;
-        align-items: center;
-        justify-content: center;
+        justify-content: center; /* main axis  -> horizontal */
+        align-items: center;     /* cross axis -> vertical   */
+
+        /* ── 2 · GRID one-liner — replace the 3 flex lines above with these 2 ──
+        display: grid;
+        place-items: center; */
       }
-      .box { padding: 24px 32px; background:#fff; border-radius:14px;
-        box-shadow:0 10px 30px rgba(0,0,0,.25); font-weight:600; color:#4338ca; }
+
+      .box {
+        padding: 24px 32px; background: #fff; border-radius: 14px;
+        box-shadow: 0 10px 30px rgba(0,0,0,.25); font-weight: 600; color: #4338ca;
+
+        /* ── 3 · ABSOLUTE + margin:auto — also delete flex/grid from .stage above ──
+        position: absolute; inset: 0;             top/right/bottom/left all 0
+        margin: auto;                             auto on all 4 sides = both axes
+        width: max-content; height: max-content;  needs an intrinsic size to solve */
+
+        /* ── 4 · ABSOLUTE + translate — best when the box's size is unknown ──
+        position: absolute; top: 50%; left: 50%;
+        transform: translate(-50%, -50%);         pull back by half the box's OWN size */
+      }
     </style>
   </head>
   <body><div class="stage"><div class="box">Perfectly centered ✨</div></div></body>
 </html>
 `
-const centerSolution = centerStarter.replace(
-  `        display: flex;
-        align-items: center;
-        justify-content: center;`,
-  `        display: grid;
-        place-items: center; /* one line, both axes */`,
-)
 
 const flexGridHtml = `<!doctype html>
 <html>
@@ -886,15 +900,34 @@ export const frontendLessons = [
   {
     id: 'fe-center-a-div', module: 'fe-css-layout', order: 1, kind: 'component', template: 'static',
     title: 'Center a div', difficulty: 'easy', tags: ['css', 'flexbox', 'grid'],
-    summary: 'The eternal question. Know the flexbox and grid one-liners cold.',
-    prompt: `Center a box horizontally **and** vertically. The starter uses flexbox — try the grid \`place-items: center\` one-liner (see the solution), or break it and watch what happens.`,
+    summary: 'The eternal question. Know the flexbox/grid one-liners — and why margin:auto only centers horizontally.',
+    prompt: `Center a box horizontally **and** vertically — the interview classic. The starter centers with **flexbox**; the other three approaches (**grid**, **absolute + \`margin:auto\`**, **absolute + \`translate\`**) are right there in the CSS, **commented out** — uncomment one to compare. Then read below for when to reach for each, and the \`margin:auto\` gotcha.`,
     keyTerms: [
-      { term: 'Main axis / cross axis', def: 'In flexbox, the main axis is the flex-direction (row by default); the cross axis is perpendicular. justify-content works on the main axis, align-items on the cross.' },
-      { term: 'place-items', def: 'Grid shorthand for align-items + justify-items. place-items: center centers on both axes in one line.' },
+      { term: 'Main axis / cross axis', def: 'In flexbox, the main axis follows flex-direction (row by default); the cross axis is perpendicular. justify-content aligns on the main axis, align-items on the cross.' },
+      { term: 'place-items', def: 'Grid shorthand for align-items + justify-items. place-items: center centers on both axes in one line — the shortest full-centering.' },
+      { term: 'margin: auto', def: 'In normal flow, auto left/right margins split the leftover horizontal space (centering horizontally), but auto top/bottom margins compute to 0 — so it does NOT center vertically.' },
+      { term: 'translate(-50%, -50%)', def: 'After top/left:50% puts the box’s top-left corner at the center, transform pulls it back by half its OWN width/height — centering an element of unknown size.' },
     ],
     starterCode: { '/index.html': centerStarter },
-    solutionCode: { '/index.html': centerSolution },
-    explanation: `Know all three approaches: **flexbox** (\`align-items\` + \`justify-content\`), **grid** (\`place-items: center\`), and **absolute** (\`inset:0; margin:auto\` or the \`top/left:50% + translate(-50%,-50%)\` trick). Be ready to explain why \`margin:auto\` centers horizontally but not vertically in normal flow.`,
+    explanation: `**When to reach for each** (all four are in the editor, commented):
+
+| Approach | How | Best for | Watch out |
+|---|---|---|---|
+| **Flexbox** | \`display:flex; justify-content:center; align-items:center\` | The modern default — one item, or a row/column of them; keeps items in flow with \`gap\` | Three lines where grid needs two |
+| **Grid** | \`display:grid; place-items:center\` | The shortest both-axes centering; real 2D layouts | Slightly less familiar to some reviewers |
+| **Absolute + \`margin:auto\`** | \`position:absolute; inset:0; margin:auto\` | Overlaying a positioned ancestor (badge, close button) when the box **has a size** | Removed from flow; needs an intrinsic width/height to solve |
+| **Absolute + \`translate\`** | \`position:absolute; top:50%; left:50%; transform:translate(-50%,-50%)\` | Centering an element of **unknown** size — the classic modal/tooltip | Removed from flow; can blur on subpixel boundaries |
+
+**Rule of thumb:** reach for **flexbox or grid** by default — they keep the box in normal flow and give you \`gap\` for free. Use the **absolute** tricks only when the element must **overlay** other content (modals, tooltips, badges): \`translate\` when its size is unknown, \`margin:auto\` when it isn’t.
+
+**Why \`margin:auto\` centers horizontally but not vertically (in normal flow):** a block-level box takes its **width from its parent** but its **height from its content**. Setting \`margin-left\`/\`margin-right: auto\` tells the browser to split the **leftover horizontal space** between the two margins — so the box lands in the horizontal middle. Vertically there’s no leftover space to split (the box is exactly as tall as its content), and the CSS spec says \`auto\` **top/bottom margins compute to \`0\`** for in-flow blocks. So \`margin:auto\` slides the box horizontally and leaves it pinned to the top.
+
+**So how do you center vertically?** Give the browser vertical space to distribute:
+- **Make the parent flex or grid** — inside a flex/grid container, \`auto\` margins absorb free space on **both** axes, so \`align-items:center\` / \`place-items:center\` (or even \`margin:auto\`) now centers vertically too. This is the modern answer.
+- **Absolutely position it** — \`position:absolute; inset:0; margin:auto\` gives the box a defined slot on all four sides, so the auto margins finally have vertical space to share.
+- **Use the translate trick** — \`top:50%; left:50%; transform:translate(-50%,-50%)\` centers regardless of the box’s size.
+
+*Sources: [MDN — margin](https://developer.mozilla.org/en-US/docs/Web/CSS/margin), [MDN — Centering in CSS](https://developer.mozilla.org/en-US/docs/Web/CSS/Layout_cookbook/Center_an_element).*`,
   },
   {
     id: 'fe-flexbox-vs-grid', module: 'fe-css-layout', order: 2, kind: 'concept', template: 'static',

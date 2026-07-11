@@ -9,6 +9,16 @@ tags: [meta, log]
 
 # Log (newest on top)
 
+## 2026-07-10 — Refine `fe-center-a-div` (per owner UX feedback)
+- Moved all 4 centering approaches into ONE code block with 3 **commented out** (flexbox active; grid,
+  absolute+margin:auto, absolute+translate as uncomment-to-compare blocks) — easier to just read.
+- **Removed the `solutionCode`** (dropped the "Reveal reference solution" section as low-value) — also
+  deleted the now-unused `centerSolution` const. Tests 171 → 170 (one fewer auto-compile case).
+- Rewrote the explanation: a **pros/cons/use-case table** per approach, plus **why `margin:auto` centers
+  horizontally but not vertically in normal flow** (auto L/R margins split leftover width; auto T/B margins
+  compute to 0 — verified vs MDN margin page) and **how to center vertically** (flex/grid parent, absolute
+  inset:0+margin:auto, or translate trick). Browser-verified.
+
 ## 2026-07-10 — New `be-graphql` module (3 concept lessons, deliberately light)
 - Owner asked for GraphQL kept **light / high-level** ("not too familiar, just high-level topics"). Built 3
   concept lessons (no live editor — awareness-level): `be-gql-what` (query language vs REST; single endpoint;
