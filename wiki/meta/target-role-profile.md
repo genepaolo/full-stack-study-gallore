@@ -33,7 +33,7 @@ From the JD, in rough priority for *our* content:
 | JS/HTML/CSS proficiency | ✅ covered | [[curriculum]] frontend track |
 | **TypeScript** | ✅ **covered (new)** | `fe-typescript` — types/inference/erasure, interfaces vs type + unions, narrowing/discriminated unions, generics, utility types (verified vs official TS Handbook) |
 | React (a UI framework) | ✅ covered | fe-react, fe-ui, **fe-react-depth** (reconciliation/keys, memo/useMemo/useCallback, custom hooks, controlled forms) |
-| Node/Express, REST, Mongo, auth | ✅ covered | backend track |
+| Node/Express, REST, Mongo, auth | ✅ covered | backend track; **MongoDB deepened** — `be-data` now 6 lessons (CRUD/operators, embed-vs-reference modeling, indexes+ESR, aggregation pipeline live+tested) |
 | Algorithms & DS (coding round) | ✅ **covered** | `adv-algorithms` — 16 lessons, full NeetCode taxonomy (patterns + cheat sheet) |
 | **JS performance + browser rendering** | ✅ **covered (new)** | `fe-performance` — pixel pipeline, reflow/thrashing, virtualization, code-splitting, Core Web Vitals |
 | **AI-assisted dev + auditing output** | ✅ **covered (new)** | `adv-ai` — workflow, prompting, + auditing / security (OWASP LLM Top 10, slopsquatting) / hands-on audit drill |
@@ -70,8 +70,10 @@ Supersedes the generic P1 order in [[expansion-roadmap]] when optimizing for *th
   1. ✅ **DONE — FE system design** (`adv-sysdesign` +4): Autocomplete/Typeahead (race guard live+tested),
      News Feed/Infinite Scroll (cursor merge/dedupe live+tested), reusable component API, real-time chat UI.
      Verified vs MDN (AbortController, IntersectionObserver, WebSocket, ARIA combobox) + react.dev.
-  2. **Deepen MongoDB** (`be-data`, the thinnest area) ← **NEXT**
-  3. GraphQL · advanced front-end (Canvas/WebGL/Service Workers/WASM) · Redis/caching · unit-testing lesson · DDD.
+  2. ✅ **DONE — Deepen MongoDB** (`be-data` 2 → 6): CRUD & query operators, embed-vs-reference modeling,
+     indexes & the ESR rule, aggregation pipeline (live+tested pure-JS stages). Verified vs the MongoDB Manual.
+  3. **GraphQL** ← **NEXT** · then advanced front-end (Canvas/WebGL/Service Workers/WASM) · Redis/caching ·
+     unit-testing lesson · DDD · backend system-design building-blocks ([[system-design-plan]]).
 - **Behavioral** stays valuable (a real round) but is secondary to the technical gaps above.
 
 ## Framing guidance (apply to every new lesson)

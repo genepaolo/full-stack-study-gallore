@@ -659,3 +659,33 @@ describe('News feed merge & cursor (adv-sd-news-feed)', () => {
     expect(nextCursor([])).toBeNull()
   })
 })
+
+describe('Aggregation pipeline (be-mongo-aggregation)', () => {
+  const orders = () => [
+    { _id: 1, customerId: 'ada', status: 'paid', total: 30 },
+    { _id: 2, customerId: 'ada', status: 'paid', total: 20 },
+    { _id: 3, customerId: 'lin', status: 'paid', total: 50 },
+    { _id: 4, customerId: 'lin', status: 'refunded', total: 15 },
+    { _id: 5, customerId: 'sam', status: 'paid', total: 10 },
+  ]
+
+  it('$match keeps only paid orders', () => {
+    const { matchPaid } = extract('be-mongo-aggregation', ['matchPaid'])
+    expect(matchPaid(orders()).map((o) => o._id)).toEqual([1, 2, 3, 5]) // refund (4) dropped
+  })
+
+  it('$group sums revenue per customer', () => {
+    const { revenueByCustomer, matchPaid } = extract('be-mongo-aggregation', ['revenueByCustomer', 'matchPaid'])
+    const rows = revenueByCustomer(matchPaid(orders()))
+    const byId = Object.fromEntries(rows.map((r) => [r.customerId, r.revenue]))
+    expect(byId).toEqual({ ada: 50, lin: 50, sam: 10 }) // lin's refund excluded upstream
+  })
+
+  it('full pipeline returns the sorted top-N by revenue', () => {
+    const { topCustomers } = extract('be-mongo-aggregation', ['topCustomers'])
+    const top = topCustomers(orders(), 2)
+    expect(top).toHaveLength(2)
+    expect(top.every((r) => r.revenue === 50)).toBe(true) // ada & lin tie at 50, sam (10) excluded
+    expect(top.map((r) => r.customerId).sort()).toEqual(['ada', 'lin'])
+  })
+})

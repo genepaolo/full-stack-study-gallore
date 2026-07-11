@@ -104,6 +104,43 @@ console.log("correct password →", verify("hunter2", record)); // true
 console.log("wrong password   →", verify("guess", record));   // false
 `
 
+// ---------- be-data (aggregation pipeline) ----------
+const aggregationStarter = `// MongoDB's AGGREGATION PIPELINE runs documents through stages, each transforming the stream:
+//   $match (filter) -> $group (accumulate) -> $sort -> $limit.
+// It's just data transformation — so here it is in plain JS. Same shapes, no database needed.
+const orders = [
+  { _id: 1, customerId: "ada", status: "paid",     total: 30 },
+  { _id: 2, customerId: "ada", status: "paid",     total: 20 },
+  { _id: 3, customerId: "lin", status: "paid",     total: 50 },
+  { _id: 4, customerId: "lin", status: "refunded", total: 15 },
+  { _id: 5, customerId: "sam", status: "paid",     total: 10 },
+];
+
+// $match — keep only the docs that match (like .filter / a WHERE clause).
+function matchPaid(docs) {
+  return docs.filter((o) => o.status === "paid");
+}
+
+// $group — collapse docs sharing a key into one, accumulating a value ($sum here).
+// Returns [{ customerId, revenue }] — the _id of a $group is the key you grouped by.
+function revenueByCustomer(docs) {
+  const totals = new Map();
+  for (const o of docs) totals.set(o.customerId, (totals.get(o.customerId) || 0) + o.total);
+  return [...totals].map(([customerId, revenue]) => ({ customerId, revenue }));
+}
+
+// The whole pipeline: $match -> $group -> $sort (desc) -> $limit.
+function topCustomers(docs, n) {
+  return revenueByCustomer(matchPaid(docs))
+    .sort((a, b) => b.revenue - a.revenue) // $sort: { revenue: -1 }
+    .slice(0, n);                          // $limit: n
+}
+
+console.log("paid orders:", matchPaid(orders).length);        // 4 (the refund is dropped)
+console.log("revenue:    ", revenueByCustomer(matchPaid(orders)));
+console.log("top 2:      ", topCustomers(orders, 2));         // ada 50, lin 50 -> top 2
+`
+
 export const backendLessons = [
   // be-node
   {
@@ -200,6 +237,164 @@ await User.create({ email: 'a@b.com' })
 \`\`\`
 
 This project uses exactly this pattern — see \`server/src/models/Progress.js\`, including a **compound unique index** on \`(userId, challengeId)\`.`,
+  },
+  {
+    id: 'be-mongo-crud', module: 'be-data', order: 3, kind: 'concept',
+    title: 'CRUD & query operators', difficulty: 'medium', tags: ['mongodb', 'crud', 'queries'],
+    summary: 'Create/read/update/delete with query operators ($gt, $in, $regex), projection, and update operators ($set, $inc, $push) — plus upsert.',
+    prompt: `Every app is **CRUD** over documents. MongoDB queries are themselves **documents**: \`{ age: { $gt: 21 } }\` reads "age greater than 21". Learn the everyday **query operators** (comparison, membership, logical), **projection** (which fields to return), and the **update operators** (\`$set\`, \`$inc\`, \`$push\`) — these come up constantly and are the same whether you use the driver or Mongoose.`,
+    keyTerms: [
+      { term: 'insertOne / insertMany', def: 'Create documents. Each gets an `_id` (an ObjectId) if you don’t supply one. Mongoose: `Model.create(doc)`.' },
+      { term: 'find / findOne', def: '`find(filter)` returns a cursor of matches; `findOne` returns the first (or null). The filter is a document of field→condition.' },
+      { term: 'Comparison operators', def: '`$eq $ne $gt $gte $lt $lte` compare a field; `$in`/`$nin` test membership in an array of values: `{ status: { $in: ["paid","shipped"] } }`.' },
+      { term: 'Logical & element operators', def: '`$and`/`$or`/`$not` combine conditions; `$exists` tests a field’s presence; `$regex` matches strings. Multiple keys in one filter are ANDed implicitly.' },
+      { term: 'Projection', def: 'Choose returned fields: `find(filter, { name: 1, _id: 0 })` returns only `name`. Fetch less over the wire — the DB analogue of not over-selecting.' },
+      { term: 'Update operators', def: '`$set` replaces a field, `$inc` adds to a number, `$push`/`$pull` add/remove array items, `$addToSet` pushes only if absent. Without them a raw doc *replaces* the whole document.' },
+      { term: 'Upsert', def: '`updateOne(filter, update, { upsert: true })` updates the match or inserts it if none exists — atomic "create-or-update".' },
+    ],
+    codeNotes: [
+      { label: 'Read with operators + projection', code: `// users 21+, only name & email, newest first\ndb.users.find(\n  { age: { $gte: 21 }, status: { $in: ["active", "trial"] } },\n  { name: 1, email: 1, _id: 0 }\n).sort({ createdAt: -1 }).limit(20);`, note: "The filter and projection are both plain documents." },
+      { label: 'Update operators (not whole-doc replace)', code: `db.posts.updateOne(\n  { _id: id },\n  { $inc: { likes: 1 }, $set: { updatedAt: new Date() },\n    $addToSet: { likedBy: userId } }   // no duplicate likers\n);\n// ⚠️ { likes: 1 } WITHOUT $set replaces the ENTIRE document.`, note: "Forgetting $set and replacing the doc is a classic data-loss bug." },
+      { label: 'Upsert = create-or-update atomically', code: `db.counters.updateOne(\n  { name: "visits" },\n  { $inc: { value: 1 } },\n  { upsert: true }   // first call inserts { name, value: 1 }\n);`, note: "One atomic op instead of read-then-write (which races)." },
+    ],
+    explanation: `**Queries are documents describing a shape to match.** \`{ age: { $gt: 21 }, active: true }\`
+reads "age > 21 AND active === true" — multiple keys are **implicitly ANDed**. The operator families you'll
+use daily: **comparison** (\`$gt\`, \`$gte\`, \`$lt\`, \`$lte\`, \`$ne\`), **membership** (\`$in\`, \`$nin\`),
+**logical** (\`$or\`, \`$and\`, \`$not\`), and **element/eval** (\`$exists\`, \`$regex\`). Pair every query with a
+**projection** so you return only the fields you need — the database equivalent of not over-fetching, and it
+directly cuts payload and enables *covered queries* (indexes lesson).
+
+**Updates are where people get burned.** You almost always want an **update operator**: \`$set\` to change a
+field, \`$inc\` to bump a counter, \`$push\`/\`$pull\`/\`$addToSet\` for arrays. If you pass a bare document
+(\`{ likes: 1 }\`) instead of \`{ $set: { likes: 1 } }\`, MongoDB **replaces the whole document** — silently
+dropping every other field. **Upsert** (\`{ upsert: true }\`) folds create-and-update into one atomic
+operation, avoiding a read-then-write race.
+
+**The AI-audit angle:** generated Mongo code frequently (a) forgets \`$set\` and clobbers documents,
+(b) builds \`$regex\` filters from unsanitized input (a query-injection / ReDoS risk), and (c) omits
+projections and ships whole documents to the client including fields like \`passwordHash\`. Check all three
+when reviewing. *Source: [MongoDB Manual — Query & Projection Operators](https://www.mongodb.com/docs/manual/reference/operator/query/),
+[Update Operators](https://www.mongodb.com/docs/manual/reference/operator/update/).*`,
+  },
+  {
+    id: 'be-mongo-modeling', module: 'be-data', order: 4, kind: 'concept',
+    title: 'Data modeling: embed vs reference', difficulty: 'medium', tags: ['mongodb', 'schema-design', 'nosql'],
+    summary: 'The central NoSQL decision: nest related data in one document (embed) or store an id and look it up (reference). Driven by how you read and how data grows.',
+    prompt: `The defining MongoDB skill is **schema design**, and it turns on one question: **embed or reference?** Embedding nests related data in a single document (one read, no join); referencing stores an \`_id\` you resolve separately (like a foreign key). The right call is driven by **how you access the data** and **how it grows** — get it wrong and you hit the 16MB document limit or a storm of extra queries.`,
+    keyTerms: [
+      { term: 'Embedding', def: 'Nesting related data inside the parent document (e.g. a post’s comments as an array). One read gets everything; no join. Best when data is read together and bounded.' },
+      { term: 'Referencing', def: 'Storing another document’s `_id` and looking it up separately (Mongoose `ref` + `populate`, or `$lookup`). Best for large, shared, or unbounded data.' },
+      { term: 'One-to-few / one-to-many / many-to-many', def: 'Few (a person’s addresses) → embed. Many (a blog’s posts) → reference. Many-to-many (students↔courses) → reference ids on one or both sides.' },
+      { term: '16MB document limit', def: 'A single BSON document can’t exceed 16MB. An **unbounded** embedded array (e.g. every event for a user, forever) will eventually blow this — reference instead.' },
+      { term: 'Denormalization & duplication', def: 'Embedding/duplicating data for read speed means an update must touch every copy. Trade write complexity for read simplicity — acceptable when reads dominate.' },
+      { term: 'populate / $lookup', def: 'Resolve references at read time: Mongoose `.populate("author")` or the aggregation `$lookup` (a left outer join). Convenient, but it’s N+1 / an extra stage — don’t over-reference.' },
+    ],
+    codeNotes: [
+      { label: 'Embed one-to-few (read together, bounded)', code: `// A user with a handful of addresses — always loaded with the user.\n{\n  _id: 1, name: "Ada",\n  addresses: [                 // embedded array, small & bounded\n    { label: "home", city: "LA" },\n    { label: "work", city: "SF" },\n  ],\n}\n// One read, no join. Adding an address = $push.`, note: "Embed data you read together and that won't grow without bound." },
+      { label: 'Reference one-to-many / unbounded', code: `// A blog post can have thousands of comments (unbounded) -> reference.\n// posts:    { _id: 10, title: "...", authorId: 1 }\n// comments: { _id: 99, postId: 10, text: "...", userId: 7 }\ndb.comments.find({ postId: 10 }).limit(50); // paginate them`, note: "Unbounded or independently-queried data → its own collection." },
+      { label: 'Resolve a reference at read time', code: `// Mongoose:\nPost.findById(id).populate("author");   // fills authorId -> author doc\n// Aggregation ($lookup = left outer join):\n{ $lookup: { from: "users", localField: "authorId",\n             foreignField: "_id", as: "author" } }`, note: "Populate/$lookup are the join you gave up by referencing — use sparingly." },
+    ],
+    explanation: `**MongoDB has no schema police and no cheap joins, so *you* design for your access
+pattern** — this is the skill interviewers probe. The decision tree:
+
+- **Embed** when the related data is **read together**, **owned** by the parent, and **bounded** in size —
+  a user's few addresses, an order's line items. One document, one read, no join. Mutate with \`$push\`/\`$set\`.
+- **Reference** when the data is **large**, **shared** across parents, **queried on its own**, or
+  **unbounded** — a post's comments, a user's activity log. Store an \`_id\`; resolve with \`populate\`/\`$lookup\`
+  only when you actually need it.
+
+Two failure modes to name out loud: the **unbounded embedded array** (embedding an ever-growing list until
+the document nears the **16MB limit** and every read drags the whole thing), and **over-referencing**
+(splitting data you always read together into five collections, then firing five queries — the NoSQL version
+of N+1). The guiding rule from MongoDB's own guidance: *favor embedding unless there is a compelling reason
+not to* — usually growth, sharing, or independent access.
+
+**Tie to the rest of the stack:** this is the same **denormalization** trade-off as caching (duplicate for
+read speed, pay on write) and the same "model for your reads" instinct as designing a **cursor-paginated
+feed**. Close an interview answer by stating the access pattern first, then justifying embed-vs-reference
+from it. *Source: [MongoDB Manual — Data Modeling](https://www.mongodb.com/docs/manual/data-modeling/),
+[Embedded vs References](https://www.mongodb.com/docs/manual/data-modeling/concepts/embedding-vs-references/).*`,
+  },
+  {
+    id: 'be-mongo-indexes', module: 'be-data', order: 5, kind: 'concept',
+    title: 'Indexes & the ESR rule', difficulty: 'hard', tags: ['mongodb', 'indexes', 'performance'],
+    summary: 'Without an index, MongoDB scans every document. Compound-index field order follows ESR (Equality, Sort, Range); explain() proves it.',
+    prompt: `An **index** is the single biggest lever on database performance — the same Big-O idea from the algorithms track, applied to data. Without one, a query is an **O(n) collection scan**; with the right one it's an **O(log n)** B-tree lookup. The hard part is **compound indexes**: field order matters, and the rule that gets it right is **ESR — Equality, Sort, Range**.`,
+    keyTerms: [
+      { term: 'Collection scan (COLLSCAN)', def: 'No usable index → MongoDB reads every document to answer the query. O(n) and it gets slower as data grows. The thing indexes prevent.' },
+      { term: 'Index (B-tree)', def: 'A sorted structure mapping field values → document locations, giving O(log n) lookups and free ordering. `_id` is always indexed; you add others.' },
+      { term: 'Compound index', def: 'An index on multiple fields, e.g. `{ status: 1, createdAt: -1 }`. Order matters: it supports queries on a **left-to-right prefix** of its fields.' },
+      { term: 'ESR rule', def: 'Order compound-index fields as **Equality** first (fields matched by `$eq`/`$in`), then **Sort** fields, then **Range** fields (`$gt`/`$lt`). Follows how the B-tree is traversed.' },
+      { term: 'Covered query', def: 'A query answered entirely from the index — the projection asks only for indexed fields, so MongoDB never touches the documents. The fastest kind of read.' },
+      { term: 'explain()', def: '`explain("executionStats")` shows the plan: look for **IXSCAN** (good) vs **COLLSCAN** (bad), `totalDocsExamined` vs `nReturned`, and whether a sort was done in memory.' },
+      { term: 'Index cost', def: 'Indexes speed reads but slow writes (each insert/update maintains them), use disk, and want to fit in RAM. Index the fields you query/sort on — not every field.' },
+    ],
+    codeNotes: [
+      { label: 'The ESR rule for compound-index order', code: `// Query: status equals, sort by date, price in a range\ndb.orders.find({ status: "paid", price: { $gte: 20 } })\n         .sort({ createdAt: -1 });\n// Index fields in ESR order:\ndb.orders.createIndex({ status: 1, createdAt: -1, price: 1 });\n//                       ^Equality   ^Sort        ^Range`, note: "Equality → Sort → Range. Wrong order = an in-memory sort or a scan." },
+      { label: 'Prefix rule: one index serves many queries', code: `// createIndex({ a: 1, b: 1, c: 1 }) supports queries on:\n//   {a}, {a,b}, {a,b,c}  (left-to-right prefixes)\n// but NOT {b} or {c} alone — the leading field must be used.`, note: "Design the compound index around your most important query's prefix." },
+      { label: 'Prove it with explain()', code: `db.orders.find({ status: "paid" }).explain("executionStats");\n// win: stage "IXSCAN", totalDocsExamined ≈ nReturned\n// lose: stage "COLLSCAN", totalDocsExamined = whole collection`, note: "Never guess — explain() tells you if the index is actually used." },
+    ],
+    explanation: `**Indexes are where "it works on my laptop" meets "it times out in production."** Without an
+index, MongoDB does a **COLLSCAN** — reads every document — which is fine at 100 docs and fatal at 10 million.
+An index is a **B-tree**: sorted, so lookups are **O(log n)** and results can come back already ordered.
+
+**Single-field indexes are easy; compound indexes are the interview topic.** A compound index
+\`{ status: 1, createdAt: -1 }\` only helps queries that use a **left-to-right prefix** of its fields (\`status\`,
+or \`status\`+\`createdAt\` — never \`createdAt\` alone). To order the fields correctly, use **ESR**:
+
+1. **E — Equality** fields first (matched exactly, \`$eq\`/\`$in\`) — they narrow the tree to a tight range.
+2. **S — Sort** fields next — so results come out of the index already ordered (no expensive in-memory sort).
+3. **R — Range** fields last (\`$gt\`/\`$lt\`/\`$gte\`) — a range scans a span, so it must come after the parts
+   that pin down where to start.
+
+Get ESR wrong and MongoDB either can't use the index for the sort (an **in-memory sort**, capped at 100MB) or
+falls back toward a scan. A **covered query** — projection touches only indexed fields — is the fastest read
+of all, because the documents are never fetched. And always **verify with \`explain("executionStats")\`**:
+\`IXSCAN\` with \`totalDocsExamined ≈ nReturned\` is the win; \`COLLSCAN\` or examining far more docs than you
+return is the tell. **The trade-off (say it):** indexes cost write speed, disk, and RAM — index the fields you
+filter and sort on, not everything. This is the exact Big-O-in-the-hot-path thinking from the performance
+module, at the data layer. *Source: [MongoDB Manual — Indexes](https://www.mongodb.com/docs/manual/indexes/),
+[The ESR Rule](https://www.mongodb.com/docs/manual/tutorial/equality-sort-range-rule/).*`,
+  },
+  {
+    id: 'be-mongo-aggregation', module: 'be-data', order: 6, kind: 'utility', template: 'vanilla',
+    title: 'The aggregation pipeline', difficulty: 'hard', tags: ['mongodb', 'aggregation', 'queries'],
+    summary: 'Analytics in the database: stages ($match → $group → $sort → $limit) transform a document stream. The editor implements the pipeline as pure JS.',
+    prompt: `When you need **grouping, totals, and analytics** — "revenue per customer", "top posts this week" — you reach for the **aggregation pipeline**: an ordered list of **stages**, each transforming the stream of documents and passing it to the next. The live editor implements the core stages (\`$match\`, \`$group\`, \`$sort\`, \`$limit\`) as **pure JavaScript**, so you can see exactly what each one does.`,
+    keyTerms: [
+      { term: 'Pipeline & stages', def: 'An array of stages run in order; each takes the previous stage’s output. Order matters — `$match` early shrinks the stream (and can use indexes).' },
+      { term: '$match', def: 'Filters documents (same syntax as `find`). Put it first so later stages process fewer docs and it can use an index.' },
+      { term: '$group', def: 'Collapses docs sharing a key into one. `_id` is the group key; accumulators build values: `$sum`, `$avg`, `$min`, `$max`, `$push`, `$addToSet`.' },
+      { term: '$sort / $limit / $skip', def: 'Order, cap, and page the results — same as their query counterparts, but as pipeline stages (great for "top N").' },
+      { term: '$project', def: 'Reshape each document: include/exclude fields, rename, or compute new ones. Like a projection but more powerful.' },
+      { term: '$lookup', def: 'A left outer join to another collection — the aggregation way to resolve a reference (the join you gave up by referencing).' },
+    ],
+    codeNotes: [
+      { label: 'A real pipeline (revenue per customer, top 2)', code: `db.orders.aggregate([\n  { $match: { status: "paid" } },                       // filter first\n  { $group: { _id: "$customerId",\n              revenue: { $sum: "$total" } } },          // accumulate\n  { $sort:  { revenue: -1 } },                          // order\n  { $limit: 2 },                                        // top N\n]);`, note: "This is exactly what the editor implements in plain JS." },
+      { label: '$group accumulators', code: `{ $group: {\n  _id: "$category",              // group key (the _id of the group)\n  count:   { $sum: 1 },          // count docs\n  revenue: { $sum: "$total" },   // sum a field\n  avg:     { $avg: "$total" },\n  items:   { $push: "$name" },   // collect into an array\n} }`, note: "_id is the key you group by; accumulators fold each group." },
+      { label: '$match early = index-friendly & cheap', code: `// ✅ filter, THEN group a small stream\n[{ $match: { createdAt: { $gte: since } } }, { $group: … }]\n// ❌ group everything, then filter — scans the whole collection\n[{ $group: … }, { $match: … }]`, note: "Stage order is a performance decision: shrink the stream early." },
+    ],
+    starterCode: { '/index.js': aggregationStarter },
+    explanation: `**The aggregation pipeline is MongoDB's answer to SQL \`GROUP BY\` / analytics** — and it's
+just **data transformation**, which is why the editor can implement it in plain JS with \`filter\`, a \`Map\`,
+and \`sort\`. Documents flow through **stages** in order; each reshapes the stream:
+
+- **\`$match\`** — filter (put it **first** so everything downstream is cheaper, and so it can use an index).
+- **\`$group\`** — the heart of it: collapse documents that share a key (\`_id: "$customerId"\`) into one,
+  building values with **accumulators** (\`$sum\`, \`$avg\`, \`$min\`, \`$max\`, \`$push\`). The editor's
+  \`revenueByCustomer\` is exactly a \`$group\` with \`$sum\`.
+- **\`$sort\` / \`$limit\`** — order and cap, the classic "top N" tail.
+- **\`$project\`** reshapes each document; **\`$lookup\`** joins another collection (the read-time resolution
+  of a reference from the modeling lesson).
+
+**Two things interviewers listen for:** (1) **stage order is a performance decision** — \`$match\` and
+\`$limit\` early shrink the stream and let indexes help; grouping the whole collection and filtering afterward
+scans everything (the same *filter-before-you-work* instinct as \`$match\` vs a late filter, or map/filter
+ordering on the front end). (2) It runs **in the database**, next to the data, instead of pulling every
+document into Node and reducing there — far less data over the wire. Run the editor: watch \`$match\` drop the
+refund, \`$group\` sum per customer, and \`$sort\`+\`$limit\` produce the top 2. *Source:
+[MongoDB Manual — Aggregation Pipeline](https://www.mongodb.com/docs/manual/core/aggregation-pipeline/),
+[\\$group](https://www.mongodb.com/docs/manual/reference/operator/aggregation/group/).*`,
   },
 
   // be-auth

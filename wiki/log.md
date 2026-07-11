@@ -9,6 +9,21 @@ tags: [meta, log]
 
 # Log (newest on top)
 
+## 2026-07-10 — Deepen MongoDB: `be-data` +4 lessons · run-skill added · pushed to origin
+- `be-data` 2 → 6 lessons (the ⚠️-partial area): `be-mongo-crud` (concept: operators $gt/$in/$regex,
+  projection, $set/$inc/$push, upsert; the whole-doc-replace footgun), `be-mongo-modeling` (concept:
+  embed vs reference, one-to-few/many, 16MB limit, populate/$lookup), `be-mongo-indexes` (concept:
+  COLLSCAN vs IXSCAN, compound-index prefix rule, **ESR** = Equality→Sort→Range, covered queries,
+  explain()), `be-mongo-aggregation` (utility/vanilla, live+**tested**: $match→$group→$sort→$limit
+  implemented as pure JS — matchPaid/revenueByCustomer/topCustomers). Verified vs the MongoDB Manual.
+- **Tooling**: added `.claude/skills/run/` (SKILL.md + drive.py) — the repo's in-browser verification path
+  (Vite :5173 + **Python Playwright** + local Chromium; no DevTools MCP needed). drive.py takes
+  `path:expected-substring` args, screenshots, asserts text, ignores Sandpack's offline CDN timeouts.
+  Browser-verified all new modules this way (fe-paradigms, fe-react-depth, adv-sysdesign, be-data).
+- **Pushed** all commits to origin/main (`6673186..22b303d`): fe-paradigms `621df0f`, fe-react-depth
+  `55f5750`, fe-system-design `8d9055d`, run-skill `22b303d`. Tests **163 → 167** (+3 taught-logic,
+  +1 auto-compile), build clean, live editor executes correctly in-browser. Next: **GraphQL**.
+
 ## 2026-07-10 — FE system design batch: `adv-sysdesign` +4 lessons (first P2)
 - First P2 item after all P1 closed. Front-end exercises from [[system-design-plan]] (highest signal for the
   FE-leaning target). `adv-sysdesign` 2 → 6 lessons: `adv-sd-typeahead` (utility/vanilla, live+**tested**:
