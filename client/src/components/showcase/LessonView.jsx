@@ -8,6 +8,8 @@ import Collapsible from './Collapsible.jsx'
 import Markdown from './Markdown.jsx'
 import KeyTerms from './KeyTerms.jsx'
 import CodeNotes from './CodeNotes.jsx'
+import DesignWalkthrough from './DesignWalkthrough.jsx'
+import WorkflowDiagram from './WorkflowDiagram.jsx'
 import ErrorBoundary from './ErrorBoundary.jsx'
 
 // One path every lesson flows through, adapting to its `kind`. Interactive areas are wrapped in an
@@ -60,6 +62,20 @@ export default function LessonView({ lesson }) {
 
       {/* Code to reach for — concrete idioms/lines this lesson leans on */}
       <CodeNotes notes={lesson.codeNotes} />
+
+      {/* Staged, think-first walkthrough — the reader reasons each step before revealing an answer */}
+      {lesson.steps?.length > 0 && (
+        <ErrorBoundary>
+          <DesignWalkthrough steps={lesson.steps} />
+        </ErrorBoundary>
+      )}
+
+      {/* Optional architecture/workflow diagram (e.g. the AWS translation of a design) */}
+      {lesson.workflow && (
+        <ErrorBoundary>
+          <WorkflowDiagram workflow={lesson.workflow} />
+        </ErrorBoundary>
+      )}
 
       {/* Interactive area — isolated */}
       {lesson.kind === 'quiz' ? (

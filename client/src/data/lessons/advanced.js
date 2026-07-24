@@ -1037,9 +1037,37 @@ generalizes to TypeScript — you just add types to the inputs and outputs (see 
       { term: 'Data model & API', def: 'What the client stores, what it fetches, pagination shape (cursor vs offset).' },
       { term: 'Rendering strategy', def: 'CSR vs SSR vs SSG; virtualization for long lists; when to lazy-load.' },
     ],
+    steps: [
+      {
+        phase: 'R — Requirements',
+        question: `You're told "design a news feed." **Before any UI, what do you clarify?** Split it into functional and non-functional.`,
+        hint: 'Non-functional is where FE points hide: perf, a11y, i18n, offline, device.',
+        answer: `**Functional:** what the feature does — infinite feed, like/comment, media, real-time updates? **Non-functional:** performance budget (60fps, payload), **accessibility** (keyboard, screen readers), **i18n/RTL**, **offline/slow-network**, target **devices** (mobile-first?). State a scope out loud so you're designing to explicit targets, not guessing.`,
+      },
+      {
+        phase: 'A — Architecture',
+        question: `**How do you decompose the UI, and where does state live?** Sketch the component tree and the data flow.`,
+        answer: `Break the screen into a **component tree** (Feed → PostList → Post → actions), then decide **ownership**: local UI state in the leaf, shared/server state lifted or in a store/query cache. Separate **server state** (fetched, cached, revalidated) from **client state** (open menus, form input). Draw the one-way data flow and where events bubble up.`,
+      },
+      {
+        phase: 'D — Data model & API',
+        question: `**What does the client store and fetch?** Pick the pagination shape and justify it.`,
+        answer: `Define the client-side shape (often a **normalized** store keyed by id to dedupe) and the fetch contract. Choose **cursor pagination** (\`?after=id\`) over offset for a feed because new items shift offsets and cause dupes/skips. Note payload shape, image sizes, and what's prefetched.`,
+      },
+      {
+        phase: 'I — Interface',
+        question: `**What's the component/API surface** other engineers use — props, events, slots?`,
+        answer: `Keep the public surface small and predictable: **props for behavior**, **composition/slots for content**, clear **events** (\`onLoadMore\`, \`onLike\`), and sensible defaults. This is the reusable-component-API lesson applied — the interface is the contract.`,
+      },
+      {
+        phase: 'O — Optimizations & edge cases',
+        question: `**What performance work and edge cases** do you close with? Name as many as you can.`,
+        answer: `**Perf:** list **virtualization** (small DOM), **code-splitting**/lazy-load, image lazy-loading, memoization to cut re-renders. **Edge cases & states:** loading **skeletons**, **empty**, **error + retry**, slow network, and a11y (focus order, ARIA live regions for new items). Always end on trade-offs and failure modes — that's what "drive the conversation" means.`,
+      },
+    ],
     explanation: `**RADIO-style flow:** **R**equirements → **A**rchitecture (component tree + data flow) → **D**ata model → **I**nterface/API → **O**ptimizations & edge cases.
 
-For a **news feed**: infinite scroll with **cursor pagination**, **list virtualization** so the DOM stays small, **optimistic** likes, image lazy-loading, skeleton loading states, and a11y (keyboard, ARIA live regions). Always close with trade-offs and failure modes (empty, error, slow network). Talk **out loud** and drive the conversation.`,
+For a **news feed**: infinite scroll with **cursor pagination**, **list virtualization** so the DOM stays small, **optimistic** likes, image lazy-loading, skeleton loading states, and a11y (keyboard, ARIA live regions). Always close with trade-offs and failure modes (empty, error, slow network). Talk **out loud** and drive the conversation. *The backend twin of this flow — assumptions → estimate → API → core → storage → scale → edge → platform — is worked end-to-end in the [URL shortener walkthrough](/lesson/adv-sd-url-shortener).*`,
   },
   {
     id: 'adv-sysdesign-scale', module: 'adv-sysdesign', order: 2, kind: 'concept',
@@ -1052,6 +1080,35 @@ For a **news feed**: infinite scroll with **cursor pagination**, **list virtuali
       { term: 'Cache (Redis)', def: 'In-memory store for hot data/sessions to cut DB load and latency.' },
       { term: 'Message queue', def: 'Buffer (e.g. RabbitMQ/SQS) that offloads slow tasks (email, image processing) to workers.' },
       { term: 'Replication & sharding', def: 'Copies for read scale/failover (replication); splitting data across nodes for write scale (sharding).' },
+    ],
+    steps: [
+      {
+        phase: 'Step 1 — Measure before you scale',
+        question: `One server + DB is melting under load. **What's your first move** — and what do you refuse to do yet?`,
+        hint: 'Don\'t add boxes blindly. What\'s actually the bottleneck?',
+        answer: `**Measure first** — is it CPU, memory, DB, or network? Cheapest early win is a **cache for hot reads** (most workloads are read-heavy), plus obvious query/index fixes. **Vertical scaling** (a bigger box) buys time with zero architecture change — do it before distributed complexity. Only then reach for more machines.`,
+      },
+      {
+        phase: 'Step 2 — Go horizontal behind a load balancer',
+        question: `Traffic keeps growing past one box. **How do you add more servers** — and what has to be true first?`,
+        answer: `Put **N app instances behind a load balancer** and autoscale. The prerequisite is **statelessness** — move session/state out of the app process (into a cache/DB/token) so any instance can serve any request. This also enables **zero-downtime deploys** and per-instance failure tolerance.`,
+      },
+      {
+        phase: 'Step 3 — Offload slow work to a queue',
+        question: `Some requests do slow work (email, image processing, exports) and block. **How do you keep the request path fast?**`,
+        answer: `Push slow tasks onto a **message queue** (SQS/RabbitMQ) and process them with **background workers**. The request returns immediately; work happens async. This decouples spikes (the queue absorbs bursts) and lets you scale workers independently of the web tier.`,
+      },
+      {
+        phase: 'Step 4 — Scale the database',
+        question: `The DB is now the bottleneck. **What do you do — and in what order?**`,
+        hint: 'Reads and writes scale differently.',
+        answer: `Reads first: add **read replicas** and send reads there (accepting **replication lag**). When **writes** dominate or data outgrows one node, **shard** (partition by a key). Choose the shard key carefully to avoid **hot shards**; consistent hashing eases rebalancing. Sharding is last because it adds the most complexity (cross-shard queries, rebalancing).`,
+      },
+      {
+        phase: 'Step 5 — Name the new failure modes',
+        question: `Every step above bought scale at a cost. **What new failure modes did you introduce?**`,
+        answer: `**Cache:** staleness + **invalidation** ("one of the two hard problems"). **Load balancer:** it's a new SPOF (run it HA) and needs health checks. **Queue:** at-least-once delivery → make consumers **idempotent**; watch backlog. **Replicas:** **replication lag** → read-your-writes issues. **Shards:** **hot shards**, cross-shard joins, rebalancing. Naming these unprompted is the senior signal. *See the [URL shortener walkthrough](/lesson/adv-sd-url-shortener) for this progression applied to one concrete system.*`,
+      },
     ],
     explanation: `A typical progression: **1)** one server + DB → **2)** add a **cache** for hot reads → **3)** go **stateless** and put N servers behind a **load balancer** → **4)** move slow work to a **queue + workers** → **5)** add **read replicas**, then **shard** when writes dominate. Every step trades simplicity for scale — interviewers want you to justify *why* and name the new failure modes (cache invalidation, replication lag, hot shards).`,
   },
@@ -1074,6 +1131,34 @@ For a **news feed**: infinite scroll with **cursor pagination**, **list virtuali
       { label: 'Accessible combobox wiring', code: `<input role="combobox" aria-expanded={open} aria-controls="lb"\n  aria-activedescendant={"opt-" + active} />\n<ul id="lb" role="listbox">\n  <li id={"opt-" + i} role="option" aria-selected={i === active}>…</li>\n</ul>`, note: "Roles + aria-activedescendant let screen readers follow ↑/↓ selection." },
     ],
     starterCode: { '/index.js': raceGuardStarter },
+    steps: [
+      {
+        phase: 'Step 1 — Clarify requirements',
+        question: `Before coding the box, **what do you ask?** Think about data source, result count, latency, and accessibility.`,
+        answer: `Is it **remote** search (network) or local? How many results, and are they ranked? What **latency** is acceptable? **a11y** and **mobile/touch** expectations? Do we show recent/popular on empty focus? Scope it: "debounced remote search, ~8 ranked results, fully keyboard-accessible."`,
+      },
+      {
+        phase: 'Step 2 — Don\'t fetch per keystroke',
+        question: `A user types \`react\` fast. Naively you'd fire 5 requests. **What's the fix, and what else guards load?**`,
+        hint: 'Collapse a burst into one call.',
+        answer: `**Debounce** the input (~300ms) so you fetch on a *pause*, not per keystroke, and set a **min length** (don't query on 1 char or whitespace). Together they cut request volume dramatically. This is the JS-core debounce utility in a real setting.`,
+      },
+      {
+        phase: 'Step 3 — The race (the bug most people miss)',
+        question: `Requests for \`re\`, \`rea\`, \`reac\` can resolve **out of order**. If \`re\` lands last it overwrites newer results. **How do you prevent stale data winning?** (This is what the live editor implements.)`,
+        answer: `Tag each request with a sequence id and **drop any response that isn't the latest** (a race guard), and/or use **\`AbortController\`** to cancel the in-flight request when a newer query starts. Debounce alone doesn't fix this — two requests can still overlap. Run the editor to watch the stale \`re\` response get dropped.`,
+      },
+      {
+        phase: 'Step 4 — Cache & accessibility',
+        question: `Two more things separate a strong answer: **avoiding refetches** and **keyboard use**. How do you handle each?`,
+        answer: `**Cache** results by query in a bounded **LRU** so re-typing a prior query is instant and network-free. **a11y:** a \`combobox\`/\`listbox\` with **↑/↓/Enter/Esc**, \`aria-activedescendant\` on the active option so screen readers announce it. On FE-leaning teams this is table stakes, not bonus.`,
+      },
+      {
+        phase: 'Step 5 — Edge cases',
+        question: `**What states and edges** do you close with?`,
+        answer: `Empty state (recent/popular), **no results**, **network error + retry**, very long result lists (**virtualize**), slow network, and mobile/touch behavior. Naming the failure modes is the point.`,
+      },
+    ],
     explanation: `**Framework, then the real signal.** Open with **RADIO** — Requirements (debounced remote
 search? how many results? a11y? mobile?), Architecture (a controlled input + a results \`listbox\` + a data
 layer), Data/API (\`GET /search?q=\` returning ranked items, cursor if paginated), Interface, Optimizations.
@@ -1114,6 +1199,34 @@ performance module), and mobile. Run the editor to see the race guard drop the s
       { label: 'Optimistic like (immutable update)', code: `setPosts((posts) => posts.map((p) =>\n  p.id === id ? { ...p, liked: true, likes: p.likes + 1 } : p));\n// then POST; on failure, revert with the same map pattern.`, note: "Instant UI; reconcile/rollback on the server response." },
     ],
     starterCode: { '/index.js': feedStarter },
+    steps: [
+      {
+        phase: 'Step 1 — Pagination: cursor, not offset',
+        question: `You'll page a feed that's constantly gaining new posts at the top. **Why is \`?page=2\` (offset) the wrong choice, and what replaces it?**`,
+        answer: `With **offset**, a post added at the top shifts everything down, so page 2 **repeats** an item from page 1 (or skips one). A **cursor** ("items after id X") is stable under insertion. \`nextCursor\` derives the next request from the last item you hold. Run the editor to watch it advance.`,
+      },
+      {
+        phase: 'Step 2 — Dedupe on merge',
+        question: `Even with cursors, refresh/overlap can hand you an item you already have. **How do you merge pages without duplicate rows?** (The editor implements this.)`,
+        hint: 'What breaks in React if two items share an id?',
+        answer: `\`mergeFeed\` filters each new page against a **\`Set\` of seen ids**, **immutably**, order preserved. Skip this and you get **duplicate React keys**, flickering rows, and wrong counts — the hidden correctness bug in most naive infinite-scroll code.`,
+      },
+      {
+        phase: 'Step 3 — Keep the DOM small',
+        question: `The feed grows to thousands of items. **What keeps scrolling at 60fps?**`,
+        answer: `**List virtualization** (windowing) — render only the ~visible rows so the node count stays tiny regardless of feed length. Tie it back to the 16ms frame budget from the performance module.`,
+      },
+      {
+        phase: 'Step 4 — Feel instant + trigger fetches right',
+        question: `Two UX pieces: making a **like** feel instant, and **triggering** the next page. How do you do each?`,
+        answer: `**Optimistic update:** apply the like to local **immutable** state immediately, then reconcile with the server and **roll back** on failure. **Trigger:** an **\`IntersectionObserver\`** on a sentinel near the list end (with \`rootMargin\` to prefetch early) — not a scroll handler, which fires constantly and janks.`,
+      },
+      {
+        phase: 'Step 5 — States & edge cases',
+        question: `**What states** must you handle, and what happens **when a new post arrives while you're scrolled down?**`,
+        answer: `Loading **skeletons**, **empty**, **error + retry**, pull-to-refresh. For a new post mid-scroll: don't jump the viewport — show a "new posts" pill and prepend on tap. Interviewers check all three states, not just the happy path.`,
+      },
+    ],
     explanation: `**RADIO for a feed, with the parts that actually earn points:**
 
 - **Pagination — cursor, not offset.** With offset (\`?page=2\`), a post added at the top shifts everything
@@ -1153,6 +1266,28 @@ drop the overlapping id and \`nextCursor\` advance. *Sources:
       { label: 'Composition over a prop explosion', code: `// ❌ every option becomes a prop — never enough\n<Modal title="…" body="…" footer="…" icon="…" />\n// ✅ open-ended via children/slots\n<Modal>\n  <Modal.Header>…</Modal.Header>\n  <Modal.Body>…</Modal.Body>\n  <Modal.Footer>…</Modal.Footer>\n</Modal>`, note: "Compound components + slots scale to cases you didn't foresee." },
       { label: 'Support controlled AND uncontrolled', code: `function Select({ value, defaultValue, onChange }) {\n  const isControlled = value !== undefined;\n  const [inner, setInner] = useState(defaultValue);\n  const current = isControlled ? value : inner;\n  const set = (v) => { if (!isControlled) setInner(v); onChange?.(v); };\n}`, note: "Mirror native inputs: value = controlled, defaultValue = uncontrolled." },
       { label: 'Forward ref + spread rest (escape hatches)', code: `const Button = forwardRef(function Button({ variant = "primary", ...rest }, ref) {\n  return <button ref={ref} className={styles[variant]} {...rest} />;\n});`, note: "ref forwarding + {...rest} let consumers extend without forking." },
+    ],
+    steps: [
+      {
+        phase: 'Step 1 — Props vs composition',
+        question: `You're designing \`<Modal>\`. The naive path is a prop for every option (\`title\`, \`footer\`, \`icon\`…). **Why does that fail, and what's the alternative?**`,
+        answer: `A prop per feature **balloons** and still can't express every layout. Use **composition** — accept \`children\`/named slots, or go **compound** (\`<Modal.Header/>\`, \`<Modal.Body/>\` sharing state via context). Rule of thumb: **props for behavior, composition for content.**`,
+      },
+      {
+        phase: 'Step 2 — Controlled vs uncontrolled',
+        question: `Some callers want to own the open/value state; some don't. **How do you support both** without two components?`,
+        answer: `Mirror native inputs: **\`value\` + \`onChange\`** for controlled callers, **\`defaultValue\`** for uncontrolled. Internally, \`isControlled = value !== undefined\` picks the source of truth. One component, both modes — exactly the forms lesson as library design.`,
+      },
+      {
+        phase: 'Step 3 — Defaults & accessibility',
+        question: `**What should the zero-config case do, and what a11y is non-negotiable** for a dialog?`,
+        answer: `**Sensible defaults (Open/Closed):** it works with minimal props; advanced needs are opt-in — you extend without editing the component. **a11y as contract:** a \`<Modal>\` ships a **focus trap**, **\`Esc\`** to close, \`aria-modal\`, and focus restore on close. Bake it in so every consumer inherits it — retrofitting per-consumer never happens.`,
+      },
+      {
+        phase: 'Step 4 — Escape hatches',
+        question: `A team needs to extend your component in a way you didn't foresee. **How do you let them without forking it?**`,
+        answer: `Forward **\`ref\`**, spread **\`...rest\`** onto the root element, and allow **\`className\`/\`style\`** passthrough. These escape hatches let consumers attach handlers, styles, and refs — the difference between a component teams adopt and one they copy-paste and diverge from.`,
+      },
     ],
     explanation: `**When you design a component API, the API is the interface everyone lives with — treat it
 like designing a public function.** The trade-offs to talk through:
@@ -1197,6 +1332,33 @@ passthrough — and document the two or three props that matter." *Sources:
       { label: 'Reconnect with exponential backoff + jitter', code: `let delay = 1000;\nfunction connect() {\n  const ws = new WebSocket(url);\n  ws.onclose = () => {\n    setTimeout(connect, delay + Math.random() * 300); // jitter\n    delay = Math.min(delay * 2, 30000);               // cap at 30s\n  };\n  ws.onopen = () => { delay = 1000; fetchSince(lastId); }; // gap-fill\n}`, note: "Backoff avoids hammering; on reopen, fetch what you missed." },
       { label: 'Order by server sequence, not arrival', code: `setMsgs((m) => [...m, incoming].sort((a, b) => a.seq - b.seq));\n// a late message inserts into its correct slot, not at the end.`, note: "Arrival order ≠ true order across reconnects and multiple senders." },
     ],
+    steps: [
+      {
+        phase: 'Step 1 — Pick the transport',
+        question: `First decision for a chat UI: **WebSocket, SSE, or polling?** Pick one and justify it.`,
+        answer: `Chat is **bidirectional** (send + receive), so **WebSocket** (full-duplex, low latency) is the default. **SSE** fits one-way live feeds (notifications, live comments) — simpler, auto-reconnecting. **Polling** is the compatibility fallback. State the pick *and why* — the direction of data flow drives it.`,
+      },
+      {
+        phase: 'Step 2 — Optimistic send',
+        question: `The message must appear instantly, before the server confirms. **How do you render it and later reconcile?**`,
+        answer: `Show the bubble immediately with a **temporary client id** and a "sending" state. When the server **acks** with the real id, swap it in and mark "sent"; on timeout, mark **"failed"** with a retry affordance. The UI never waits on the round-trip.`,
+      },
+      {
+        phase: 'Step 3 — Dedupe the echo',
+        question: `The server broadcasts your message to everyone **including you**. **How do you avoid rendering your own message twice?**`,
+        answer: `Match the echoed message to your optimistic bubble by **client id** and reconcile in place rather than appending. Same duplicate-key hazard as the news-feed merge — key by a stable id and dedupe.`,
+      },
+      {
+        phase: 'Step 4 — Ordering',
+        question: `Messages arrive out of order across senders and reconnects. **How do you display them in the right order?**`,
+        answer: `Sort by a **server sequence/timestamp**, not arrival time, and **insert late arrivals in place** rather than at the end. Arrival order ≠ true order once you have multiple senders and reconnects.`,
+      },
+      {
+        phase: 'Step 5 — Reconnection & volume',
+        question: `Disconnects are normal, and a busy room is a firehose. **How do you reconnect cleanly and keep the UI smooth?**`,
+        answer: `Reconnect with **exponential backoff + jitter**; on reopen, **gap-fill** (fetch everything since your last known id) so the timeline has no holes. For volume, **batch/coalesce** incoming events per frame and **virtualize** the list so React and the DOM keep up. Close with presence/typing, read receipts, and stick-to-bottom-unless-scrolled-up.`,
+      },
+    ],
     explanation: `**Start with the transport trade-off.** Chat is bidirectional, so **WebSocket** is the default
 (full-duplex, low latency). **SSE** is a fine choice for one-way live feeds (notifications, live comments) —
 simpler and auto-reconnecting. **Polling** is the compatibility fallback. State your pick and why.
@@ -1220,6 +1382,185 @@ Close with presence/typing indicators, read receipts, offline queueing, and scro
 unless the user scrolled up). *Sources:
 [MDN — WebSocket API](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API),
 [MDN — Server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events).*`,
+  },
+
+  {
+    id: 'adv-sd-url-shortener', module: 'adv-sysdesign', order: 7, kind: 'concept',
+    title: 'Design: a URL shortener (walkthrough)',
+    difficulty: 'hard', tags: ['system-design', 'backend', 'aws', 'walkthrough'],
+    summary: 'The canonical backend warm-up (TinyURL / bit.ly), structured like the Grokking/DesignGurus writeup. A step-by-step interview walkthrough — try each step, then reveal a strong answer — and a final step that translates the whole design into a concrete AWS workflow.',
+    prompt: `**"Design a URL shortener like bit.ly."** Across ranked lists of FAANG system-design questions this is consistently the **#1 easiest / warm-up** prompt — so it's the perfect place to *learn the method*, not just an answer. It looks trivial (a two-column table!) yet the follow-ups probe everything: back-of-the-envelope sizing, API design, a genuinely interesting ID-generation problem, storage choice, and read-scaling.
+
+**The goal here is the thought process, not the trivia.** The steps below mirror how a strong candidate **drives the conversation** — clarify → estimate → design outward from the core → scale → edge cases. That same spine is what you reuse on the *medium* (news feed, chat) and *hard* (Google Docs) questions; only the core mechanism changes. See "the difficulty ladder" in the deep dive below.
+
+**Don't scroll straight to the answers.** For each step, take a minute to reason it out loud (as you would in the room), jot your answer, *then* reveal one and compare. The reveal is for calibration, not for reading.`,
+    keyTerms: [
+      { term: 'Functional vs non-functional requirements', def: 'Functional = what it does (shorten, redirect, custom alias). Non-functional = qualities: read-heavy, low-latency redirects, high availability, unguessable codes. Interviewers expect you to name both before designing.' },
+      { term: 'Back-of-the-envelope estimation', def: 'Rough math on traffic and storage (writes/sec, reads/sec, GB/year) so your design targets the real scale. Approximations are fine — showing the method is the point.' },
+      { term: 'Read-heavy workload', def: 'Far more redirects (reads) than creations (writes) — often ~100:1. It steers you toward caching and read replicas, and tells you the redirect is the hot path to optimize.' },
+      { term: 'Base62 encoding', def: 'Encode a number in [0-9a-zA-Z] (62 symbols). 62^7 ≈ 3.5 trillion codes fit in 7 chars — the standard way to turn a numeric id into a short, URL-safe string.' },
+      { term: 'Collision', def: 'Two different long URLs mapping to the same short code. Random/hash schemes must detect and retry on collisions; a monotonic counter avoids them by construction.' },
+      { term: '301 vs 302 redirect', def: '301 = permanent (browsers/proxies cache it, so you stop seeing the request — bad for analytics). 302 = temporary (every hit comes back to you). Most shorteners use 302 to keep control and count clicks.' },
+      { term: 'Key Generation Service (KGS)', def: 'A service that pre-generates unique short keys offline into a "keys" DB (unused vs used). App servers grab a batch into memory and hand them out, marking each used atomically. Eliminates collisions entirely; run a standby replica since it is a single point of failure.' },
+      { term: 'Consistent hashing', def: 'A sharding scheme that maps keys and nodes onto a ring so adding/removing a shard only remaps a small slice of keys — not the whole dataset. Avoids the mass-reshuffle a plain `hash % N` causes when N changes.' },
+    ],
+    codeNotes: [
+      { label: 'Base62-encode a counter into a short code', code: `const A = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';\nfunction encode(n) {              // n = a globally-unique id from a counter/ticket server\n  let s = '';\n  do { s = A[n % 62] + s; n = Math.floor(n / 62); } while (n > 0);\n  return s;                       // 125 -> "21", 1_000_000 -> "4c92"\n}`, note: 'Counter → base62 gives a unique code with no collision check. Encrypt/shuffle the counter first if you don\'t want codes to be enumerable.' },
+      { label: 'The two endpoints', code: `// create\nPOST /api/urls   { "longUrl": "https://...", "alias": "optional" }\n            -> 201 { "shortUrl": "https://sho.rt/4c92" }\n// resolve (the hot path)\nGET /4c92   -> 302 Location: https://the-original-url...`, note: 'Redirect is read-heavy and latency-sensitive — cache it. Creation is rare.' },
+    ],
+    steps: [
+      {
+        phase: 'Step 1 — Clarify the requirements',
+        question: `The prompt is deliberately vague. **What do you ask before designing anything?** List the functional and non-functional questions you\'d put to the interviewer.`,
+        hint: 'Separate "what it does" from "how well it must do it."',
+        answer: `**Functional:** shorten a long URL → short code; redirect short → original. Then probe scope: **custom aliases**? **expiration / TTL**? **click analytics**? do we **dedupe** (same URL → same code) or mint a fresh code each time? per-**user** accounts?
+
+**Non-functional:** it\'s **read-heavy** (~100 redirects per create), redirects must be **low-latency** and **highly available** (a dead redirect breaks every link ever shared), codes should be **short** and ideally **not sequentially guessable**. Scope it down out loud: "I\'ll build shorten + redirect with optional custom alias and analytics, optimizing the redirect path."`,
+      },
+      {
+        phase: 'Step 2 — State your assumptions, then estimate the scale',
+        question: `Numbers need inputs, so **state your assumptions out loud first**, then do the **back-of-the-envelope** math. Assume ~**500M** new URLs per month. What assumptions do you declare, and what are your writes/sec, reads/sec, 5-year storage, cache size, and code length?`,
+        hint: 'Declare: traffic, read:write ratio, bytes/record, retention. A month ≈ 2.6M seconds.',
+        answer: `**Assumptions (say these before any math):** ~**500M** new URLs/month · **100:1** read:write ratio · ~**500 bytes** per stored record · **5-year** retention · codes from **base62** \`[0-9a-zA-Z]\`. Flag them as adjustable — the interviewer may move a number.
+
+**Writes:** 500M ÷ ~2.6M s/month ≈ **~200 writes/sec**.
+**Reads:** 100× → **~20,000 reads/sec**. This ratio is the headline: *optimize reads.*
+**Storage:** 500M/mo × 60 months × 500 bytes ≈ **~15 TB** over five years.
+**Cache:** caching the hot **~20%** of a day's ~1.7B reads ≈ **~170 GB** — fits in memory on a small cache fleet.
+**Code length:** over 5 yr you need ≥ **30B** distinct codes. **Base62^6 ≈ 57B** already covers it; **62^7 ≈ 3.5T** gives comfortable headroom — so **6–7 characters**.`,
+      },
+      {
+        phase: 'Step 3 — Define the API',
+        question: `Sketch the **public API**. What endpoints, request/response shapes, and — importantly — which **redirect status code** do you return, 301 or 302, and why?`,
+        answer: `Three endpoints, keyed by an **\`api_dev_key\`** (identifies the caller for quotas/rate limiting):
+- \`POST /api/urls\` \`{ apiKey, longUrl, alias?, expiresAt? }\` → \`201 { shortUrl }\` — reject an \`alias\` over a **max length** (e.g. 16 chars) or one already taken.
+- \`GET /{code}\` → a **redirect** to the original (the hot path).
+- \`DELETE /api/urls/{code}\` \`{ apiKey }\` → \`204\`.
+
+Use **302 (temporary)**, not 301. A **301 is cached** by browsers and proxies, so subsequent clicks never reach your server — you lose **analytics** and the ability to change/expire the target. 302 costs a little latency per hit but keeps you in the loop. Return **404** for unknown codes and **410 Gone** for deliberately-expired ones. **Rate-limit by \`api_dev_key\`** (quota/throttle) to curb abuse.`,
+      },
+      {
+        phase: 'Step 4 — The core problem: generating the short code',
+        question: `Here\'s the actual interesting part. Given a long URL, **how do you generate a unique 7-char code?** Come up with **at least two** approaches and the failure mode of each. Which do you pick?`,
+        hint: 'Random, hash, and counter each fail differently. Think collisions vs guessability.',
+        answer: `**(a) Random base62 + uniqueness check** — generate 7 random chars, check the DB, retry on collision. Simple; but collision-checks get costlier as the space fills, and it needs a read on every write.
+
+**(b) Hash the URL (MD5/SHA) → take first 7 chars** — deterministic, so it auto-dedupes identical URLs. But truncation **causes collisions** (still needs a check), and being deterministic means you *can\'t* mint different codes per user/campaign.
+
+**(c) Counter → base62 (the usual winner)** — a **globally-unique incrementing id** (a distributed ticket/ID service, or ranges handed to each app server) encoded to base62. **No collision check ever** — unique by construction, and fast. Downside: raw counters are **sequential and enumerable** (\`/4c90, /4c91, /4c92\`…), leaking volume and letting people crawl links. Mitigate by **encrypting or shuffling** the counter before encoding, so output looks random but stays unique.
+
+**(d) Key Generation Service (KGS) — pre-generate keys offline.** A background service mints random 6–7 char base62 keys *ahead of time* into a "keys" DB split into **unused** vs **used**. On create, an app server grabs a batch of unused keys into memory and hands them out, marking them used. **Collisions are eliminated by construction** and it's not enumerable. The catches: the KGS is a **single point of failure** (run a **standby replica**) and you must mark a key used **atomically** so two servers never hand out the same one (the in-memory batch per server avoids contention). This is the answer interviewers from the Grokking/DesignGurus lineage are often fishing for.
+
+**Pick (c) or (d)** — counter+base62 for simplicity, or a **KGS** when you want collision-free *and* non-sequential codes. Either way, explain the enumeration/collision trade-off out loud — that discussion is the real signal.`,
+      },
+      {
+        phase: 'Step 5 — Data model & storage choice',
+        question: `What does the table/document look like, and would you reach for **SQL or NoSQL**? Justify it from the access pattern.`,
+        hint: 'What shape are the queries? Any joins? What\'s the read pattern?',
+        answer: `Schema: **\`code\` (primary key)**, \`longUrl\`, \`createdAt\`, \`userId?\`, \`expiresAt?\`, \`clickCount?\`. Every lookup is a single **key → value** by \`code\`; there are **no joins** and the workload is read-heavy.
+
+That access pattern is a textbook fit for a **key-value / wide-column store** (DynamoDB, Cassandra) which scales horizontally and gives O(1) lookups. **SQL is equally fine** at this scale — \`code\` as the PK is already an index — and simpler to reason about; you\'d shard by \`code\` later if needed. State the pick and the reason ("KV access, no relations, needs horizontal read scale"), not just the name.`,
+      },
+      {
+        phase: 'Step 6 — Make reads fast and keep it available',
+        question: `You have ~20,000 redirects/sec and they must be quick and never down. **How do you scale and speed up the read path** and remove single points of failure?`,
+        hint: 'Where does a redirect actually spend its time? What\'s the cheapest layer to serve it from?',
+        answer: `- **Cache the hot codes** (Redis/Memcached, read-through, **LRU** eviction). Links follow a heavy **power law**, so caching just the hot **~20%** of daily traffic serves most reads — a hit avoids the DB entirely and cuts latency to sub-ms. On a cache miss, load from the DB and populate the cache.
+- The service is **stateless** → run **N instances behind a load balancer** and autoscale; a dead node just drops out. (LBs sit in three places: client→app, app→DB, app→cache.)
+- **Read replicas** (or KV replication) absorb cache misses and give failover; push popular redirects to a **CDN/edge** too.
+- **Partition/shard** the data once it outgrows one box: hashing the \`code\` to pick a shard spreads load evenly (range-by-first-letter creates hot partitions), and **consistent hashing** lets you add/remove shards without reshuffling everything.
+- Keep **analytics off the hot path**: fire the click event to a **message queue** and let workers aggregate counts, so counting never slows the redirect or contends on a hot row.
+
+Close by naming the new failure modes you\'ve introduced — **cache staleness**, **replication lag**, and **hot shards** — because every scaling step adds one.`,
+      },
+      {
+        phase: 'Step 7 — Edge cases, cleanup & telemetry',
+        question: `Before you\'re done, what **edge cases, cleanup, and analytics** would a good interviewer push on? Name as many as you can.`,
+        answer: `- **Custom alias collisions** — reserve/validate, reject duplicates; cap the length.
+- **Expiration & cleanup** — default TTL (~2 yr). Use **lazy deletion** (drop it on the next read, return 410) plus a **low-priority cleanup service** during off-peak; **recycle** freed keys back to the key pool.
+- **Abuse** — malicious/phishing URLs (safe-browsing check), spam (rate limit + \`api_dev_key\` quotas).
+- **Permissions** — public vs private links; a separate table mapping \`code → allowed userIds\`, returning **401** on unauthorized access.
+- **Telemetry** — per-URL click count, location, timestamp, referrer, browser/platform. Popular links cause **write contention** on the counter, so aggregate **asynchronously** via a queue/stream + workers (approximate counts are fine).
+- **Idempotency/dedupe** for repeat submissions, and the **single-counter bottleneck** — hand out **id ranges** or use a **KGS/Snowflake**-style id so the id source isn\'t a SPOF.
+
+You won\'t cover them all — the point is showing you know where the bodies are buried.`,
+      },
+      {
+        phase: 'Step 8 — Translate the design to an AWS workflow',
+        question: `The design is provider-agnostic. Now **map each component onto concrete AWS managed services** — and, the real signal, **audit which parts AWS hands you for free vs. which decisions you still own.**`,
+        hint: 'For each box in your diagram, name the AWS service that plays that role — then ask what it does NOT solve.',
+        answer: `**Component → AWS service:**
+- **Domain + DNS** (\`sho.rt\`) → **Route 53** (resolution + health-checked failover/latency routing).
+- **Edge cache + TLS for redirects** → **CloudFront** — cache hot 302s at edge PoPs. *Caveat:* only cache redirects you won\'t soon change/expire.
+- **Create-API throttling & abuse** → **API Gateway** usage plans (per-\`api_dev_key\` rate + quota) in front of the create endpoint; **AWS WAF** rate-based rules for bad IPs.
+- **Load balancing** → **Elastic Load Balancing (ALB)** across app instances, dropping unhealthy ones.
+- **Stateless app tier** → **ECS on Fargate** or **EC2 Auto Scaling** (or **Lambda** for a serverless redirect) — scale out on the read spike; statelessness makes it trivial.
+- **Primary \`code → longUrl\` store** → **DynamoDB** — managed key-value, partition key = \`code\`, single-digit-ms reads. It absorbs the **partitioning/consistent-hashing + replication** you'd otherwise hand-build.
+- **Hot-key cache** → **ElastiCache (Redis)** — the ~20% hot set, LRU eviction, Multi-AZ failover.
+- **Expiration/cleanup** → **DynamoDB TTL** — set an \`expiresAt\` epoch attribute and DynamoDB deletes items automatically. *Gotcha:* deletion is **asynchronous (typically within ~48h)** and **expired-but-undeleted items still appear in reads**, so you must **filter on read** and return 410. Recycle keys with **EventBridge Scheduler → Lambda**.
+- **Analytics off the hot path** → click events to **Kinesis Data Streams** (or **SQS**) → **Lambda** consumers aggregate counts into DynamoDB; **Kinesis Firehose → S3** + **Athena** for ad-hoc analysis. Avoids hot-row contention.
+- **Key Generation Service** → small **Lambda/ECS** service over a DynamoDB "keys" table (unused/used), handing out batches via **conditional writes**; Multi-AZ removes the SPOF.
+- **Observability** → **CloudWatch** (metrics/alarms/logs) + **X-Ray** tracing. **Multi-region HA** → **DynamoDB Global Tables** + Route 53/CloudFront.
+
+**The audit — managed vs. still-yours:** AWS turns several *hand-designed* components into *configuration* — DynamoDB = sharding + replication + TTL, ELB = the load balancer, CloudFront = the edge cache, SQS/Kinesis = the queue. What you still **own** is the *logic and the trade-offs*: 301-vs-302, the KGS/counter scheme and its non-enumerability, **read-side filtering** of not-yet-deleted expired items, and cache-invalidation policy. Managed services remove operational toil, **not** design decisions — and each adds its own limit/failure mode (DynamoDB **hot-partition throttling**, TTL **deletion lag**, CloudFront **caching a redirect you later want to change**). Naming those is the senior signal.
+
+*The diagram below the steps renders this same mapping as three request paths.*`,
+      },
+    ],
+    workflow: {
+      title: 'The design as an AWS workflow',
+      flows: [
+        {
+          caption: 'Read path — redirect, ~20K/s (the hot path, served as far left as possible)',
+          tone: 'read',
+          nodes: [
+            'Client · browser',
+            'Route 53 · DNS',
+            'CloudFront · edge-cached 302',
+            'ALB · load balance',
+            'App · ECS/Fargate or Lambda',
+            'ElastiCache · Redis, hot ~20%',
+            'DynamoDB · code→URL on miss',
+          ],
+        },
+        {
+          caption: 'Write path — create a short link, ~200/s',
+          tone: 'write',
+          nodes: [
+            'Client · POST /api/urls',
+            'API Gateway · api_dev_key quota',
+            'ALB → App',
+            'KGS · Lambda + DynamoDB keys',
+            'DynamoDB · store mapping',
+          ],
+        },
+        {
+          caption: 'Async — analytics kept off the redirect path',
+          tone: 'async',
+          nodes: [
+            'App · emit click event',
+            'Kinesis / SQS',
+            'Lambda · aggregate',
+            'DynamoDB counts · S3 + Athena',
+          ],
+        },
+      ],
+    },
+    explanation: `**Why this question opens so many interviews:** it starts trivial (a key→value map) and every follow-up adds a real dimension — **estimation, API semantics, a distributed-ID problem, storage trade-offs, and read-scaling** — so the interviewer can steer toward whatever they want to test. Your job isn\'t to recite "the answer"; it\'s to **drive the conversation** in that order and **name trade-offs and failure modes** at each step.
+
+**The reusable spine** (works for most backend design prompts): **0)** state your **assumptions** (traffic, read:write ratio, bytes/record, retention) → **1)** clarify functional + non-functional requirements → **2)** estimate scale (writes/s, reads/s, storage, cache) → **3)** define the API → **4)** design the core mechanism (here, ID generation) → **5)** pick storage from the access pattern → **6)** scale the hot path (cache → stateless + LB → replicas/queues) → **7)** edge cases → **8)** translate to your platform (Step 8 maps every box to a concrete **AWS** service). Naming your assumptions up front is what makes the estimates defensible — the interviewer can move a number and watch you re-derive. It\'s the backend twin of the **RADIO** flow from the frontend design lessons — same discipline, different surface. See also the *Scaling a backend* lesson for the caching/replication/sharding building blocks this leans on.
+
+**Where this sits — the difficulty ladder.** The reason to master this specific question is that it's the **entry rung**, and the *method above is what transfers up the ladder* — only the hard core changes:
+
+- **Easy / warm-up** — *URL shortener*, *Pastebin*, *rate limiter*, *key-value store*. Well-scoped, few components, doable in ~35 min. The core is one clever mechanism (ID generation, a token bucket).
+- **Medium** — *News feed* (the **fan-out** push/pull model), *chat / WhatsApp* (real-time, ordering, delivery), *typeahead*, *Uber/ride-matching*, *web crawler*. Multiple interacting services and a genuinely hard sub-problem. (The frontend *news feed*, *autocomplete*, and *chat* lessons in this module are these, from the client side.)
+- **Hard** — *Google Docs* (concurrent editing via **CRDT/OT** conflict resolution), *video streaming (YouTube/Netflix)*, *distributed cache*, *payment systems*, *ad-click aggregation*. State/consistency at scale is the whole problem, not a bolt-on.
+
+If you can walk these steps cleanly here, you already have the scaffold for the medium tier — you just swap step 4's mechanism (fan-out, message ordering, CRDTs) and lean harder on steps 5–6.
+
+**On the AWS translation (Step 8):** the win of doing it explicitly is that it forces you to separate the *design* from the *platform*. A strong candidate can say "conceptually this is a load balancer + a KV store + a cache + a queue," then "on AWS that's ALB + DynamoDB + ElastiCache + SQS/Kinesis," **and** name what the managed services still don't decide for you (301-vs-302, KGS non-enumerability, read-side filtering of expired-but-undeleted items, cache invalidation). Managed platforms remove toil, not judgment — and each adds a limit (DynamoDB hot-partition throttling, TTL deletion lag). That platform-aware-but-not-platform-dependent framing is exactly the senior signal.
+
+*Sources: [DesignGurus — Designing a URL Shortening service (Grokking)](https://www.designgurus.io/blog/url-shortening), [System Design Primer — Design Pastebin/Bit.ly](https://github.com/donnemartin/system-design-primer/blob/master/solutions/system_design/pastebin/README.md), [DesignGurus — FAANG system-design questions ranked by difficulty](https://designgurus.substack.com/p/30-system-design-interview-questions), [MDN — 301 vs 302 redirects](https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections), [AWS — DynamoDB TTL (async deletion, ~48h; filter expired on read)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/TTL.html), [AWS — API Gateway usage plans & throttling](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-request-throttling.html).*`,
   },
 
   // adv-ai
